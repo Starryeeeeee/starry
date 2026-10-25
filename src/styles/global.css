@@ -78,11 +78,11 @@ html {
   font-size: 17px; /* 专治“字特别小” */
   scroll-behavior: smooth;
   /* 防御：未知来源的下划线会从根元素传播到全站文字，显式关掉 */
-  text-decoration-line: none;
+  text-decoration-line: none !important;
 }
 
 body {
-  text-decoration-line: none;
+  text-decoration-line: none !important;
 }
 
 @media (max-width: 640px) {
