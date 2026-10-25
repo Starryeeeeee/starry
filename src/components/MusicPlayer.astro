@@ -1,253 +1,94 @@
 ---
-// 浮动唱片播放器：左下角圆盘，播放时旋转 + 边缘进度环，hover 展开曲名
-// 加歌：往 public/music/ 放文件，并在下方 tracks 里加一行
+// 左下角音乐播放器：APlayer（github.com/DIYgod/APlayer，MIT 许可）固定迷你模式
+// ——中文个人站事实标准，替代原先手写的黑胶圆盘。加歌：往 public/music/ 放
+// 文件，并在下方 audio 列表里加一行（name / artist / url 必填，cover 可选）
 import { u } from '../lib/base';
+import 'aplayer/dist/APlayer.min.css';
 
-const tracks = [
-  { file: 'komorebi.mp3', title: 'Komorebi', artist: '田熊理秀' },
+const audio = [
+  {
+    name: 'Komorebi',
+    artist: '田熊理秀',
+    url: u('/music/komorebi.mp3'),
+    cover: u('/music/cover.svg'),
+  },
 ];
-
-const first = tracks[0];
 ---
 
-<div class="music-dock" data-track-count={tracks.length}>
-  <button
-    class="music-disc"
-    type="button"
-    aria-label={`播放音乐：${first.title} - ${first.artist}`}
-    aria-pressed="false"
-  >
-    <svg class="music-ring" viewBox="0 0 56 56" aria-hidden="true">
-      <circle class="ring-track" cx="28" cy="28" r="26" />
-      <circle class="ring-progress" cx="28" cy="28" r="26" />
-    </svg>
-    <span class="music-vinyl" aria-hidden="true">
-      <svg viewBox="0 0 56 56">
-        <circle cx="28" cy="28" r="27" fill="var(--ink)" />
-        <circle cx="28" cy="28" r="24" fill="none" stroke="var(--line)" stroke-width="0.8" />
-        <circle cx="28" cy="28" r="19" fill="none" stroke="var(--line)" stroke-width="0.6" />
-        <circle cx="28" cy="28" r="9" fill="var(--accent)" />
-        <circle cx="28" cy="28" r="2.4" fill="var(--bg)" />
-        <path d="M28 1.5 A26.5 26.5 0 0 1 51 14" fill="none" stroke="var(--bg)" stroke-width="1.6" opacity="0.55" />
-      </svg>
-      <svg class="music-note" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-        <circle cx="6.5" cy="18" r="2.6" fill="currentColor" />
-        <circle cx="16.5" cy="16" r="2.6" fill="currentColor" />
-      </svg>
-    </span>
-  </button>
-  <span class="music-label">
-    <b class="music-title">{first.title}</b>
-    <i class="music-artist">{first.artist}</i>
-  </span>
-  <audio preload="none" src={u(`/music/${first.file}`)}></audio>
-</div>
+<div id="site-aplayer" data-audio={JSON.stringify(audio)}></div>
 
 <style>
-  .music-dock {
-    position: fixed;
-    left: 22px;
-    bottom: 22px;
-    z-index: 40; /* 头部 50、灯箱 100 之下 */
-    display: flex;
-    align-items: center;
-    gap: 0;
+  /* APlayer 固定模式：贴左下角，层级压过头部(50)、让位灯箱(100) */
+  :global(.aplayer.aplayer-fixed) {
+    left: 18px;
+    bottom: 18px;
+    z-index: 60;
   }
 
-  .music-disc {
-    position: relative;
-    width: 52px;
-    height: 52px;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: none;
-    cursor: pointer;
-    flex-shrink: 0;
+  /* 皮肤对齐站内令牌：面板底、列表、文字全部跟随明暗主题，去掉默认白底 */
+  :global(.aplayer.aplayer-fixed .aplayer-body),
+  :global(.aplayer.aplayer-fixed .aplayer-list) {
+    background: var(--surface) !important;
+    color: var(--ink-2);
   }
 
-  /* 进度环：骑在圆盘外缘 */
-  .music-ring {
-    position: absolute;
-    inset: -3px;
-    width: calc(100% + 6px);
-    height: calc(100% + 6px);
-    transform: rotate(-90deg);
-    pointer-events: none;
+  :global(.aplayer.aplayer-fixed .aplayer-body .aplayer-music) {
+    display: none; /* 固定迷你态宽度太窄，曲名交给展开后的完整面板 */
   }
 
-  .ring-track {
-    fill: none;
-    stroke: color-mix(in srgb, var(--ink) 14%, transparent);
-    stroke-width: 2;
+  :global(.aplayer .aplayer-list ol li) {
+    border-top-color: var(--line) !important;
   }
 
-  .ring-progress {
-    fill: none;
-    stroke: var(--accent);
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-dasharray: 163.4; /* 2πr, r=26 */
-    stroke-dashoffset: 163.4;
-    transition: stroke-dashoffset 0.3s linear;
+  :global(.aplayer .aplayer-list ol li:hover),
+  :global(.aplayer .aplayer-list ol li.aplayer-list-on) {
+    background: var(--wash) !important;
   }
 
-  .music-vinyl {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    box-shadow: 0 2px 10px rgba(22, 22, 45, 0.18), 0 0 0 3px var(--bg);
-    transition: transform 0.25s var(--ease-out, ease);
+  :global(.aplayer .aplayer-list ol li .aplayer-list-author) {
+    color: var(--ink-3) !important;
   }
 
-  .music-vinyl > svg:first-child {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
+  :global(.aplayer .aplayer-icon) {
+    fill: var(--ink-3);
   }
 
-  .music-disc:hover .music-vinyl {
-    transform: scale(1.06);
+  /* 展开/收起箭头按钮：默认自带浅灰底，换成站内色 */
+  :global(.aplayer .aplayer-miniswitcher) {
+    background: var(--surface-2) !important;
   }
 
-  .music-disc:active .music-vinyl {
-    transform: scale(0.96);
+  :global(.aplayer .aplayer-miniswitcher:hover) {
+    background: var(--wash) !important;
   }
 
-  /* 唱片中心的小音符：暂停时显示，播放时淡出（唱盘转动自带信息量） */
-  .music-note {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 13px;
-    height: 13px;
-    color: var(--bg);
-    transform: translate(-50%, -50%);
-    transition: opacity 0.2s ease;
+  :global(.aplayer .aplayer-miniswitcher .aplayer-icon) {
+    fill: var(--ink-2);
   }
 
-  :global(.music-playing) .music-note {
-    opacity: 0;
-  }
-
-  /* 播放时唱片旋转 */
-  .music-vinyl {
-    animation: spin 14s linear infinite;
-    animation-play-state: paused;
-  }
-
-  :global(.music-playing) .music-vinyl {
-    animation-play-state: running;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  /* 曲名标签：默认收起，hover/播放时滑出 */
-  .music-label {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    max-width: 0;
-    margin-left: 0;
-    padding: 6px 0;
-    overflow: hidden;
-    white-space: nowrap;
-    opacity: 0;
-    transform: translateX(-6px);
-    transition: max-width 0.35s var(--ease-out, ease), opacity 0.25s ease,
-      transform 0.35s var(--ease-out, ease), margin-left 0.35s var(--ease-out, ease);
-    pointer-events: none;
-  }
-
-  .music-dock:hover .music-label,
-  :global(.music-playing) .music-dock:not(:hover) .music-label,
-  :global(.music-paused-open) .music-label {
-    max-width: 180px;
-    margin-left: 10px;
-    opacity: 1;
-    transform: none;
-  }
-
-  .music-title {
-    font-size: 0.82rem;
-    font-weight: 650;
-    line-height: 1.3;
-  }
-
-  .music-artist {
-    font-size: 0.72rem;
-    font-style: normal;
-    color: var(--ink-3);
-    line-height: 1.3;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .music-vinyl {
-      animation: none;
-    }
-    .music-label {
-      transition: none;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .music-dock {
-      left: 16px;
-      bottom: 16px;
-    }
-    .music-disc {
-      width: 44px;
-      height: 44px;
-    }
+  /* 暗色下给迷你圆盘压一圈和站内一致的描边 */
+  :global([data-theme='dark'] .aplayer.aplayer-fixed .aplayer-body .aplayer-pic) {
+    box-shadow: 0 0 0 2px var(--line);
   }
 </style>
 
 <script>
-  // 播放器逻辑：点击切换播放/暂停；进度环跟随；播完自动收起
-  const dock = document.querySelector<HTMLElement>('.music-dock');
-  const btn = dock?.querySelector<HTMLButtonElement>('.music-disc');
-  const audio = dock?.querySelector<HTMLAudioElement>('audio');
-  const progress = dock?.querySelector<SVGCircleElement>('.ring-progress');
-  const CIRC = 163.4;
+  import APlayer from 'aplayer';
 
-  if (dock && btn && audio && progress) {
-    const setState = (playing: boolean) => {
-      document.body.classList.toggle('music-playing', playing);
-      btn.setAttribute('aria-pressed', String(playing));
-      btn.setAttribute(
-        'aria-label',
-        (playing ? '暂停音乐：' : '播放音乐：') +
-          (btn.getAttribute('aria-label')?.split('：')[1] ?? ''),
-      );
-    };
+  const mount = document.getElementById('site-aplayer');
+  const audio = JSON.parse(mount?.dataset.audio ?? '[]');
 
-    btn.addEventListener('click', () => {
-      if (audio.paused) {
-        void audio.play();
-      } else {
-        audio.pause();
-      }
-    });
-
-    audio.addEventListener('play', () => setState(true));
-    audio.addEventListener('pause', () => setState(false));
-
-    audio.addEventListener('timeupdate', () => {
-      if (audio.duration > 0) {
-        progress.style.strokeDashoffset = String(CIRC * (1 - audio.currentTime / audio.duration));
-      }
-    });
-
-    audio.addEventListener('ended', () => {
-      progress.style.strokeDashoffset = String(CIRC);
-      setState(false);
+  if (mount && audio.length > 0) {
+    new APlayer({
+      container: mount,
+      fixed: true,
+      mini: true,
+      autoplay: false,
+      loop: 'all',
+      order: 'random',
+      volume: 0.7,
+      theme: '#5f7f9e',
+      audio,
     });
   }
 </script>
