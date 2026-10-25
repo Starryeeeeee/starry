@@ -5,7 +5,7 @@
 
 <div class="page-loader" id="page-loader" aria-hidden="true">
   <div class="pl-inner">
-    <p class="pl-text">漫游中<span class="pl-dot"></span><span class="pl-dot"></span><span class="pl-dot"></span></p>
+    <p class="pl-text">roaming<span class="pl-dot"></span><span class="pl-dot"></span><span class="pl-dot"></span></p>
     <div class="pl-track">
       <div class="pl-fill"></div>
     </div>
@@ -42,9 +42,11 @@
   }
 
   .pl-text {
-    font-size: 0.92rem;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.02rem;
     font-weight: 600;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.08em;
     color: var(--ink-2);
     animation: pl-glow 1.2s ease-in-out infinite;
   }
@@ -71,14 +73,15 @@
     overflow: hidden;
   }
 
-  /* 水位：雾蓝单色充一次，右端一点圆肚；表面那道白光是「水面反光」 */
+  /* 水位：站内三个点缀色的水彩流动（雾蓝→湖水绿→陶土玫瑰），充填时逐段展开，
+     再叠一层轻微的色相呼吸让它像活水；刻意压低幅度，不走霓虹路线 */
   .pl-fill {
     position: relative;
     height: 100%;
     width: 0;
     border-radius: 999px;
-    background: var(--accent);
-    animation: pl-fill 1.1s var(--ease-out) 0.1s forwards;
+    background: linear-gradient(90deg, var(--accent), #8aa595, #b4766b, var(--accent));
+    animation: pl-fill 1.1s var(--ease-out) 0.1s forwards, pl-breathe 2.4s ease-in-out infinite;
   }
 
   .pl-fill::after {
@@ -98,6 +101,11 @@
 
   @keyframes pl-fill {
     to { width: 100%; }
+  }
+
+  @keyframes pl-breathe {
+    0%, 100% { filter: hue-rotate(0deg) saturate(1); }
+    50% { filter: hue-rotate(-16deg) saturate(1.18); }
   }
 
   @keyframes pl-shimmer {
