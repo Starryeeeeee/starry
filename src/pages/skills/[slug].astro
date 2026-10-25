@@ -1,0 +1,30 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { fmtDate } from '../../lib/format';
+import { u } from '../../lib/base';
+
+export async function getStaticPaths() {
+  const skills = await getCollection('skills');
+  return skills.map((skill) => ({ params: { slug: skill.id }, props: { skill } }));
+}
+
+const { skill } = Astro.props;
+const { Content } = await render(skill);
+---
+
+<Base title={`${skill.data.title} · 星野漫游`} description={skill.data.description}>
+  <article class="container prose">
+    <h1>{skill.data.title}</h1>
+    <p class="prose-meta">
+      <time datetime={skill.data.date.toISOString()}>{fmtDate(skill.data.date)}</time>
+    </p>
+    <div class="prose-body">
+      <Content />
+    </div>
+    {skill.data.tags.length > 0 && (
+      <div class="tags">{skill.data.tags.map((t) => <span>{t}</span>)}</div>
+    )}
+    <a class="back-link" href={u('/skills/')}>回到 Skills 列表</a>
+  </article>
+</Base>

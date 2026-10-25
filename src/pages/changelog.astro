@@ -1,0 +1,51 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { fmtDate } from '../lib/format';
+
+const entries = (await getCollection('changelog')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+
+const rendered = await Promise.all(
+  entries.map(async (entry) => ({ entry, Content: (await render(entry)).Content })),
+);
+---
+
+<Base title="建站日志 · 星野漫游" description="记录网站本身的进化：改版、新功能、踩坑心得。">
+  <div class="container">
+    <h1 class="page-title">建站日志</h1>
+    <p class="page-desc">这个网站是怎么一点点长出来的。</p>
+
+    {rendered.map(({ entry, Content }) => (
+      <div class="changelog-item">
+        <time datetime={entry.data.date.toISOString()}>{fmtDate(entry.data.date)}</time>
+        <div>
+          <h3>{entry.data.title}</h3>
+          <div class="body">
+            <Content />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .page-title {
+    margin-top: 56px;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+  .page-desc {
+    margin: 10px 0 14px;
+    color: var(--ink-2);
+  }
+  .body :global(ul) {
+    margin: 0.4em 0 0;
+    padding-left: 1.4em;
+  }
+  .body :global(li) {
+    margin-top: 0.3em;
+  }
+</style>

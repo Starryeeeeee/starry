@@ -1,0 +1,41 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { fmtDate } from '../lib/format';
+import { u } from '../lib/base';
+
+const skills = (await getCollection('skills')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<Base title="AI Skills · 星野漫游" description="Starry 收集和整理的对 AI 好用的 skill 与提示词。">
+  <div class="container">
+    <h1 class="page-title">AI Skills</h1>
+    <p class="page-desc">对 AI 好用的 skill 和提示词，都能直接复制去用。</p>
+    {skills.map((s) => (
+      <a class="skill-item" href={u(`/skills/${s.id}/`)}>
+        <div>
+          <h3>{s.data.title}</h3>
+          <p class="desc">{s.data.description}</p>
+          {s.data.tags.length > 0 && (
+            <div class="tags">{s.data.tags.map((t) => <span>{t}</span>)}</div>
+          )}
+        </div>
+        <time datetime={s.data.date.toISOString()}>{fmtDate(s.data.date)}</time>
+      </a>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .page-title {
+    margin-top: 56px;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+  .page-desc {
+    margin: 10px 0 8px;
+    color: var(--ink-2);
+  }
+</style>

@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import { u } from '../lib/base';
+---
+
+<Base title="关于 · 星野漫游" description="认识 Starry：一个在星野里漫游的新手开发者。">
+  <div class="container prose">
+    <h1>关于我</h1>
+    <div class="prose-body">
+      <p>
+        我是 <strong>Starry</strong>，一个刚开始学编程的新手开发者，也是在星野里漫游的人。
+      </p>
+      <p>
+        平时喜欢做点小东西：给社团写互动小游戏、给班级做公开工具，偶尔折腾一些让自己省事的小网页。
+        东西不大，但每次把它挂上网的那一刻都很开心。这个网站就是用来放这些小东西的，
+        顺带写写随感，发发日常的废话条。
+      </p>
+      <h2>我在做什么</h2>
+      <ul>
+        <li>在学 HTML、CSS 和 JavaScript，正在慢慢补基础</li>
+        <li>在造这个网站本身——它是我目前最大的项目（建站日志里有全程记录）</li>
+        <li>在收集对 AI 好用的 skill，整理好就发在 <a href={u('/skills/')}>Skills</a> 页</li>
+      </ul>
+      <h2>联系我</h2>
+      <p>
+        最快的方式是在 GitHub 上找我：
+        <a href="https://github.com/Starryeeeeee" target="_blank" rel="noopener">Starryeeeeee</a>；
+        也可以发邮件到
+        <a href="mailto:Jia100906985211@outlook.com">Jia100906985211@outlook.com</a>。
+        有想聊的、想合作的，或者发现我哪里写错了（很可能），都欢迎说说。
+      </p>
+      <blockquote>
+        <p>在星野里漫游，把小灵感做成小东西。</p>
+      </blockquote>
+    </div>
+    <a class="back-link" href={u('/')}>回到首页</a>
+  </div>
+</Base>

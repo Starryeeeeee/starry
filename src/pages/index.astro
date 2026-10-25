@@ -1,0 +1,192 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { getMoments } from '../lib/moments';
+import { fmtDate, fmtDateShort } from '../lib/format';
+import { u } from '../lib/base';
+import avatar from '../assets/avatar.jpg';
+
+// 图标从 src/icons 图标库内联进来（?raw 保留 currentColor，可换任何一个文件）
+import handIcon from '../icons/hand/wave-fluent-emoji-hc.svg?raw';
+import githubIcon from '../icons/social/github.svg?raw';
+import rssIcon from '../icons/ui/rss.svg?raw';
+import bilibiliIcon from '../icons/social/bilibili.svg?raw';
+import neteaseIcon from '../icons/social/netease-cloud-music.svg?raw';
+import outlookIcon from '../icons/social/outlook.svg?raw';
+
+const allPosts = (await getCollection('posts')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+const posts = allPosts.slice(0, 3);
+const moments = (await getMoments()).slice(0, 2);
+const projects = (await getCollection('projects'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 2);
+const skills = (await getCollection('skills'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 4);
+
+// 建站数据：与 innei 一样，把「这个站活了多久、写了多少」摆出来
+const founded = new Date('2026-10-25T00:00:00Z');
+const days = Math.max(1, Math.ceil((Date.now() - founded.valueOf()) / 86400000));
+const chars = allPosts.reduce((sum, p) => sum + (p.body?.length ?? 0), 0);
+---
+
+<Base title="星野漫游 · Starry Roam">
+  <section class="hero container wide">
+    <div class="hero-avatar in" style="--d:0s" aria-hidden="true">
+      <img src={avatar.src} alt="" width="112" height="112" />
+    </div>
+    <h1 class="hero-title in" style="--d:.15s" lang="en">
+      <span class="ht-lead">Hi, I'm</span> <span class="hero-name">Starry</span> <span class="hero-wave"><Fragment set:html={handIcon} /></span>
+    </h1>
+    <p class="hero-tagline in" style="--d:.35s">
+      把<span class="kw">好奇心</span>，做成看得见的<span class="kw2">小东西</span><span class="caret" aria-hidden="true"></span>
+    </p>
+    <p class="hero-sub-caps in" style="--d:.55s">一个学生开发者的作品、AI Skills 与日常废话条</p>
+    <p class="hero-quote in" style="--d:.7s" lang="en">"Do not follow the majority, follow the truth."</p>
+    <p class="hero-stats in" style="--d:.8s">
+      <span>建站 <b class="stat-num" data-value={String(days)}>{days}</b> 天</span>
+      <span>文章 <b class="stat-num" data-value={String(allPosts.length)}>{allPosts.length}</b> 篇</span>
+      <span>约 <b class="stat-num" data-value={String(chars)}>{chars.toLocaleString('en-US')}</b> 字</span>
+    </p>
+    <div class="hero-social in" style="--d:.95s">
+      <a
+        href="https://github.com/Starryeeeeee"
+        data-tip="我的 GitHub 主页"
+        target="_blank"
+        rel="noopener"
+        aria-label="GitHub"
+        style="--i:0"
+      >
+        <Fragment set:html={githubIcon} />
+      </a>
+      <a href="https://www.bilibili.com" data-tip="哔哩哔哩" target="_blank" rel="noopener" aria-label="哔哩哔哩" style="--i:1">
+        <Fragment set:html={bilibiliIcon} />
+      </a>
+      <a href="https://music.163.com" data-tip="网易云音乐" target="_blank" rel="noopener" aria-label="网易云音乐" style="--i:2">
+        <Fragment set:html={neteaseIcon} />
+      </a>
+      <!-- TODO: 把 href 换成你的邮箱，如 mailto:starry@outlook.com -->
+      <a href="mailto:Jia100906985211@outlook.com" data-tip="Outlook 邮箱 · 给我写邮件" aria-label="发邮件给我" style="--i:3">
+        <Fragment set:html={outlookIcon} />
+      </a>
+      <a href={u('/rss.xml')} data-tip="RSS · 用阅读器订阅更新" aria-label="RSS 订阅" style="--i:4">
+        <Fragment set:html={rssIcon} />
+      </a>
+    </div>
+  </section>
+
+  <div class="container home-sections">
+    <section class="reveal" style="--i:0" aria-labelledby="latest-posts">
+      <div class="section-head">
+        <h2 id="latest-posts">最近的文章</h2>
+        <a class="more" href={u('/posts/')}>全部文章</a>
+      </div>
+      {posts.map((post) => (
+        <a class="post-item" href={u(`/posts/${post.id}/`)}>
+          <time datetime={post.data.date.toISOString()}>{fmtDate(post.data.date)}</time>
+          <h3>{post.data.title}</h3>
+          {post.data.description && <p>{post.data.description}</p>}
+        </a>
+      ))}
+    </section>
+
+    <section class="reveal" style="--i:1" aria-labelledby="latest-moments">
+      <div class="section-head">
+        <h2 id="latest-moments">废话条</h2>
+        <a class="more" href={u('/moments/')}>更多动态</a>
+      </div>
+      {moments.length === 0 ? (
+        <p class="list-empty">还没有动态——去仓库发一条带 <code>moment</code> 标签的 Issue 试试。</p>
+      ) : (
+        moments.map((m) => (
+          <article class="moment-card">
+            <div class="moment-head">
+              <span class="moment-avatar" aria-hidden="true"><img src={avatar.src} alt="" /></span>
+              <span class="moment-name">Starry</span>
+              <time datetime={m.date.toISOString()}>{fmtDateShort(m.date)}</time>
+            </div>
+            <p class="moment-body">{m.text}</p>
+          </article>
+        ))
+      )}
+    </section>
+
+    <section class="reveal" style="--i:2" aria-labelledby="latest-projects">
+      <div class="section-head">
+        <h2 id="latest-projects">作品</h2>
+        <a class="more" href={u('/projects/')}>全部作品</a>
+      </div>
+      <div class="project-grid">
+        {projects.map((p) => (
+          <a
+            class="project-card"
+            href={p.data.demo ?? p.data.repo ?? u('/projects/')}
+            target={(p.data.demo ?? p.data.repo) ? '_blank' : undefined}
+            rel="noopener"
+          >
+            <h3>{p.data.title}</h3>
+            <p>{p.data.description}</p>
+            {p.data.tags.length > 0 && (
+              <div class="tags">{p.data.tags.map((t) => <span>{t}</span>)}</div>
+            )}
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="reveal" style="--i:3" aria-labelledby="latest-skills">
+      <div class="section-head">
+        <h2 id="latest-skills">AI Skills</h2>
+        <a class="more" href={u('/skills/')}>全部 Skills</a>
+      </div>
+      {skills.map((s) => (
+        <a class="skill-item" href={u(`/skills/${s.id}/`)}>
+          <div>
+            <h3>{s.data.title}</h3>
+            <p class="desc">{s.data.description}</p>
+          </div>
+          <time datetime={s.data.date.toISOString()}>{fmtDate(s.data.date)}</time>
+        </a>
+      ))}
+    </section>
+  </div>
+</Base>
+
+<script>
+  // 封面出场：把「Starry」拆成逐字错峰入场（GSAP SplitText 的思路，纯手写版）
+  const name = document.querySelector<HTMLElement>('.hero-name');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (name && !reduceMotion) {
+    const text = name.textContent ?? '';
+    name.textContent = '';
+    [...text].forEach((ch, i) => {
+      const s = document.createElement('span');
+      s.className = 'ht-char';
+      s.textContent = ch;
+      s.style.animationDelay = `${0.3 + i * 0.045}s`;
+      name.appendChild(s);
+    });
+  }
+
+  // 数据行数字滚动：easeOutCubic，reduced-motion 时保持静态
+  if (!reduceMotion) {
+    for (const el of document.querySelectorAll<HTMLElement>('.stat-num')) {
+      const target = Number(el.dataset.value ?? '0');
+      if (!target) continue;
+      const dur = 900;
+      const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+      setTimeout(() => {
+        const t0 = performance.now();
+        const step = (now: number) => {
+          const p = Math.min(1, (now - t0) / dur);
+          el.textContent = Math.round(ease(p) * target).toLocaleString('en-US');
+          if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }, 900);
+    }
+  }
+</script>

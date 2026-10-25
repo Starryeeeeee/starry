@@ -1,0 +1,63 @@
+---
+import avatar from '../assets/avatar.jpg';
+import { u } from '../lib/base';
+
+const { pathname } = Astro.url;
+
+const nav = [
+  { href: '/', label: '首页' },
+  { href: '/posts/', label: '文章' },
+  { href: '/projects/', label: '作品' },
+  { href: '/gallery/', label: '画廊' },
+  { href: '/skills/', label: 'Skills' },
+  { href: '/moments/', label: '废话条' },
+  { href: '/changelog/', label: '建站日志', optional: true },
+  { href: '/about/', label: '关于' },
+];
+
+// 传入未加前缀的路径，比较时统一补上 base（构建时 Astro.url.pathname 含 base）
+const isActive = (href: string) => {
+  const full = u(href);
+  return href === '/' ? pathname === full : pathname === full || pathname.startsWith(full);
+};
+---
+
+<header class="site-header">
+  <div class="container wide header-inner">
+    <a href={u('/')} class="brand" aria-label="回到首页">
+      <span class="brand-avatar" aria-hidden="true">
+        <img src={avatar.src} alt="" width="30" height="30" />
+      </span>
+      <span class="brand-cn">星野漫游</span>
+      <span class="brand-en">Starry Roam</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      {nav.map((item) => (
+        <a
+          href={u(item.href)}
+          class:list={[item.optional && 'nav-optional']}
+          aria-current={isActive(item.href) ? 'true' : undefined}
+        >
+          {item.label}
+        </a>
+      ))}
+      <button class="theme-toggle" type="button" aria-label="切换深浅色主题">
+        <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+        <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+        </svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<script>
+  document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('sr-theme', next);
+  });
+</script>

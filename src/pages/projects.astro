@@ -1,0 +1,43 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const projects = (await getCollection('projects')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<Base title="作品 · 星野漫游" description="Starry 做过的小网站、小工具和游戏。">
+  <div class="container">
+    <h1 class="page-title">作品</h1>
+    <p class="page-desc">做过的东西，不管多小都值得放着。点击卡片看源码或在线 demo。</p>
+    <div class="project-grid">
+      {projects.map((p) => (
+        <a
+          class="project-card"
+          href={p.data.demo ?? p.data.repo ?? '#'}
+          target={(p.data.demo ?? p.data.repo) ? '_blank' : undefined}
+          rel="noopener"
+        >
+          <h3>{p.data.title}</h3>
+          <p>{p.data.description}</p>
+          {p.data.tags.length > 0 && (
+            <div class="tags">{p.data.tags.map((t) => <span>{t}</span>)}</div>
+          )}
+        </a>
+      ))}
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page-title {
+    margin-top: 56px;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+  .page-desc {
+    margin: 10px 0 8px;
+    color: var(--ink-2);
+  }
+</style>

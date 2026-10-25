@@ -1,0 +1,129 @@
+---
+// 图标挑选预览页（开发辅助页，不想发布时删掉本文件即可）
+// 用 import.meta.glob 一次性内联 src/icons 下所有 SVG 原文
+import Base from '../layouts/Base.astro';
+
+const modules = import.meta.glob('../icons/**/*.svg', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+type Item = { name: string; svg: string };
+const CAT_ORDER = ['hand', 'friendly', 'social', 'ui'] as const;
+const groups: Record<string, Item[]> = {};
+for (const [path, svg] of Object.entries(modules)) {
+  const parts = path.split('/');
+  const file = parts.pop()!;
+  const cat = parts.pop()!;
+  (groups[cat] ??= []).push({ name: file.replace('.svg', ''), svg });
+}
+for (const list of Object.values(groups)) list.sort((a, b) => a.name.localeCompare(b.name));
+
+const titles: Record<string, string> = {
+  hand: '招手 👋 的替代品（hand/）',
+  friendly: '友好笑脸 · 可当打招呼用（friendly/）',
+  social: '社交品牌 · 单色跟随主题（social/）',
+  ui: '界面小图标 · Lucide 线条（ui/）',
+};
+const orderedGroups = CAT_ORDER.filter((c) => groups[c]).map((c) => [c, groups[c]] as const);
+---
+
+<Base title="图标预览 · 星野漫游" description="src/icons 图标库挑选页">
+  <div class="container prose">
+    <h1>图标库预览</h1>
+    <p class="prose-meta">
+      src/icons/ 下共 {Object.values(groups).flat().length} 个图标 · 明暗主题下都看一眼 ·
+      挑中哪个去 <code>src/icons/README.md</code> 看用法
+    </p>
+
+    {orderedGroups.map(([cat, items]) => (
+      <section class="icon-section">
+        <h2>{titles[cat] ?? cat}</h2>
+        <div class="icon-grid" class:list={{ 'icon-grid-lg': cat === 'hand' }}>
+          {items.map((it) => (
+            <figure class="icon-card">
+              <span class="ic" set:html={it.svg} />
+              <figcaption>{it.name}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <p class="prose-meta tip">
+      提示：单色图标在这里显示为文字色；彩色款（twemoji / openmoji / fluent-emoji）自带颜色。
+      wave-animated 会自动播放挥手动画。
+    </p>
+  </div>
+</Base>
+
+<style>
+  .icon-section {
+    margin-top: 44px;
+  }
+
+  .icon-section h2 {
+    font-size: 1.15rem;
+    margin-bottom: 14px;
+  }
+
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    gap: 10px;
+  }
+
+  /* 招手图标放大些看，接近首页 hero 的实际用法 */
+  .icon-grid-lg {
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  }
+
+  .icon-card {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .icon-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+  }
+
+  .ic {
+    display: grid;
+    place-items: center;
+    height: 34px;
+    color: var(--ink-2);
+  }
+
+  .ic :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .icon-grid-lg .ic :global(svg) {
+    width: 34px;
+    height: 34px;
+  }
+
+  .icon-card figcaption {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--ink-3);
+    text-align: center;
+    word-break: break-all;
+  }
+
+  .tip {
+    margin-top: 40px;
+  }
+</style>

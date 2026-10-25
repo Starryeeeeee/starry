@@ -1,0 +1,122 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Base from '../layouts/Base.astro';
+
+// 把图片丢进 src/assets/gallery/ 文件夹即可：文件名日期前缀变时间标注，其余变图注
+const modules = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/gallery/*.{jpg,jpeg,png,webp,avif,JPG,JPEG,PNG,WEBP,AVIF}',
+  { eager: true },
+);
+
+const photos = Object.entries(modules)
+  .map(([path, mod]) => {
+    const filename = path.split('/').pop() ?? path;
+    const stem = filename.replace(/\.[^.]+$/, '');
+    const date = stem.match(/^\d{4}-\d{2}-\d{2}/)?.[0] ?? '';
+    const caption = stem.replace(/^\d{4}-\d{2}-\d{2}[\s_-]?/, '') || stem;
+    return { src: mod.default, caption, date, stem };
+  })
+  .sort((a, b) => b.stem.localeCompare(a.stem)); // 新的照片排前面
+---
+
+<Base title="画廊 · 星野漫游" description="Starry 分享的照片：拍到的、做出来的、值得留下的画面。">
+  <div class="container wide">
+    <h1 class="page-title">画廊</h1>
+    <p class="page-desc">拍到的、做出来的、值得留下的画面。点开可以看大图。</p>
+
+    {photos.length === 0 ? (
+      <div class="gallery-empty">还没有照片。</div>
+    ) : (
+      <div class="gallery-grid">
+        {photos.map((p, i) => (
+          <figure class="gallery-item reveal" style={`--i:${i % 3}`}>
+            <button
+              class="gallery-thumb"
+              type="button"
+              data-full={p.src.src}
+              data-caption={`${p.caption}${p.date ? ` · ${p.date}` : ''}`}
+              aria-label={`放大查看：${p.caption}`}
+            >
+              <Image
+                src={p.src}
+                alt={p.caption}
+                widths={[480, 960]}
+                sizes="(max-width: 560px) 92vw, (max-width: 1024px) 46vw, 31vw"
+                loading={i < 3 ? 'eager' : 'lazy'}
+              />
+            </button>
+            <figcaption>
+              <span>{p.caption}</span>
+              {p.date && <span class="date">{p.date}</span>}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="lightbox-close" type="button" aria-label="关闭大图">✕</button>
+    <figure>
+      <img id="lightbox-img" src="" alt="" />
+      <figcaption id="lightbox-caption"></figcaption>
+    </figure>
+  </div>
+</Base>
+
+<style>
+  .page-title {
+    margin-top: 56px;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+  .page-desc {
+    margin: 10px 0 8px;
+    color: var(--ink-2);
+  }
+</style>
+
+<script>
+  // 灯箱：点击照片 → 深色房间看大图；ESC / 关闭按钮 / 点空白处退出
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement | null;
+  const lightboxCaption = document.getElementById('lightbox-caption');
+  const closeBtn = lightbox?.querySelector('.lightbox-close');
+
+  let lastFocus: HTMLElement | null = null;
+
+  function openLightbox(src: string, caption: string) {
+    if (!lightbox || !lightboxImg || !lightboxCaption) return;
+    lastFocus = document.activeElement as HTMLElement | null;
+    lightboxImg.src = src;
+    lightboxImg.alt = caption;
+    lightboxCaption.textContent = caption;
+    lightbox.hidden = false;
+    document.body.style.overflow = 'hidden';
+    closeBtn instanceof HTMLElement && closeBtn.focus();
+  }
+
+  function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.hidden = true;
+    document.body.style.overflow = '';
+    lastFocus?.focus();
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.gallery-thumb').forEach((btn) => {
+    btn.addEventListener('click', () =>
+      openLightbox(btn.dataset.full ?? '', btn.dataset.caption ?? ''),
+    );
+  });
+
+  closeBtn?.addEventListener('click', closeLightbox);
+
+  lightbox?.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox && !lightbox.hidden) closeLightbox();
+  });
+</script>

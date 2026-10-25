@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro';
+import { getMoments } from '../lib/moments';
+import { fmtDateShort } from '../lib/format';
+import avatar from '../assets/avatar.jpg';
+import heartIcon from '../icons/ui/heart.svg?raw';
+
+const moments = await getMoments();
+---
+
+<Base title="废话条 · 星野漫游" description="Starry 的日常动态，朋友圈式的短内容。">
+  <div class="container">
+    <h1 class="page-title">废话条</h1>
+    <p class="page-desc">日常的、碎碎的、不值得写成文章的话，都放在这里。</p>
+
+    {moments.length === 0 ? (
+      <div class="list-empty">还没有动态。</div>
+    ) : (
+      moments.map((m) => (
+        <article class="moment-card">
+          <div class="moment-head">
+            <span class="moment-avatar" aria-hidden="true"><img src={avatar.src} alt="" /></span>
+            <span class="moment-name">Starry</span>
+            <time datetime={m.date.toISOString()}>{fmtDateShort(m.date)}</time>
+          </div>
+          <p class="moment-body">{m.text}</p>
+          <div class="moment-actions">
+            <button class="moment-like" type="button" disabled aria-label="喜欢">
+              <span class="moment-like-icon" aria-hidden="true"><Fragment set:html={heartIcon} /></span>
+              <span>0</span>
+            </button>
+          </div>
+        </article>
+      ))
+    )}
+  </div>
+</Base>
+
+<style>
+  .page-title {
+    margin-top: 56px;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+  .page-desc {
+    margin: 10px 0 26px;
+    color: var(--ink-2);
+  }
+  .moments-empty {
+    padding: 36px 24px;
+    text-align: center;
+    color: var(--ink-3);
+    background: var(--wash);
+    border-radius: var(--radius);
+    font-size: 0.92rem;
+    line-height: 2;
+  }
+  .moments-empty code {
+    font-family: var(--font-mono);
+    background: var(--surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }
+</style>

@@ -1,0 +1,36 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { fmtDate } from '../../lib/format';
+import { u } from '../../lib/base';
+
+const posts = (await getCollection('posts')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<Base title="文章 · 星野漫游" description="Starry 写的随感、记录和看法。">
+  <div class="container">
+    <h1 class="page-title">文章</h1>
+    <p class="page-desc">随感、记录、看法。更新不定时，想写就写。</p>
+    {posts.map((post) => (
+      <a class="post-item" href={u(`/posts/${post.id}/`)}>
+        <time datetime={post.data.date.toISOString()}>{fmtDate(post.data.date)}</time>
+        <h3>{post.data.title}</h3>
+        {post.data.description && <p>{post.data.description}</p>}
+      </a>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .page-title {
+    margin-top: 56px;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+  .page-desc {
+    margin: 10px 0 8px;
+    color: var(--ink-2);
+  }
+</style>

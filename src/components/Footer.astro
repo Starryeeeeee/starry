@@ -1,0 +1,156 @@
+---
+// 控制台式页脚：四角裁切线 + 编号分栏 + 偏好开关
+import { u } from '../lib/base';
+import githubIcon from '../icons/social/github.svg?raw';
+import bilibiliIcon from '../icons/social/bilibili.svg?raw';
+import neteaseIcon from '../icons/social/netease-cloud-music.svg?raw';
+import outlookIcon from '../icons/social/outlook.svg?raw';
+import rssIcon from '../icons/ui/rss.svg?raw';
+import arrowUpRight from '../icons/ui/arrow-up-right.svg?raw';
+
+const buildDate = new Date().toISOString().slice(0, 10);
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container wide">
+    <div class="foot-wrap">
+      <div class="foot-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="foot-panel">
+        <div class="foot-top">
+          <p class="foot-brandline">
+            <span class="foot-name">星野漫游</span>
+            <span class="foot-slogan">Roam the starry field.</span>
+          </p>
+          <p class="foot-status">上次构建 {buildDate} · 正在 OTA 中</p>
+        </div>
+
+        <div class="foot-cols">
+          <div class="foot-col">
+            <h3>01 探索</h3>
+            <ul>
+              <li><a href={u('/')}>首页</a></li>
+              <li><a href={u('/posts/')}>文章</a></li>
+              <li><a href={u('/gallery/')}>画廊</a></li>
+              <li><a href={u('/moments/')}>废话条</a></li>
+            </ul>
+          </div>
+          <div class="foot-col">
+            <h3>02 关于</h3>
+            <ul>
+              <li><a href={u('/about/')}>关于我</a></li>
+              <li><a href={u('/projects/')}>作品集</a></li>
+              <li><a href={u('/changelog/')}>建站日志</a></li>
+            </ul>
+          </div>
+          <div class="foot-col">
+            <h3>03 联系</h3>
+            <ul>
+              <li>
+                <a class="foot-link" href="https://github.com/Starryeeeeee" target="_blank" rel="noopener">
+                  <Fragment set:html={githubIcon} /><span>GitHub</span>
+                  <i class="foot-ext" aria-hidden="true"><Fragment set:html={arrowUpRight} /></i>
+                </a>
+              </li>
+              <!-- TODO: 换成你的哔哩哔哩空间链接 -->
+              <li>
+                <a class="foot-link" href="#" target="_blank" rel="noopener">
+                  <Fragment set:html={bilibiliIcon} /><span>哔哩哔哩</span>
+                  <i class="foot-ext" aria-hidden="true"><Fragment set:html={arrowUpRight} /></i>
+                </a>
+              </li>
+              <!-- TODO: 换成你的网易云音乐主页链接 -->
+              <li>
+                <a class="foot-link" href="#" target="_blank" rel="noopener">
+                  <Fragment set:html={neteaseIcon} /><span>网易云音乐</span>
+                  <i class="foot-ext" aria-hidden="true"><Fragment set:html={arrowUpRight} /></i>
+                </a>
+              </li>
+              <!-- TODO: 换成你的邮箱，如 mailto:starry@outlook.com -->
+              <li>
+                <a class="foot-link" href="mailto:Jia100906985211@outlook.com">
+                  <Fragment set:html={outlookIcon} /><span>Outlook 邮箱</span>
+                </a>
+              </li>
+              <li>
+                <a class="foot-link" href={u('/rss.xml')}>
+                  <Fragment set:html={rssIcon} /><span>RSS 订阅</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div class="foot-col">
+            <h3>04 偏好</h3>
+            <ul>
+              <li class="foot-opt-row">
+                <span class="foot-opt-label">主题</span>
+                <button type="button" data-theme-choice="system">系统</button>
+                <button type="button" data-theme-choice="light">淡色</button>
+                <button type="button" data-theme-choice="dark">深色</button>
+              </li>
+              <li class="foot-opt-row">
+                <span class="foot-opt-label">背景</span>
+                <button type="button" data-decor="on">开</button>
+                <button type="button" data-decor="off">关</button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="foot-bottom">
+      <span>莫奈水色 / MONET WATER</span>
+      <span>{buildDate}</span>
+      <span>© {year} Starryeeeeee</span>
+      <span>Powered by Astro</span>
+    </p>
+  </div>
+</footer>
+
+<script>
+  const html = document.documentElement;
+  const themeBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-theme-choice]'));
+  const decorBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-decor]'));
+
+  const currentTheme = () => localStorage.getItem('sr-theme') ?? 'system';
+  const currentDecor = () => localStorage.getItem('sr-decor') ?? 'on';
+
+  function refresh() {
+    for (const b of themeBtns) {
+      const active = b.dataset.themeChoice === currentTheme();
+      b.classList.toggle('foot-opt-active', active);
+      b.setAttribute('aria-pressed', String(active));
+    }
+    for (const b of decorBtns) {
+      const active = b.dataset.decor === currentDecor();
+      b.classList.toggle('foot-opt-active', active);
+      b.setAttribute('aria-pressed', String(active));
+    }
+  }
+
+  for (const b of themeBtns) {
+    b.addEventListener('click', () => {
+      const choice = b.dataset.themeChoice;
+      if (choice === 'system') {
+        localStorage.removeItem('sr-theme');
+        html.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      } else if (choice === 'light' || choice === 'dark') {
+        localStorage.setItem('sr-theme', choice);
+        html.dataset.theme = choice;
+      }
+      refresh();
+    });
+  }
+
+  for (const b of decorBtns) {
+    b.addEventListener('click', () => {
+      const choice = b.dataset.decor === 'off' ? 'off' : 'on';
+      localStorage.setItem('sr-decor', choice);
+      html.classList.toggle('no-decor', choice === 'off');
+      refresh();
+    });
+  }
+
+  refresh();
+</script>
