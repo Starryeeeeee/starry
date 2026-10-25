@@ -77,6 +77,12 @@ html[data-body-font="round"] {
 html {
   font-size: 17px; /* 专治“字特别小” */
   scroll-behavior: smooth;
+  /* 防御：未知来源的下划线会从根元素传播到全站文字，显式关掉 */
+  text-decoration-line: none;
+}
+
+body {
+  text-decoration-line: none;
 }
 
 @media (max-width: 640px) {
@@ -1061,40 +1067,7 @@ main {
   color: var(--accent-ink);
 }
 
-/* ---------- 建站日志（时间线） ---------- */
-
-.changelog-item {
-  display: grid;
-  grid-template-columns: 108px 1fr;
-  gap: 22px;
-  padding: 22px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-@media (max-width: 560px) {
-  .changelog-item {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-}
-
-.changelog-item time {
-  font-size: 0.86rem;
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-  padding-top: 3px;
-}
-
-.changelog-item h3 {
-  font-size: 1.06rem;
-  font-weight: 650;
-}
-
-.changelog-item .body {
-  margin-top: 8px;
-  font-size: 0.94rem;
-  color: var(--ink-2);
-}
+/* ---------- 建站日志（时间轴样式移至 changelog.astro 页内） ---------- */
 
 /* ---------- 页脚（控制台式） ---------- */
 

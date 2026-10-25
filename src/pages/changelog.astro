@@ -1,33 +1,57 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import { fmtDate } from '../lib/format';
+import { fmtDate, fmtDateShort } from '../lib/format';
 
-const entries = (await getCollection('changelog')).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-);
+// 时间轴版式，模式借鉴两个现成实现：
+//  - antfu.me 的 ListPosts（github.com/antfu/antfu.me）：倒序 + 按年分组幽灵大字 + 60ms 级错峰入场
+//  - 中文博客圈通行的左轴节点样式（hexo-theme-redefine / Volantis 一脉）：竖轴线 + 圆点 + 日期列
+const entries = (await getCollection('changelog')).sort((a, b) => {
+  const diff = b.data.date.valueOf() - a.data.date.valueOf();
+  // 日期相同（建站初期经常同一天多篇）时按编号倒序，保证 009 在 001 上面
+  return diff !== 0 ? diff : b.id.localeCompare(a.id);
+});
 
 const rendered = await Promise.all(
   entries.map(async (entry) => ({ entry, Content: (await render(entry)).Content })),
 );
+
+// 按年份分组，年份变化时插入 antfu 式的描边幽灵年份数字
+const groups: Array<{ year: number; items: typeof rendered }> = [];
+for (const item of rendered) {
+  const year = item.entry.data.date.getFullYear();
+  const last = groups[groups.length - 1];
+  if (last && last.year === year) last.items.push(item);
+  else groups.push({ year, items: [item] });
+}
 ---
 
 <Base title="建站日志 · 星野漫游" description="记录网站本身的进化：改版、新功能、踩坑心得。">
   <div class="container">
     <h1 class="page-title">建站日志</h1>
-    <p class="page-desc">这个网站是怎么一点点长出来的。</p>
+    <p class="page-desc">这个网站是怎么一点点长出来的。最新的在最上面。</p>
 
-    {rendered.map(({ entry, Content }) => (
-      <div class="changelog-item">
-        <time datetime={entry.data.date.toISOString()}>{fmtDate(entry.data.date)}</time>
-        <div>
-          <h3>{entry.data.title}</h3>
-          <div class="body">
-            <Content />
-          </div>
-        </div>
-      </div>
-    ))}
+    <section class="timeline">
+      {groups.map((group) => (
+        <>
+          <div class="tl-year reveal" aria-hidden="true">{group.year}</div>
+          {group.items.map(({ entry, Content }, i) => (
+            <article class="tl-item reveal" style={`--i:${i}`}>
+              <time class="tl-date" datetime={entry.data.date.toISOString()} title={fmtDate(entry.data.date)}>
+                {fmtDateShort(entry.data.date)}
+              </time>
+              <span class="tl-dot" aria-hidden="true"></span>
+              <div class="tl-body">
+                <h3>{entry.data.title}</h3>
+                <div class="body">
+                  <Content />
+                </div>
+              </div>
+            </article>
+          ))}
+        </>
+      ))}
+    </section>
   </div>
 </Base>
 
@@ -38,14 +62,153 @@ const rendered = await Promise.all(
     font-weight: 800;
   }
   .page-desc {
-    margin: 10px 0 14px;
+    margin: 10px 0 8px;
     color: var(--ink-2);
   }
+
+  /* 轴线：穿过所有节点的那一条（desktop 上节点列中心在 96px） */
+  .timeline {
+    position: relative;
+    padding-bottom: 40px;
+  }
+
+  .timeline::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    bottom: 6px;
+    left: 96px;
+    width: 1px;
+    background: color-mix(in srgb, var(--accent) 38%, var(--line));
+  }
+
+  /* 年份标记：antfu 式描边幽灵大字 */
+  .tl-year {
+    position: relative;
+    z-index: 1;
+    height: 74px;
+    margin: 26px 0 6px 118px;
+    font-family: var(--font-serif);
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--ink-3) 50%, transparent);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  @supports not (-webkit-text-stroke: 1px black) {
+    .tl-year {
+      color: var(--ink-3);
+      opacity: 0.4;
+    }
+  }
+
+  .tl-item {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 56px 26px 1fr;
+    column-gap: 14px;
+    padding: 14px 0 20px;
+  }
+
+  .tl-date {
+    padding-top: 4px;
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* 节点：空心圆点骑在轴线上，bg 色光环遮住穿过的线 */
+  .tl-dot {
+    width: 11px;
+    height: 11px;
+    margin: 7px auto 0;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 5px var(--bg);
+    transition: background 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+  }
+
+  /* 最新一条（页面第一条）：实心 + 一圈雾蓝呼吸光环 */
+  .tl-item:first-of-type .tl-dot,
+  .tl-year + .tl-item .tl-dot {
+    background: var(--accent);
+  }
+
+  .tl-item:hover .tl-dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 5px var(--bg), 0 0 0 8px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
+  .tl-body h3 {
+    font-size: 1.06rem;
+    font-weight: 650;
+    transition: color 0.2s ease;
+  }
+
+  .tl-item:hover .tl-body h3 {
+    color: var(--accent-ink);
+  }
+
+  .tl-body .body {
+    margin-top: 6px;
+    font-size: 0.94rem;
+    color: var(--ink-2);
+  }
+
   .body :global(ul) {
     margin: 0.4em 0 0;
     padding-left: 1.4em;
   }
+
   .body :global(li) {
     margin-top: 0.3em;
+  }
+
+  @media (max-width: 560px) {
+    .timeline::before {
+      left: 8px;
+    }
+
+    /* 窄屏：日期并进内容列，轴线贴最左 */
+    .tl-item {
+      grid-template-columns: 18px 1fr;
+      row-gap: 2px;
+      column-gap: 12px;
+      padding: 10px 0 16px;
+    }
+
+    .tl-dot {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      width: 9px;
+      height: 9px;
+      margin: 7px 0 0 4px;
+    }
+
+    .tl-date {
+      grid-column: 2;
+      grid-row: 1;
+      padding-top: 0;
+      text-align: left;
+      order: -1;
+    }
+
+    .tl-body {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .tl-year {
+      margin-left: 30px;
+      font-size: 3rem;
+      height: 56px;
+    }
   }
 </style>
