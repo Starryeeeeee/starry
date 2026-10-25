@@ -18,18 +18,19 @@
   --accent-2: #6b8f7d; /* 湖水绿（文字级），与雾蓝成双色系统 */
   --wash: #edf1ec; /* 水彩般的柔和底色 */
 
-  --font-sans: "AliHYAiHei-Beta", "PingFang SC", "HarmonyOS Sans SC", "MiSans",
-    "Source Han Sans SC", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei",
-    system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Source Han Sans SC",
+    "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-serif: Georgia, "Times New Roman", "Songti SC", serif;
   /* 论文级衬线（Times 风格），用于英文问候与签名 */
   --font-display: "STIX Two Text", "Times New Roman", Times, Georgia, serif;
-  /* 中文展示标题（字魂正酷超级黑，子集来自站长仓库） */
-  --font-display-cn: "zihunzhengkuchaojihei ExtraBold", "AliHYAiHei-Beta",
-    "PingFang SC", "Microsoft YaHei", sans-serif;
-  /* 寒蝉全圆体：标语、废话条、引用这类带人味的文字 */
-  --font-round: "寒蝉全圆体", "LXGW WenKai Screen", "LXGW WenKai", "Kaiti SC",
-    STKaiti, KaiTi, serif;
+  /* AI 黑体：只用于大标题（品牌、章节、页标题）——小字会糊成一团，正文禁用 */
+  --font-display-cn: "AliHYAiHei-Beta", "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* 正文字体三选一（页脚偏好可切换），默认霞鹜文楷 */
+  --font-kai: "LXGW WenKai Screen", "LXGW WenKai", "Kaiti SC", STKaiti, KaiTi, serif;
+  --font-song: "SimSun", "NSimSun", "Songti SC", "Noto Serif SC", serif;
+  --font-round: "寒蝉全圆体", "LXGW WenKai Screen", "Kaiti SC", STKaiti, KaiTi, serif;
+  --font-body: var(--font-kai);
   --font-mono: "Cascadia Code", "SF Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
 
   --w-text: 680px;
@@ -56,6 +57,15 @@
   --accent-2: #97b8a4;
   --wash: #262b28;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+/* 正文字体切换（页脚偏好） */
+html[data-body-font="song"] {
+  --font-body: var(--font-song);
+}
+
+html[data-body-font="round"] {
+  --font-body: var(--font-round);
 }
 
 /* ---------- 基础 ---------- */
@@ -190,8 +200,8 @@ main {
 
 .brand-cn {
   font-family: var(--font-display-cn);
-  font-weight: 800;
-  font-size: 1.04rem;
+  font-weight: 400; /* AI 黑体自带厚重，伪粗会糊成一团 */
+  font-size: 1.08rem;
   letter-spacing: 0.02em;
 }
 
@@ -640,15 +650,15 @@ main {
 
 .section-head h2 {
   font-family: var(--font-display-cn);
-  font-weight: 800;
-  font-size: 1.24rem;
+  font-weight: 400;
+  font-size: 1.3rem;
 }
 
 /* 各内容页的大标题（页面内另有字号的 scoped 样式） */
 .page-title,
 .prose h1 {
   font-family: var(--font-display-cn);
-  font-weight: 800;
+  font-weight: 400;
 }
 
 .section-head .more {
@@ -847,7 +857,7 @@ main {
 
 .moment-body {
   margin-top: 10px;
-  font-family: var(--font-round);
+  font-family: var(--font-body);
   font-size: 1.02rem;
 }
 
@@ -928,18 +938,23 @@ main {
 
 .prose .prose-body {
   margin-top: 8px;
+  font-family: var(--font-body); /* 正文字体跟随页脚偏好切换 */
 }
 
 .prose h2 {
   margin-top: 2.3em;
   margin-bottom: 0.6em;
+  font-family: var(--font-display-cn);
+  font-weight: 400;
   font-size: 1.42rem;
 }
 
 .prose h3 {
   margin-top: 1.9em;
   margin-bottom: 0.5em;
-  font-size: 1.15rem;
+  font-family: var(--font-display-cn);
+  font-weight: 400;
+  font-size: 1.18rem;
 }
 
 .prose p {
@@ -965,7 +980,7 @@ main {
   background: var(--wash);
   border-radius: 0 10px 10px 0;
   color: var(--ink-2);
-  font-family: var(--font-round);
+  font-family: var(--font-body);
 }
 
 .prose code {

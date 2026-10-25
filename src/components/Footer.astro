@@ -89,6 +89,12 @@ const year = new Date().getFullYear();
                 <button type="button" data-theme-choice="dark">深色</button>
               </li>
               <li class="foot-opt-row">
+                <span class="foot-opt-label">正文</span>
+                <button type="button" data-body-font="kai">楷体</button>
+                <button type="button" data-body-font="song">宋体</button>
+                <button type="button" data-body-font="round">圆体</button>
+              </li>
+              <li class="foot-opt-row">
                 <span class="foot-opt-label">背景</span>
                 <button type="button" data-decor="on">开</button>
                 <button type="button" data-decor="off">关</button>
@@ -112,9 +118,11 @@ const year = new Date().getFullYear();
   const html = document.documentElement;
   const themeBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-theme-choice]'));
   const decorBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-decor]'));
+  const bodyFontBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-body-font]'));
 
   const currentTheme = () => localStorage.getItem('sr-theme') ?? 'system';
   const currentDecor = () => localStorage.getItem('sr-decor') ?? 'on';
+  const currentBodyFont = () => localStorage.getItem('sr-body-font') ?? 'kai';
 
   function refresh() {
     for (const b of themeBtns) {
@@ -127,6 +135,25 @@ const year = new Date().getFullYear();
       b.classList.toggle('foot-opt-active', active);
       b.setAttribute('aria-pressed', String(active));
     }
+    for (const b of bodyFontBtns) {
+      const active = b.dataset.bodyFont === currentBodyFont();
+      b.classList.toggle('foot-opt-active', active);
+      b.setAttribute('aria-pressed', String(active));
+    }
+  }
+
+  for (const b of bodyFontBtns) {
+    b.addEventListener('click', () => {
+      const choice = b.dataset.bodyFont;
+      if (choice === 'song' || choice === 'round') {
+        localStorage.setItem('sr-body-font', choice);
+        html.dataset.bodyFont = choice;
+      } else {
+        localStorage.removeItem('sr-body-font');
+        html.dataset.bodyFont = 'kai';
+      }
+      refresh();
+    });
   }
 
   for (const b of themeBtns) {

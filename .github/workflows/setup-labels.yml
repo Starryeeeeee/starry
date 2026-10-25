@@ -1,0 +1,26 @@
+# 仓库初始化：自动创建废话条所需的 moment 标签
+# 幂等设计：标签已存在时跳过，每次推送都会自检一次（误删了也会自动补回）
+name: Setup labels
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  moment-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create moment label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh label create moment \
+            --repo "$REPO" \
+            --color 5f7f9e \
+            --description "废话条发布标签：带此标签的 Issue 会显示到网站动态流" \
+            || echo "moment 标签已存在，跳过"

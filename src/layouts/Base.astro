@@ -3,6 +3,7 @@ import '@fontsource/stix-two-text/400.css';
 import '@fontsource/stix-two-text/600.css';
 import '@fontsource/stix-two-text/700.css';
 import '@fontsource/stix-two-text/400-italic.css';
+import 'lxgw-wenkai-screen-webfont/style.css';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -25,10 +26,9 @@ const { title, description = 'Starry 的个人星球：作品集、AI Skills 分
     <meta name="description" content={description} />
     <link rel="alternate" type="application/rss+xml" title="星野漫游 RSS" href={u('/rss.xml')} />
     <link rel="icon" type="image/svg+xml" href={u('/favicon.svg')} />
-    <!-- cn-font-split 子集字体（来自站长仓库）：阿里汉仪AI黑体 / 寒蝉全圆体 / 字魂正酷超级黑 -->
+    <!-- cn-font-split 子集字体（来自站长仓库）：阿里汉仪AI黑体（大标题）/ 寒蝉全圆体（正文圆体选项） -->
     <link rel="stylesheet" href={u('/fonts/alihei/result.css')} />
     <link rel="stylesheet" href={u('/fonts/hanchan/result.css')} />
-    <link rel="stylesheet" href={u('/fonts/zihun/result.css')} />
     <script is:inline>
       // 首屏前设定主题与背景偏好，避免闪烁
       const saved = localStorage.getItem('sr-theme');
@@ -42,6 +42,10 @@ const { title, description = 'Starry 的个人星球：作品集、AI Skills 分
       if (localStorage.getItem('sr-decor') === 'off') {
         document.documentElement.classList.add('no-decor');
       }
+      // 正文字体偏好：kai（霞鹜文楷，默认）/ song（宋体）/ round（寒蝉全圆体）
+      const bodyFont = localStorage.getItem('sr-body-font');
+      document.documentElement.dataset.bodyFont =
+        bodyFont === 'song' || bodyFont === 'round' ? bodyFont : 'kai';
       // 标记 JS 可用：滚动浮现的初始隐藏只在有 JS 时生效，避免无 JS 时内容消失
       document.documentElement.classList.add('js');
     </script>
