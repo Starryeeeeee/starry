@@ -11,6 +11,16 @@
 | 首页 hero 标题（原 👋 emoji） | `hand/wave-fluent-emoji-hc.svg`（预览页第 4 个，单色高对比，跟随主题） |
 | 首页 hero 社交行 | `social/github` `social/bilibili` `social/netease-cloud-music` `social/outlook` + `ui/rss` |
 | 页脚「03 联系」栏 | 同上五个 + `ui/arrow-up-right`（外链小箭头） |
+| 浏览器标签页图标（favicon） | `public/favicon.svg`（不在本库内，见下方「站点图标 favicon」） |
+
+## 站点图标 favicon
+
+`public/favicon.svg` —— 树形实心剪影，纯黑 `#000000` 剪影 + 纯白 `#ffffff` 细描边光晕（`paint-order: stroke fill`），背景透明。
+
+- **图形来源**：[Bootstrap Icons](https://github.com/twbs/icons/blob/main/icons/tree-fill.svg) 的 `tree-fill`
+- **作者**：The Bootstrap Authors
+- **许可证**：MIT（无需署名）
+- **为什么加白色描边**：favicon 是静态 SVG，跟不了站点明暗主题。白描边只在剪影外侧生成一圈细 keyline，浅色标签栏上看不见、深色标签栏上勾出轮廓，两种背景都清晰。
 
 换图标 = 改一行 import。比如想把招手换成摇摆笑脸：
 
