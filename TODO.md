@@ -10,11 +10,13 @@
 ## 功能待接入
 - [x] 废话条接 GitHub Issues（拉取逻辑已由另一会话实现，等 `starry` 仓库就绪）
 - [x] 部署 GitHub Pages：**已上线 2026-10-25，https://starryeeeeee.github.io/starry/**（方法见 DEPLOY.md：WorkBuddy 便携版 git + ~/.workbuddy/gh_deploy 密钥 + Actions 自动构建）
+- [x] 音乐播放器（2026-10-25 晚上线）：左下角浮动唱片，第一首 Komorebi；加歌 = mp3 丢进 `public/music/` + `src/components/MusicPlayer.astro` 列表加一行
 - [ ] giscus 评论（文章页底部，需要仓库开启 Discussions 并拿 repoId/categoryId）
 - [ ] 匿名点赞（Supabase，废话条卡片上的按钮目前是禁用占位）
 - [ ] 不蒜子访客统计
 - [ ] 废话条发布提示：手机发完带 `moment` 标签的 Issue 后需要再触发一次构建才会上站（推任意 commit 或手动 Run workflow）
 - [ ] `src/pages/icon-preview.astro` 是图标预览页，部署前可以删掉
+- [ ] 音乐版权自担：站歌为个人收藏 mp3，非商用个人站惯例；若介意可换无版权曲库（如 Free Music Archive）
 
 ## 字体（已接入 2026-10-25）
 - [x] 三套 cn-font-split 子集从你的仓库搬到 `public/fonts/`：alihei（阿里汉仪AI黑体，正文/UI）、hanchan（寒蝉全圆体，标语/废话条/引用）、zihun（字魂正酷超级黑，品牌与章节标题）
