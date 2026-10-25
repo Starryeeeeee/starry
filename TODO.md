@@ -9,10 +9,11 @@
 
 ## 功能待接入
 - [x] 废话条接 GitHub Issues（拉取逻辑已由另一会话实现，等 `starry` 仓库就绪）
+- [x] 部署 GitHub Pages：**已上线 2026-10-25，https://starryeeeeee.github.io/starry/**（方法见 DEPLOY.md：WorkBuddy 便携版 git + ~/.workbuddy/gh_deploy 密钥 + Actions 自动构建）
 - [ ] giscus 评论（文章页底部，需要仓库开启 Discussions 并拿 repoId/categoryId）
 - [ ] 匿名点赞（Supabase，废话条卡片上的按钮目前是禁用占位）
 - [ ] 不蒜子访客统计
-- [ ] 部署 GitHub Pages：base 已设为 `/starry/`（对应仓库 Starryeeeeee/starry），电脑上 git 还不在 PATH，部署时先理顺
+- [ ] 废话条发布提示：手机发完带 `moment` 标签的 Issue 后需要再触发一次构建才会上站（推任意 commit 或手动 Run workflow）
 - [ ] `src/pages/icon-preview.astro` 是图标预览页，部署前可以删掉
 
 ## 字体（已接入 2026-10-25）
