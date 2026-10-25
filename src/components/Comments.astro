@@ -1,0 +1,64 @@
+---
+// 评论区（giscus · GitHub 登录评论）：配置存在 public/site-config.json，
+// 在 /admin 管理页一键写入后，下次构建即生效；未配置时静默不渲染。
+import cfg from '../../public/site-config.json';
+
+const giscus = cfg.giscus as { repoId: string; categoryId: string; category: string } | null;
+const enabled = giscus !== null;
+---
+
+{enabled && giscus && (
+  <section class="comments" aria-label="评论">
+    <h2 class="comments-title">评论</h2>
+    <div class="giscus-wrap"></div>
+  </section>
+)}
+
+{enabled && (
+  <script define:vars={{ repoId: giscus.repoId, categoryId: giscus.categoryId, category: giscus.category }}>
+    const wrap = document.querySelector('.giscus-wrap');
+    const s = document.createElement('script');
+    s.src = 'https://giscus.app/client.js';
+    s.crossOrigin = 'anonymous';
+    s.async = true;
+    s.setAttribute('data-repo', 'Starryeeeeee/starry');
+    s.setAttribute('data-repo-id', repoId);
+    s.setAttribute('data-category', category);
+    s.setAttribute('data-category-id', categoryId);
+    s.setAttribute('data-mapping', 'pathname');
+    s.setAttribute('data-strict', '1');
+    s.setAttribute('data-reactions-enabled', '1');
+    s.setAttribute('data-emit-metadata', '0');
+    s.setAttribute('data-input-position', 'top');
+    s.setAttribute('data-theme', document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+    s.setAttribute('data-lang', 'zh-CN');
+    wrap.appendChild(s);
+
+    // 站点切主题时同步评论区主题
+    const syncTheme = () => {
+      const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+      document.querySelector('.giscus-wrap iframe')?.contentWindow?.postMessage(
+        { giscus: { setConfig: { theme } } },
+        'https://giscus.app',
+      );
+    };
+    new MutationObserver(syncTheme).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+  </script>
+)}
+
+<style>
+  .comments {
+    margin-top: 56px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+  .comments-title {
+    font-family: var(--font-display-cn);
+    font-weight: 400;
+    font-size: 1.2rem;
+    margin-bottom: 18px;
+  }
+</style>

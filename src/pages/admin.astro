@@ -1,0 +1,561 @@
+---
+// 站长管理面板：纯客户端，通过 GitHub API 直接读写仓库（等于把 GitHub 当后端）
+// 登录方式：GitHub 个人访问令牌（PAT），只存在站长自己浏览器的 localStorage 里
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="管理 · 星野漫游" description="站长管理面板。">
+  <div class="container admin">
+    <header class="admin-head">
+      <h1>管理面板</h1>
+      <div class="admin-user" hidden>
+        <img alt="" width="28" height="28" />
+        <b></b>
+        <button class="admin-btn ghost" type="button" data-act="logout">退出</button>
+      </div>
+    </header>
+
+    <!-- 登录 -->
+    <section class="admin-login" hidden>
+      <p>粘贴你的 GitHub 个人访问令牌（Token）登录。</p>
+      <ol>
+        <li>打开 <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=starry-roam-admin" target="_blank" rel="noopener">github.com/settings/tokens/new</a>（已预选 repo + workflow 权限）</li>
+        <li>拉到底部 Generate token，复制生成的一串字符</li>
+        <li>粘贴到下面并登录</li>
+      </ol>
+      <div class="login-row">
+        <input type="password" placeholder="ghp_…" autocomplete="off" spellcheck="false" />
+        <button class="admin-btn primary" type="button" data-act="login">登录</button>
+      </div>
+      <p class="admin-msg" role="status"></p>
+    </section>
+
+    <!-- 主体 -->
+    <section class="admin-body" hidden>
+      <nav class="admin-tabs" role="tablist">
+        <button class="admin-tab active" type="button" data-tab="moment" role="tab">废话条</button>
+        <button class="admin-tab" type="button" data-tab="post" role="tab">文章</button>
+        <button class="admin-tab" type="button" data-tab="site" role="tab">站点</button>
+      </nav>
+
+      <!-- 废话条 -->
+      <div class="admin-panel" data-panel="moment">
+        <textarea rows="3" placeholder="这一刻的想法…" maxlength="300"></textarea>
+        <div class="row-end">
+          <button class="admin-btn primary" type="button" data-act="publish-moment">发布</button>
+        </div>
+        <h3>已发布的动态</h3>
+        <ul class="admin-list" data-list="moments"></ul>
+      </div>
+
+      <!-- 文章 -->
+      <div class="admin-panel" data-panel="post" hidden>
+        <label class="field">
+          <span>标题</span>
+          <input type="text" data-post="title" placeholder="文章标题" />
+        </label>
+        <div class="field-grid">
+          <label class="field">
+            <span>文件名（英文）</span>
+            <input type="text" data-post="slug" placeholder="my-first-post" />
+          </label>
+          <label class="field">
+            <span>标签（逗号分隔）</span>
+            <input type="text" data-post="tags" placeholder="随感, 记录" />
+          </label>
+        </div>
+        <label class="field">
+          <span>摘要</span>
+          <input type="text" data-post="desc" placeholder="一句话摘要（可空）" />
+        </label>
+        <label class="field">
+          <span>正文（Markdown）</span>
+          <textarea rows="10" data-post="body" placeholder="# 用 Markdown 写…"></textarea>
+        </label>
+        <div class="row-end">
+          <button class="admin-btn primary" type="button" data-act="publish-post">发布文章</button>
+        </div>
+        <h3>已有文章</h3>
+        <ul class="admin-list" data-list="posts"></ul>
+      </div>
+
+      <!-- 站点 -->
+      <div class="admin-panel" data-panel="site" hidden>
+        <h3>构建</h3>
+        <p class="hint">发布内容后一般会自动构建；发完废话条或想立刻刷新站点时手动点一次。</p>
+        <button class="admin-btn" type="button" data-act="rebuild">触发重新构建</button>
+
+        <h3>评论（giscus · GitHub 登录评论）</h3>
+        <p class="hint">开启前提（各做一次）：仓库 Settings → Features 勾选 Discussions；安装 <a href="https://github.com/apps/giscus" target="_blank" rel="noopener">giscus App</a>。都完成后点下面按钮，自动写入配置，1-2 分钟后文章页出现评论区。</p>
+        <button class="admin-btn" type="button" data-act="setup-giscus">一键配置评论</button>
+
+        <h3>音乐</h3>
+        <p class="hint">在「站点」之外操作：把 mp3 放进仓库 <code>public/music/</code>，再改 <code>src/components/MusicPlayer.astro</code> 顶部的曲目列表。</p>
+      </div>
+
+      <p class="admin-msg" role="status"></p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .admin {
+    padding-top: 48px;
+    padding-bottom: 96px;
+  }
+  .admin-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .admin-head h1 {
+    font-family: var(--font-display-cn);
+    font-weight: 400;
+    font-size: 1.7rem;
+  }
+  .admin-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.92rem;
+  }
+  .admin-user img {
+    border-radius: 50%;
+  }
+  .admin-login ol {
+    margin: 10px 0 18px;
+    padding-left: 1.4em;
+    color: var(--ink-2);
+    font-size: 0.94rem;
+    line-height: 2;
+  }
+  .login-row {
+    display: flex;
+    gap: 10px;
+  }
+  .login-row input {
+    flex: 1;
+  }
+  .admin-tabs {
+    display: flex;
+    gap: 6px;
+    margin: 26px 0 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .admin-tab {
+    padding: 8px 18px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--ink-2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .admin-tab.active {
+    color: var(--ink);
+    font-weight: 650;
+    border-bottom-color: var(--accent);
+  }
+  .admin-panel textarea,
+  .admin-panel input {
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px 14px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .admin-panel textarea:focus,
+  .admin-panel input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+    border-color: transparent;
+  }
+  .field {
+    display: block;
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: var(--ink-2);
+  }
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 560px) {
+    .field-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .row-end {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+  .admin-btn {
+    padding: 8px 20px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 550;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  .admin-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .admin-btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+  }
+  .admin-btn:active {
+    transform: scale(0.97);
+  }
+  .admin-btn.ghost {
+    padding: 4px 12px;
+    font-size: 0.82rem;
+  }
+  .admin-panel h3 {
+    margin-top: 30px;
+    font-family: var(--font-display-cn);
+    font-weight: 400;
+    font-size: 1.1rem;
+  }
+  .hint {
+    margin-top: 8px;
+    font-size: 0.88rem;
+    color: var(--ink-3);
+    line-height: 1.9;
+  }
+  .hint code {
+    font-family: var(--font-mono);
+    background: var(--surface-2);
+    border-radius: 6px;
+    padding: 0.1em 0.4em;
+    font-size: 0.9em;
+  }
+  .admin-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+  }
+  .admin-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.92rem;
+  }
+  .admin-list .name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .admin-list .meta {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    color: var(--ink-3);
+  }
+  .admin-msg {
+    margin-top: 16px;
+    font-size: 0.88rem;
+    color: var(--accent-ink);
+    min-height: 1.4em;
+  }
+</style>
+
+<script>
+  // ============ 管理面板：GitHub API 即后端 ============
+  const REPO = 'Starryeeeeee/starry';
+  const BRANCH = 'main';
+  const TOKEN_KEY = 'sr-admin-token';
+
+  const api = async (path: string, init: RequestInit = {}) => {
+    const token = localStorage.getItem(TOKEN_KEY) ?? '';
+    const r = await fetch(`https://api.github.com${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+        ...init.headers,
+      },
+    });
+    if (!r.ok) {
+      const body = await r.json().catch(() => ({}));
+      throw new Error(`${r.status} ${body.message ?? r.statusText}`);
+    }
+    return r.status === 204 ? null : r.json();
+  };
+
+  const b64 = (s: string) => btoa(String.fromCharCode(...new TextEncoder().encode(s)));
+
+  const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
+  const msg = (m: string) => {
+    const el = $('.admin-msg');
+    el.textContent = m;
+    console.log('[admin]', m);
+  };
+
+  const dispatchBuild = () =>
+    api(`/repos/${REPO}/actions/workflows/deploy.yml/dispatches`, {
+      method: 'POST',
+      body: JSON.stringify({ ref: BRANCH }),
+    });
+
+  // ---------- 登录态 ----------
+  async function showLogin(loggedIn: { login: string; avatar_url: string } | null) {
+    $('.admin-login').hidden = !!loggedIn;
+    $('.admin-body').hidden = !loggedIn;
+    $('.admin-user').hidden = !loggedIn;
+    if (loggedIn) {
+      const img = $('.admin-user img');
+      img.src = loggedIn.avatar_url;
+      $('.admin-user b').textContent = loggedIn.login;
+    }
+  }
+
+  async function verify() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return showLogin(null);
+    try {
+      const me = await api('/user');
+      await showLogin(me);
+      await refreshMoments();
+      await refreshPosts();
+    } catch {
+      localStorage.removeItem(TOKEN_KEY);
+      await showLogin(null);
+      msg('令牌无效或已过期，请重新登录');
+    }
+  }
+
+  // ---------- 废话条（Issues） ----------
+  async function refreshMoments() {
+    const list = $('[data-list="moments"]');
+    list.innerHTML = '<li class="meta">加载中…</li>';
+    const issues = await api(`/repos/${REPO}/issues?labels=moment&state=open&per_page=30`);
+    list.innerHTML = '';
+    if (!issues.length) {
+      list.innerHTML = '<li class="meta">还没有动态</li>';
+      return;
+    }
+    for (const it of issues) {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="name"></span><span class="meta">${it.created_at.slice(0, 10)}</span>`;
+      (li.querySelector('.name') as HTMLElement).textContent = it.title;
+      const del = document.createElement('button');
+      del.className = 'admin-btn ghost';
+      del.type = 'button';
+      del.textContent = '删除';
+      del.onclick = async () => {
+        del.disabled = true;
+        try {
+          await api(`/repos/${REPO}/issues/${it.number}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ state: 'closed' }),
+          });
+          await dispatchBuild();
+          msg('已删除，站点构建中（1-2 分钟生效）');
+          await refreshMoments();
+        } catch (e) {
+          msg('删除失败：' + (e as Error).message);
+          del.disabled = false;
+        }
+      };
+      li.appendChild(del);
+      list.appendChild(li);
+    }
+  }
+
+  // ---------- 文章（contents API） ----------
+  async function refreshPosts() {
+    const list = $('[data-list="posts"]');
+    list.innerHTML = '<li class="meta">加载中…</li>';
+    const files = await api(`/repos/${REPO}/contents/src/content/posts?ref=${BRANCH}`);
+    list.innerHTML = '';
+    if (!files.length) {
+      list.innerHTML = '<li class="meta">还没有文章</li>';
+      return;
+    }
+    for (const f of files) {
+      const li = document.createElement('li');
+      const name = document.createElement('span');
+      name.className = 'name';
+      name.textContent = f.name;
+      const del = document.createElement('button');
+      del.className = 'admin-btn ghost';
+      del.type = 'button';
+      del.textContent = '删除';
+      del.onclick = async () => {
+        if (!confirm(`删除《${f.name}》？构建后即从站点消失。`)) return;
+        del.disabled = true;
+        try {
+          await api(`/repos/${REPO}/contents/src/content/posts/${f.name}`, {
+            method: 'DELETE',
+            body: JSON.stringify({ message: `删文章 ${f.name}`, sha: f.sha, branch: BRANCH }),
+          });
+          msg('已删除，构建中…（push 自动触发）');
+          await refreshPosts();
+        } catch (e) {
+          msg('删除失败：' + (e as Error).message);
+          del.disabled = false;
+        }
+      };
+      li.append(name, del);
+      list.appendChild(li);
+    }
+  }
+
+  // ---------- 事件绑定 ----------
+  document.addEventListener('click', async (e) => {
+    const t = e.target as HTMLElement;
+    const act = t.closest('[data-act]')?.getAttribute('data-act');
+    if (!act) return;
+    try {
+      if (act === 'login') {
+        const input = $('.login-row input') as HTMLInputElement;
+        if (!input.value.trim()) return msg('先粘贴令牌');
+        localStorage.setItem(TOKEN_KEY, input.value.trim());
+        input.value = '';
+        await verify();
+        msg('登录成功');
+      }
+      if (act === 'logout') {
+        localStorage.removeItem(TOKEN_KEY);
+        await showLogin(null);
+      }
+      if (act === 'publish-moment') {
+        const ta = $('[data-panel="moment"] textarea') as HTMLTextAreaElement;
+        const text = ta.value.trim();
+        if (!text) return msg('写点什么再发');
+        t.setAttribute('disabled', '');
+        await api(`/repos/${REPO}/issues`, {
+          method: 'POST',
+          body: JSON.stringify({ title: text, labels: ['moment'] }),
+        });
+        await dispatchBuild();
+        ta.value = '';
+        msg('已发布，站点构建中（1-2 分钟上站）');
+        await refreshMoments();
+        t.removeAttribute('disabled');
+      }
+      if (act === 'publish-post') {
+        const g = (k: string) => ($(`[data-post="${k}"]`) as HTMLInputElement).value.trim();
+        const title = g('title');
+        let slug = g('slug');
+        if (!title) return msg('标题必填');
+        if (!slug) {
+          slug =
+            /^[a-z0-9\- ]+$/i.test(title) && title.trim().length >= 3
+              ? title.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+              : `post-${Date.now().toString(36)}`;
+        }
+        if (!/^[a-z0-9-]+$/.test(slug)) return msg('文件名只能用小写英文、数字和连字符');
+        const date = new Date().toISOString().slice(0, 10);
+        const tags = g('tags')
+          ? g('tags')
+              .split(/[,，]/)
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [];
+        const fm = [
+          '---',
+          `title: ${title}`,
+          `date: ${date}`,
+          g('desc') ? `description: ${g('desc')}` : null,
+          tags.length ? `tags: [${tags.join(', ')}]` : null,
+          '---',
+          '',
+          '',
+        ]
+          .filter((l) => l !== null)
+          .join('\n');
+        t.setAttribute('disabled', '');
+        await api(`/repos/${REPO}/contents/src/content/posts/${slug}.md`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            message: `发文：${title}`,
+            branch: BRANCH,
+            content: b64(fm + $('[data-post="body"]').value),
+          }),
+        });
+        msg(`已发布《${title}》，push 自动构建中（1-2 分钟上站）`);
+        ['title', 'slug', 'tags', 'desc', 'body'].forEach(
+          (k) => (($(`[data-post="${k}"]`) as HTMLInputElement).value = ''),
+        );
+        await refreshPosts();
+        t.removeAttribute('disabled');
+      }
+      if (act === 'rebuild') {
+        await dispatchBuild();
+        msg('已触发构建，1-2 分钟后生效');
+      }
+      if (act === 'setup-giscus') {
+        t.setAttribute('disabled', '');
+        const q = await api('/graphql', {
+          method: 'POST',
+          body: JSON.stringify({
+            query: `query{repository(owner:"Starryeeeeee",name:"starry"){id discussionCategories(first:10){nodes{id name}}}}`,
+          }),
+        });
+        const repo = q.data?.repository;
+        if (!repo?.discussionCategories) {
+          msg('读不到 Discussions：请先在仓库 Settings 勾选 Discussions，并安装 giscus App');
+          t.removeAttribute('disabled');
+          return;
+        }
+        const cats = repo.discussionCategories.nodes;
+        const cat = cats.find((c: { name: string }) => c.name === 'Announcements') ?? cats[0];
+        await api(`/repos/${REPO}/contents/public/site-config.json`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            message: '配置 giscus 评论',
+            branch: BRANCH,
+            content: b64(
+              JSON.stringify(
+                { giscus: { repoId: repo.id, categoryId: cat.id, category: cat.name } },
+                null,
+                2,
+              ),
+            ),
+          }),
+        });
+        msg(`评论已配置（分类：${cat.name}），构建完成后文章页即可评论`);
+        t.removeAttribute('disabled');
+      }
+    } catch (err) {
+      msg('出错了：' + (err as Error).message);
+      t.removeAttribute('disabled');
+    }
+  });
+
+  // Tab 切换
+  for (const tab of document.querySelectorAll<HTMLButtonElement>('.admin-tab')) {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.admin-tab').forEach((el) => el.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.admin-panel').forEach((p) => {
+        (p as HTMLElement).hidden = p.getAttribute('data-panel') !== tab.dataset.tab;
+      });
+    });
+  }
+
+  await verify();
+</script>
