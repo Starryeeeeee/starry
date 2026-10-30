@@ -35,6 +35,7 @@ import Base from '../layouts/Base.astro';
       <nav class="admin-tabs" role="tablist">
         <button class="admin-tab active" type="button" data-tab="moment" role="tab">废话条</button>
         <button class="admin-tab" type="button" data-tab="post" role="tab">文章</button>
+        <button class="admin-tab" type="button" data-tab="kb" role="tab">知识库</button>
         <button class="admin-tab" type="button" data-tab="site" role="tab">站点</button>
       </nav>
 
@@ -77,6 +78,87 @@ import Base from '../layouts/Base.astro';
         </div>
         <h3>已有文章</h3>
         <ul class="admin-list" data-list="posts"></ul>
+      </div>
+
+      <!-- 知识库 -->
+      <div class="admin-panel" data-panel="kb" hidden>
+        <div class="kb-modes">
+          <label class="kb-mode"><input type="radio" name="kb-mode" value="note" checked /> 写笔记 / 技巧</label>
+          <label class="kb-mode"><input type="radio" name="kb-mode" value="file" /> 上传文档</label>
+        </div>
+
+        <!-- 写条目 -->
+        <div class="kb-form" data-kb-form="note">
+          <label class="field">
+            <span>标题</span>
+            <input type="text" data-kb-note="title" placeholder="如：圆锥曲线常用小结论" />
+          </label>
+          <div class="field-grid">
+            <label class="field">
+              <span>科目 / 主题</span>
+              <input type="text" data-kb-note="subject" list="kb-subjects" placeholder="数学" />
+              <datalist id="kb-subjects">
+                <option value="数学"></option>
+                <option value="英语"></option>
+                <option value="语文"></option>
+                <option value="物理"></option>
+                <option value="化学"></option>
+                <option value="生物"></option>
+                <option value="信息技术"></option>
+                <option value="方法论"></option>
+                <option value="资料"></option>
+              </datalist>
+            </label>
+            <label class="field">
+              <span>标签（逗号分隔）</span>
+              <input type="text" data-kb-note="tags" placeholder="解析几何, 小结论" />
+            </label>
+          </div>
+          <label class="field">
+            <span>一句话说明</span>
+            <input type="text" data-kb-note="desc" placeholder="列表页显示的摘要（可空）" />
+          </label>
+          <label class="field">
+            <span>正文（Markdown，支持 $行内$ 与 $$公式块$$）</span>
+            <textarea rows="8" data-kb-note="body" placeholder="## 结论&#10;椭圆焦点弦最短为 $2b^2/a$…"></textarea>
+          </label>
+          <div class="row-end">
+            <button class="admin-btn primary" type="button" data-act="publish-kb-note">发布条目</button>
+          </div>
+        </div>
+
+        <!-- 传文档 -->
+        <div class="kb-form" data-kb-form="file" hidden>
+          <label class="field">
+            <span>选择文件（PDF / Word / PPT / Markdown 等）</span>
+            <input type="file" data-kb-file />
+          </label>
+          <label class="field">
+            <span>标题（不填就用文件名）</span>
+            <input type="text" data-kb-file="title" placeholder="函数专题讲义" />
+          </label>
+          <div class="field-grid">
+            <label class="field">
+              <span>科目 / 主题</span>
+              <input type="text" data-kb-file="subject" list="kb-subjects" placeholder="数学" />
+            </label>
+            <label class="field">
+              <span>标签（逗号分隔）</span>
+              <input type="text" data-kb-file="tags" placeholder="函数, 讲义" />
+            </label>
+          </div>
+          <label class="field">
+            <span>一句话说明</span>
+            <input type="text" data-kb-file="desc" placeholder="这份资料讲了什么（可空）" />
+          </label>
+          <div class="row-end">
+            <button class="admin-btn primary" type="button" data-act="upload-kb-file">上传并发布</button>
+          </div>
+          <p class="hint">上传的文件会存进仓库 public/kb/，随站点一起发布；PDF 在详情页可直接预览。</p>
+        </div>
+
+        <h3>已有条目</h3>
+        <ul class="admin-list" data-list="kb"></ul>
       </div>
 
       <!-- 站点 -->
@@ -277,6 +359,21 @@ import Base from '../layouts/Base.astro';
     color: var(--accent-ink);
     min-height: 1.4em;
   }
+  .kb-modes {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 6px;
+    font-size: 0.92rem;
+  }
+  .kb-mode {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .kb-mode input {
+    margin: 0;
+  }
 </style>
 
 <script>
@@ -339,6 +436,7 @@ import Base from '../layouts/Base.astro';
       await showLogin(me);
       await refreshMoments();
       await refreshPosts();
+      await refreshKb().catch((e) => console.warn('[admin] 知识库列表加载失败', e));
     } catch {
       localStorage.removeItem(TOKEN_KEY);
       await showLogin(null);
@@ -423,6 +521,113 @@ import Base from '../layouts/Base.astro';
     }
   }
 
+  // ---------- 知识库（笔记 = contents API；文档 = public/kb + 清单 JSON） ----------
+  const KB_NOTE_DIR = 'src/content/kb';
+  const KB_FILE_DIR = 'public/kb';
+  const KB_JSON_PATH = 'src/data/kb-files.json';
+
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+
+  // base64 → UTF-8 文本（清单里有中文，直接 atob 会乱码）
+  const b64ToText = (b64: string) =>
+    new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
+
+  const getKbJson = async (): Promise<{ sha: string | null; list: any[] }> => {
+    try {
+      const r = await api(`/repos/${REPO}/contents/${KB_JSON_PATH}?ref=${BRANCH}`);
+      return { sha: r.sha, list: JSON.parse(b64ToText(r.content.replace(/\s/g, ''))) };
+    } catch (e) {
+      if (String((e as Error).message).startsWith('404')) return { sha: null, list: [] };
+      throw e;
+    }
+  };
+
+  const putKbJson = (list: any[], sha: string | null, message: string) =>
+    api(`/repos/${REPO}/contents/${KB_JSON_PATH}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        message,
+        branch: BRANCH,
+        content: b64(JSON.stringify(list, null, 2) + '\n'),
+        ...(sha ? { sha } : {}),
+      }),
+    });
+
+  const safeName = (n: string) =>
+    n.replace(/^.*[/\\]/, '').replace(/[#?%*"<>|]/g, '').replace(/\s+/g, '-').slice(-80) || 'file';
+
+  const titleToFileName = (t: string) =>
+    t.replace(/[#?%*"<>|:/\\]/g, '').replace(/\s+/g, '-').slice(0, 60) ||
+    `kb-${Date.now().toString(36)}`;
+
+  async function refreshKb() {
+    const list = $('[data-list="kb"]');
+    list.innerHTML = '<li class="meta">加载中…</li>';
+    const [notes, kbJson] = await Promise.all([
+      api(`/repos/${REPO}/contents/${KB_NOTE_DIR}?ref=${BRANCH}`).catch(() => []),
+      getKbJson().catch(() => ({ list: [] })),
+    ]);
+    const files: any[] = kbJson.list ?? [];
+    list.innerHTML = '';
+    if (!notes.length && !files.length) {
+      list.innerHTML = '<li class="meta">还没有条目——先写一条笔记或传一份文档</li>';
+      return;
+    }
+    for (const f of notes) {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="name"></span><span class="meta">笔记</span>`;
+      (li.querySelector('.name') as HTMLElement).textContent = f.name;
+      li.appendChild(makeKbDeleteBtn(async () => {
+        await api(`/repos/${REPO}/contents/${KB_NOTE_DIR}/${encodeURIComponent(f.name)}`, {
+          method: 'DELETE',
+          body: JSON.stringify({ message: `删知识库条目 ${f.name}`, sha: f.sha, branch: BRANCH }),
+        });
+      }, li));
+      list.appendChild(li);
+    }
+    for (const rec of files) {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="name"></span><span class="meta"></span>`;
+      (li.querySelector('.name') as HTMLElement).textContent =
+        `${rec.title}（${(rec.ext ?? '').toUpperCase()}，${Math.max(1, Math.round((rec.size ?? 0) / 1024))} KB）`;
+      li.querySelector('.meta')!.textContent = rec.date ?? '';
+      li.appendChild(makeKbDeleteBtn(async () => {
+        // 先删文件本体（不存在也不报错跳过），再把记录从清单里拿掉
+        try {
+          const meta = await api(`/repos/${REPO}/contents/${encodeURIComponent(KB_FILE_DIR)}/${encodeURIComponent(rec.file.split('/').pop() ?? '')}?ref=${BRANCH}`);
+          await api(`/repos/${REPO}/contents/${KB_FILE_DIR}/${encodeURIComponent(rec.file.split('/').pop() ?? '')}`, {
+            method: 'DELETE',
+            body: JSON.stringify({ message: `删知识库文件 ${rec.file}`, sha: meta.sha, branch: BRANCH }),
+          });
+        } catch { /* 文件本体可能已不在，继续清清单 */ }
+        const { sha, list: cur } = await getKbJson();
+        await putKbJson(cur.filter((x: any) => x.slug !== rec.slug), sha, '更新知识库清单');
+      }, li));
+      list.appendChild(li);
+    }
+  }
+
+  function makeKbDeleteBtn(fn: () => Promise<void>, li: HTMLLIElement) {
+    const del = document.createElement('button');
+    del.className = 'admin-btn ghost';
+    del.type = 'button';
+    del.textContent = '删除';
+    del.onclick = async () => {
+      if (!confirm('删除后构建即从站点消失，确定？')) return;
+      del.disabled = true;
+      try {
+        await fn();
+        await dispatchBuild();
+        msg('已删除，站点构建中（1-2 分钟生效）');
+        await refreshKb();
+      } catch (e) {
+        msg('删除失败：' + (e as Error).message);
+        del.disabled = false;
+      }
+    };
+    return del;
+  }
+
   // ---------- 事件绑定 ----------
   document.addEventListener('click', async (e) => {
     const t = e.target as HTMLElement;
@@ -503,6 +708,95 @@ import Base from '../layouts/Base.astro';
         await refreshPosts();
         t.removeAttribute('disabled');
       }
+      if (act === 'publish-kb-note') {
+        const g = (k: string) => ($(`[data-kb-note="${k}"]`) as HTMLInputElement).value.trim();
+        const title = g('title');
+        if (!title) return msg('标题必填');
+        const tags = g('tags')
+          .split(/[,，]/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const fm = [
+          '---',
+          `title: ${title}`,
+          `date: ${todayStr()}`,
+          g('desc') ? `description: ${g('desc')}` : null,
+          `subject: ${g('subject') || '未分类'}`,
+          tags.length ? `tags: [${tags.join(', ')}]` : null,
+          '---',
+          '',
+          '',
+        ]
+          .filter((l) => l !== null)
+          .join('\n');
+        const name = `${titleToFileName(title)}.md`;
+        t.setAttribute('disabled', '');
+        await api(`/repos/${REPO}/contents/${KB_NOTE_DIR}/${encodeURIComponent(name)}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            message: `知识库：${title}`,
+            branch: BRANCH,
+            content: b64(fm + ($('[data-kb-note="body"]') as HTMLTextAreaElement).value),
+          }),
+        });
+        msg(`已发布《${title}》，构建中（1-2 分钟上站）`);
+        ['title', 'tags', 'desc', 'body'].forEach(
+          (k) => (($(`[data-kb-note="${k}"]`) as HTMLInputElement).value = ''),
+        );
+        await refreshKb();
+        t.removeAttribute('disabled');
+      }
+      if (act === 'upload-kb-file') {
+        const input = $('[data-kb-file]') as HTMLInputElement;
+        const f = input.files?.[0];
+        if (!f) return msg('先选一个文件');
+        if (f.size > 40 * 1024 * 1024) return msg('文件超过 40MB，放进 git 仓库会让克隆变慢，建议拆小或换链接');
+        const date = todayStr();
+        const safe = safeName(f.name);
+        const stem = safe.replace(/\.[^.]+$/, '') || 'file';
+        const ext = (f.name.match(/\.([^.]+)$/)?.[1] ?? '').toLowerCase();
+        const slug = `${date}-${stem}`.slice(0, 100);
+        const g = (k: string) => ($(`[data-kb-file="${k}"]`) as HTMLInputElement).value.trim();
+        t.setAttribute('disabled', '');
+        msg('上传中…（文件较大时会慢一些）');
+        const dataUrl = await new Promise<string>((res, rej) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result as string);
+          r.onerror = () => rej(new Error('读取文件失败'));
+          r.readAsDataURL(f);
+        });
+        await api(`/repos/${REPO}/contents/${KB_FILE_DIR}/${encodeURIComponent(safe)}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            message: `知识库文件：${safe}`,
+            branch: BRANCH,
+            content: dataUrl.split(',')[1],
+          }),
+        });
+        const { sha, list } = await getKbJson();
+        list.unshift({
+          slug,
+          title: g('title') || stem,
+          subject: g('subject') || '未分类',
+          tags: g('tags')
+            .split(/[,，]/)
+            .map((s) => s.trim())
+            .filter(Boolean),
+          description: g('desc'),
+          file: `/kb/${safe}`,
+          ext,
+          size: f.size,
+          date,
+        });
+        await putKbJson(list, sha, '知识库清单：新增文档条目');
+        msg('已上传，构建中（1-2 分钟上站）');
+        input.value = '';
+        ['title', 'subject', 'tags', 'desc'].forEach(
+          (k) => (($(`[data-kb-file="${k}"]`) as HTMLInputElement).value = ''),
+        );
+        await refreshKb();
+        t.removeAttribute('disabled');
+      }
       if (act === 'rebuild') {
         await dispatchBuild();
         msg('已触发构建，1-2 分钟后生效');
@@ -554,6 +848,15 @@ import Base from '../layouts/Base.astro';
       document.querySelectorAll('.admin-panel').forEach((p) => {
         (p as HTMLElement).hidden = p.getAttribute('data-panel') !== tab.dataset.tab;
       });
+    });
+  }
+
+  // 知识库：写笔记 / 传文档 两种模式切换
+  for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="kb-mode"]')) {
+    radio.addEventListener('change', () => {
+      const v = document.querySelector<HTMLInputElement>('input[name="kb-mode"]:checked')?.value;
+      ($('[data-kb-form="note"]') as HTMLElement).hidden = v !== 'note';
+      ($('[data-kb-form="file"]') as HTMLElement).hidden = v !== 'file';
     });
   }
 

@@ -33,6 +33,19 @@ const skills = defineCollection({
   }),
 });
 
+// 知识库·手写条目：定理、公式、解题技巧等纯文字内容（markdown，支持 $...$ 数学公式）
+// 上传的文档类资源（pdf/word/ppt）走 src/data/kb-files.json，见 src/lib/kb.ts
+const kb = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/kb' }),
+  schema: z.object({
+    title: z.string(),
+    date: z.coerce.date(),
+    description: z.string().default(''),
+    subject: z.string().default('未分类'),
+    tags: z.array(z.string()).default([]),
+  }),
+});
+
 const changelog = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/changelog' }),
   schema: z.object({
@@ -41,4 +54,4 @@ const changelog = defineCollection({
   }),
 });
 
-export const collections = { posts, projects, skills, changelog };
+export const collections = { posts, projects, skills, kb, changelog };

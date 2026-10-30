@@ -1,0 +1,253 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getKbEntries, kbSubjects, fileKindLabel } from '../../lib/kb';
+import { fmtDate } from '../../lib/format';
+import { u } from '../../lib/base';
+
+const entries = await getKbEntries();
+const subjects = kbSubjects(entries);
+---
+
+<Base title="知识库 · 星野漫游" description="Starry 的学习笔记、资料文档与定理公式、解题技巧。">
+  <div class="container">
+    <h1 class="page-title">知识库</h1>
+    <p class="page-desc">学习笔记、资料文档，还有值得反复看的定理、公式和解题技巧。</p>
+
+    <div class="kb-toolbar reveal">
+      <div class="kb-chips" role="tablist" aria-label="按科目筛选">
+        <button class="kb-chip active" type="button" data-subject="">全部</button>
+        {subjects.map((s) => (
+          <button class="kb-chip" type="button" data-subject={s.name}>{s.name}<i>{s.count}</i></button>
+        ))}
+      </div>
+      <input class="kb-search" type="search" placeholder="搜标题、说明、标签…" aria-label="搜索知识库" />
+    </div>
+
+    {entries.length === 0 ? (
+      <div class="kb-empty">知识库还空着——第一批内容整理好后会出现在这里。</div>
+    ) : (
+      <div class="kb-list" id="kb-list">
+        {entries.map((e) => (
+          <a
+            class="kb-item reveal"
+            href={u(`/kb/${e.slug}/`)}
+            data-subject={e.subject}
+            data-search={`${e.title} ${e.subject} ${e.tags.join(' ')} ${e.description}`.toLowerCase()}
+          >
+            <div class="kb-item-head">
+              <span class="kb-kind" data-kind={e.kind}>
+                {e.kind === 'note' ? '笔记' : fileKindLabel(e.ext)}
+              </span>
+              <h3>{e.title}</h3>
+              <time datetime={e.date.toISOString()}>{fmtDate(e.date)}</time>
+            </div>
+            {e.description && <p class="kb-desc">{e.description}</p>}
+            <div class="kb-item-foot">
+              <span class="kb-subject">{e.subject}</span>
+              {e.tags.length > 0 && (
+                <div class="tags">{e.tags.map((t) => <span>{t}</span>)}</div>
+              )}
+              {e.kind === 'file' && <span class="kb-size">{e.sizeKB} KB</span>}
+            </div>
+          </a>
+        ))}
+      </div>
+      <div class="kb-list-empty" id="kb-list-empty" hidden>没有匹配的内容，换个关键词试试。</div>
+    )}
+  </div>
+</Base>
+
+<script>
+  // 前端筛选：科目 chip + 关键词，两条件取交集；无 JS 时全量展示，不影响阅读
+  // 匹配数据在 .kb-item 的 data-search 属性里（标题/科目/标签/说明，构建时写死）
+  const chips = document.querySelectorAll('.kb-chip');
+  const search = document.querySelector('.kb-search');
+  const items = document.querySelectorAll('.kb-item');
+  const emptyTip = document.getElementById('kb-list-empty');
+  let subject = '';
+
+  function apply() {
+    const q = (search?.value ?? '').trim().toLowerCase();
+    let visible = 0;
+    for (const el of items) {
+      const okSubject = !subject || el.dataset.subject === subject;
+      const okQuery = !q || (el.dataset.search ?? '').includes(q);
+      const show = okSubject && okQuery;
+      el.hidden = !show;
+      if (show) visible++;
+    }
+    if (emptyTip) emptyTip.hidden = visible > 0;
+  }
+
+  for (const chip of chips) {
+    chip.addEventListener('click', () => {
+      chips.forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+      subject = chip.dataset.subject ?? '';
+      apply();
+    });
+  }
+  search?.addEventListener('input', apply);
+</script>
+
+<style>
+  .page-title {
+    margin-top: 56px;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+  .page-desc {
+    margin: 10px 0 22px;
+    color: var(--ink-2);
+  }
+  .kb-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .kb-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+  }
+  .kb-chip {
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    color: var(--ink-2);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  }
+  .kb-chip i {
+    font-style: normal;
+    font-size: 0.78em;
+    margin-left: 4px;
+    opacity: 0.6;
+  }
+  .kb-chip:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+  .kb-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .kb-search {
+    flex: 0 1 240px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .kb-search:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+    border-color: transparent;
+  }
+  .kb-empty,
+  .kb-list-empty {
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--ink-3);
+    background: var(--wash);
+    border-radius: var(--radius);
+    font-size: 0.92rem;
+  }
+  .kb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .kb-item {
+    display: block;
+    padding: 18px 22px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: border-color 0.2s ease, transform 0.15s ease;
+  }
+  .kb-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .kb-item[hidden] {
+    display: none;
+  }
+  .kb-item-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .kb-item-head h3 {
+    flex: 1;
+    min-width: 0;
+    font-size: 1.05rem;
+    font-weight: 650;
+    color: var(--ink);
+  }
+  .kb-item-head time {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    color: var(--ink-3);
+  }
+  .kb-kind {
+    flex-shrink: 0;
+    padding: 2px 9px;
+    font-size: 0.75rem;
+    border-radius: 999px;
+    background: var(--wash);
+    color: var(--accent-ink);
+    white-space: nowrap;
+  }
+  .kb-kind[data-kind='file'] {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .kb-desc {
+    margin: 8px 0 0;
+    font-size: 0.92rem;
+    color: var(--ink-2);
+    line-height: 1.8;
+  }
+  .kb-item-foot {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .kb-subject {
+    font-size: 0.78rem;
+    color: var(--accent-ink);
+    background: var(--wash);
+    padding: 2px 10px;
+    border-radius: 999px;
+  }
+  .kb-size {
+    margin-left: auto;
+    font-size: 0.76rem;
+    color: var(--ink-3);
+  }
+  @media (max-width: 560px) {
+    .kb-item {
+      padding: 15px 16px;
+    }
+    .kb-item-head {
+      flex-wrap: wrap;
+    }
+    .kb-item-head time {
+      order: 3;
+    }
+  }
+</style>

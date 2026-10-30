@@ -6,12 +6,16 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:local": "astro build && node scripts/fix-file-paths.mjs",
     "preview": "astro preview"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
     "@fontsource/stix-two-text": "^5.3.0",
     "astro": "^5.0.0",
-    "lxgw-wenkai-screen-webfont": "^1.7.0"
+    "katex": "^0.19.1",
+    "lxgw-wenkai-screen-webfont": "^1.7.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0"
   }
 }

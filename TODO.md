@@ -12,6 +12,7 @@
 - [x] 部署 GitHub Pages：**已上线 2026-10-25，https://starryeeeeee.github.io/starry/**（方法见 DEPLOY.md：WorkBuddy 便携版 git + ~/.workbuddy/gh_deploy 密钥 + Actions 自动构建）
 - [x] 音乐播放器（2026-10-25 晚上线）：左下角浮动唱片，第一首 Komorebi；加歌 = mp3 丢进 `public/music/` + `src/components/MusicPlayer.astro` 列表加一行
 - [x] 管理面板 /admin/（2026-10-25 深夜上线）：PAT 登录后网页里发废话条/写文章/删除/触发构建
+- [x] 知识库（2026-10-30 上线）：/admin「知识库」tab 写笔记/传文档（PDF/Word/PPT → public/kb/），浏览页 /kb/ 支持科目筛选+搜索；手写条目在 `src/content/kb/`，文档清单在 `src/data/kb-files.json`
 - [ ] giscus 评论：**等用户两件一次性操作**——仓库 Settings 勾选 Discussions、安装 giscus App（github.com/apps/giscus），然后在 /admin「站点」页点"一键配置评论"即完成
 - [ ] 匿名点赞（Supabase，废话条卡片上的按钮目前是禁用占位）
 - [ ] 不蒜子访客统计

@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { getMoments } from '../lib/moments';
+import { getKbEntries, fileKindLabel } from '../lib/kb';
 import { fmtDate, fmtDateShort } from '../lib/format';
 import { u } from '../lib/base';
 import avatar from '../assets/avatar.jpg';
@@ -25,6 +26,7 @@ const projects = (await getCollection('projects'))
 const skills = (await getCollection('skills'))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 4);
+const kbEntries = (await getKbEntries()).slice(0, 3);
 
 // 建站数据：与 innei 一样，把「这个站活了多久、写了多少」摆出来
 const founded = new Date('2026-10-25T00:00:00Z');
@@ -150,6 +152,29 @@ const chars = allPosts.reduce((sum, p) => sum + (p.body?.length ?? 0), 0);
           <time datetime={s.data.date.toISOString()}>{fmtDate(s.data.date)}</time>
         </a>
       ))}
+    </section>
+
+    <section class="reveal" style="--i:4" aria-labelledby="latest-kb">
+      <div class="section-head">
+        <h2 id="latest-kb">知识库</h2>
+        <a class="more" href={u('/kb/')}>全部条目</a>
+      </div>
+      {kbEntries.length === 0 ? (
+        <p class="list-empty">知识库还空着。</p>
+      ) : (
+        kbEntries.map((e) => (
+          <a class="skill-item" href={u(`/kb/${e.slug}/`)}>
+            <div>
+              <h3>{e.title}</h3>
+              <p class="desc">
+                {e.kind === 'note' ? '笔记' : fileKindLabel(e.ext)} · {e.subject}
+                {e.description ? ` · ${e.description}` : ''}
+              </p>
+            </div>
+            <time datetime={e.date.toISOString()}>{fmtDate(e.date)}</time>
+          </a>
+        ))
+      )}
     </section>
   </div>
 </Base>
