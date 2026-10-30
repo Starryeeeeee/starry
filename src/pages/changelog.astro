@@ -66,7 +66,8 @@ for (const item of rendered) {
     color: var(--ink-2);
   }
 
-  /* 轴线：穿过所有节点的那一条（desktop 上节点列中心在 96px） */
+  /* 轴线：穿过所有节点的那一条
+     位置 = 日期列56 + 列间距14 + 圆点列宽26/2 = 83px（圆点列的正中心） */
   .timeline {
     position: relative;
     padding-bottom: 40px;
@@ -77,7 +78,7 @@ for (const item of rendered) {
     position: absolute;
     top: 10px;
     bottom: 6px;
-    left: 96px;
+    left: 83px;
     width: 1px;
     background: color-mix(in srgb, var(--accent) 38%, var(--line));
   }
@@ -189,7 +190,8 @@ for (const item of rendered) {
       grid-row: 1 / span 2;
       width: 9px;
       height: 9px;
-      margin: 7px 0 0 4px;
+      /* 3.5 + 9/2 = 8px，与轴线 left:8px 精确对齐 */
+      margin: 7px 0 0 3.5px;
     }
 
     .tl-date {
