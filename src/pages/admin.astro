@@ -1437,7 +1437,8 @@ import Base from '../layouts/Base.astro';
       aiFields('model').value = saved.model;
       aiFields('apiKey').value = saved.apiKey;
       // 回填后不能再跑 applyPreset（会拿预设默认模型覆盖用户改过的模型名），只补说明文字
-      (aiFields('preset-note') as HTMLElement).textContent = matched?.note ?? AI_PRESETS[2].note;
+      (aiFields('preset-note') as HTMLElement).textContent =
+        matched?.note ?? (AI_PRESETS.find((p) => p.key === 'custom')?.note ?? '');
     } else {
       presetSel.value = AI_PRESETS[0].key;
       applyPreset();
@@ -1469,6 +1470,8 @@ import Base from '../layouts/Base.astro';
       apiKey,
       thinkingModel: preset?.thinkingModel,
       thinkingKwargs: preset?.thinkingKwargs,
+      thinkingParam: preset?.thinkingParam,
+      webSearchTool: preset?.webSearchTool,
     };
   };
 
@@ -1538,24 +1541,31 @@ import Base from '../layouts/Base.astro';
     try {
       const index = await ensureAiIndex();
       const hits = searchIndex(index, q, 5);
-      // 联网搜索与站内资料检索并行：搜索慢/失败也不拖累知识库回答
-      const webTask = webOn
-        ? webSearch(q).then(
-            (rs) => ({ ok: true, rs }),
-            (e) => ({ ok: false, err: e as Error }),
-          )
-        : null;
+      // 联网搜索两种走法：智谱等原生工具 = 服务端搜，最稳；
+      // 其余服务商 = 浏览器经公共中转搜必应 RSS，尽力而为。两者都不拖累站内资料回答。
+      const nativeSearch = !!cfg.webSearchTool;
+      const webTask =
+        webOn && !nativeSearch
+          ? webSearch(q).then(
+              (rs) => ({ ok: true, rs }),
+              (e) => ({ ok: false, err: e as Error }),
+            )
+          : null;
       const web = webTask ? await webTask : null;
       const system =
         '你是个人网站「星野漫游」的站内助手。' +
         (web?.ok
           ? '回答时把【网】开头的网络搜索结果与站内资料结合分析，网络来源在句末注明（标题）。'
-          : '请优先依据站内资料回答；资料里没有的就直说没有，不要编造。') +
+          : nativeSearch
+            ? '联网搜索由模型服务端完成，可结合最新网络信息与站内资料回答。'
+            : '请优先依据站内资料回答；资料里没有的就直说没有，不要编造。') +
         (thinkOn ? '这道问题开启了深度思考，请先想清楚再作答。' : '用简体中文回答，简洁自然。') +
         '\n\n== 站内资料 ==\n' +
         (buildContextBlock(hits) || '（本次未检索到相关站内资料）') +
         (web?.ok ? '\n\n== 网络搜索结果 ==\n' + buildWebBlock(web.rs) : '') +
-        (web && !web.ok ? '\n\n== 网络搜索 ==\n（联网搜索失败：' + web.err.message + '，请仅依据站内资料回答）' : '');
+        (web && !web.ok
+          ? '\n\n== 网络搜索 ==\n（联网搜索失败：' + web.err.message + '，请仅依据站内资料回答）'
+          : '');
       const reply = await aiChat(
         cfg,
         [
@@ -1563,31 +1573,31 @@ import Base from '../layouts/Base.astro';
           ...aiHistory.slice(-6),
           { role: 'user', content: q },
         ],
-        { thinking: thinkOn },
+        { thinking: thinkOn, webSearch: webOn && nativeSearch },
       );
       aiHistory.push({ role: 'user', content: q }, { role: 'assistant', content: reply });
       while (aiHistory.length > 8) aiHistory.shift();
       bubble.textContent = reply;
       bubble.classList.remove('thinking');
       appendAiSources(hits);
-      if (web) {
-        const note = document.createElement('div');
-        note.className = 'ai-src';
-        if (web.ok) {
-          note.append(`已联网搜索 ${web.rs.length} 条结果`);
-          web.rs.slice(0, 3).forEach((r) => {
-            const a = document.createElement('a');
-            a.href = r.url;
-            a.target = '_blank';
-            a.rel = 'noopener';
-            a.textContent = ` ${r.title} ·`;
-            note.appendChild(a);
-          });
-        } else {
-          note.textContent = '联网搜索失败，本次仅基于站内资料回答';
-        }
-        ($('[data-ai-chat]') as HTMLElement).lastElementChild?.appendChild(note);
+      const note = document.createElement('div');
+      note.className = 'ai-src';
+      if (nativeSearch && webOn) {
+        note.textContent = '已联网搜索（服务端搜索）';
+      } else if (web?.ok) {
+        note.append(`已联网搜索 ${web.rs.length} 条结果`);
+        web.rs.slice(0, 3).forEach((r) => {
+          const a = document.createElement('a');
+          a.href = r.url;
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.textContent = ` ${r.title} ·`;
+          note.appendChild(a);
+        });
+      } else if (web && !web.ok) {
+        note.textContent = '联网搜索失败，本次仅基于站内资料回答';
       }
+      if (note.textContent) ($('[data-ai-chat]') as HTMLElement).lastElementChild?.appendChild(note);
       const box = $('[data-ai-chat]') as HTMLElement;
       box.scrollTop = box.scrollHeight;
       msg('');

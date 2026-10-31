@@ -16,10 +16,15 @@ export type AiConfig = {
   baseUrl: string;
   model: string;
   apiKey: string;
-  /** 深度思考的实现方式因服务商而异：换用专门的思考模型（如 DeepSeek 的 deepseek-reasoner） */
+  /** 深度思考的三种实现（因服务商而异，按预设自动带上）：
+   *  - thinkingModel：换用专门的思考模型（如 DeepSeek 的 deepseek-reasoner）
+   *  - thinkingKwargs：同一模型开请求开关（Agnes/Qwen 系 chat_template_kwargs.enable_thinking）
+   *  - thinkingParam：thinking.type 开关（智谱 GLM 系） */
   thinkingModel?: string;
-  /** 或者在同一模型上开思考开关（Agnes/Qwen 系的 chat_template_kwargs.enable_thinking） */
   thinkingKwargs?: boolean;
+  thinkingParam?: boolean;
+  /** 服务端原生联网搜索（智谱 GLM 的 web_search 工具），开了就走它，不走浏览器中转 */
+  webSearchTool?: boolean;
 };
 
 export type AiMessage = { role: 'system' | 'user' | 'assistant'; content: string };
@@ -33,13 +38,15 @@ export const AI_PRESETS: Array<{
   note: string;
   thinkingModel?: string;
   thinkingKwargs?: boolean;
+  thinkingParam?: boolean;
+  webSearchTool?: boolean;
 }> = [
   {
     key: 'agnes',
     label: 'Agnes（免费测试用）',
     baseUrl: 'https://api.agnes-ai.cn/v1',
     model: 'agnes-2.5-flash',
-    note: '免费档，适合先把功能跑起来；正式使用建议换下面的服务商。',
+    note: '免费档，适合先把功能跑起来。深度思考可用；联网搜索走公共中转，尽力而为不稳定。',
     thinkingKwargs: true,
   },
   {
@@ -47,15 +54,24 @@ export const AI_PRESETS: Array<{
     label: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com/v1',
     model: 'deepseek-chat',
-    note: '国内直连、价格低，适合正式使用；在 platform.deepseek.com 申请 key。',
+    note: '国内直连、价格低，适合正式使用；在 platform.deepseek.com 申请 key。联网搜索同样走公共中转。',
     thinkingModel: 'deepseek-reasoner',
+  },
+  {
+    key: 'zhipu',
+    label: '智谱 GLM（联网搜索最稳）',
+    baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+    model: 'glm-5.3-flash',
+    note: '服务端原生联网搜索，稳定可靠；WorkBuddy 里配的智谱 key 直接可用，或去 bigmodel.cn 申请。深度思考/快速模式都支持。',
+    thinkingParam: true,
+    webSearchTool: true,
   },
   {
     key: 'custom',
     label: '自定义（任意 OpenAI 兼容接口）',
     baseUrl: '',
     model: '',
-    note: '任何兼容 OpenAI /chat/completions 的服务都行，填 baseUrl + 模型名 + key。深度思考开关对自定义服务商不一定生效。',
+    note: '任何兼容 OpenAI /chat/completions 的服务都行，填 baseUrl + 模型名 + key。深度思考/联网搜索开关对自定义服务商不一定生效。',
   },
 ];
 
@@ -82,6 +98,8 @@ export function saveAiConfig(cfg: AiConfig) {
       apiKey: cfg.apiKey.trim(),
       thinkingModel: cfg.thinkingModel?.trim() || undefined,
       thinkingKwargs: cfg.thinkingKwargs || undefined,
+      thinkingParam: cfg.thinkingParam || undefined,
+      webSearchTool: cfg.webSearchTool || undefined,
     }),
   );
 }
@@ -97,9 +115,16 @@ export function clearAiConfig() {
 export async function aiChat(
   cfg: AiConfig,
   messages: AiMessage[],
-  opts: { temperature?: number; maxTokens?: number; thinking?: boolean; signal?: AbortSignal } = {},
+  opts: {
+    temperature?: number;
+    maxTokens?: number;
+    thinking?: boolean;
+    /** 开联网搜索：有原生工具的服务商走服务端搜索，否则调用方自己先搜好注入上下文 */
+    webSearch?: boolean;
+    signal?: AbortSignal;
+  } = {},
 ): Promise<string> {
-  // 深度思考：优先换思考模型（DeepSeek 系），其次开请求开关（Agnes/Qwen 系）
+  // 深度思考按服务商能力三选一：换思考模型 / 开请求参数 / thinking.type 开关
   const useThinking = !!opts.thinking;
   const model = useThinking && cfg.thinkingModel ? cfg.thinkingModel : cfg.model;
   const res = await fetch(`${cfg.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
@@ -112,7 +137,13 @@ export async function aiChat(
     body: JSON.stringify({
       model,
       messages,
-      ...(useThinking && cfg.thinkingKwargs ? { chat_template_kwargs: { enable_thinking: true } } : {}),
+      ...(useThinking && cfg.thinkingKwargs
+        ? { chat_template_kwargs: { enable_thinking: true } }
+        : {}),
+      ...(cfg.thinkingParam ? { thinking: { type: useThinking ? 'enabled' : 'disabled' } } : {}),
+      ...(opts.webSearch && cfg.webSearchTool
+        ? { tools: [{ type: 'web_search', web_search: { enable: true } }] }
+        : {}),
       ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
       ...(opts.maxTokens !== undefined ? { max_tokens: opts.maxTokens } : {}),
     }),
