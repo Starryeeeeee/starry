@@ -5,7 +5,7 @@
 ## 待补链接
 - [ ] 哔哩哔哩个人空间：`src/pages/index.astro` 里现在指向 bilibili.com 官网，换成你的空间地址
 - [ ] 网易云音乐主页：`src/pages/index.astro` 里现在指向 music.163.com 官网，换成你的主页地址
-- [ ] 废话条数据源：`src/lib/moments.ts` 现在拉取 `Starryeeeeee/starry` 仓库的 Issue，确认仓库建好、名字对得上
+- [x] 废话条数据源：确认跑通（2026-10-30 线上已显示手机发的 2 条真实动态）
 
 ## 功能待接入
 - [x] 废话条接 GitHub Issues（拉取逻辑已由另一会话实现，等 `starry` 仓库就绪）
@@ -13,7 +13,8 @@
 - [x] 音乐播放器（2026-10-25 晚上线）：左下角浮动唱片，第一首 Komorebi；加歌 = mp3 丢进 `public/music/` + `src/components/MusicPlayer.astro` 列表加一行
 - [x] 管理面板 /admin/（2026-10-25 深夜上线）：PAT 登录后网页里发废话条/写文章/删除/触发构建
 - [x] 知识库（2026-10-30 上线）：/admin「知识库」tab 写笔记/传文档（PDF/Word/PPT → public/kb/），浏览页 /kb/ 支持科目筛选+搜索；手写条目在 `src/content/kb/`，文档清单在 `src/data/kb-files.json`
-- [ ] giscus 评论：**等用户两件一次性操作**——仓库 Settings 勾选 Discussions、安装 giscus App（github.com/apps/giscus），然后在 /admin「站点」页点"一键配置评论"即完成
+- [x] 统一内容 ID + 三态 status（2026-10-30）：/admin 新建内容自动写入稳定 ID（c-日期-随机码）与状态；旧内容编辑时惰性补 ID；草稿不构建、归档列表隐藏直链可见；设计细节见《对接文档.md》第十二节
+- [ ] giscus 评论：**等用户两件一次性操作**——仓库 Settings 勾选 Discussions、安装 giscus App（github.com/apps/giscus），然后在 /admin「站点」页点"一键配置评论"即完成；配置时把 data-mapping 从 pathname 切到 specific（内容 ID），评论不再随 URL 变化丢失
 - [x] 匿名点赞（2026-10-30 代码上线）：Supabase REST 直连，RLS 设计（anon 只读+只能调 increment_like 原子自增函数）；**等站主跑一次 `scripts/supabase-setup.sql`**（Dashboard → SQL Editor 粘贴 Run），跑完点赞按钮自动激活
 - [x] Supabase 保活：.github/workflows/supabase-keepalive.yml，每周一自动 ping，防免费档 7 天无活动被暂停
 - [ ] 不蒜子访客统计
