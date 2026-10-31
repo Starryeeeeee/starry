@@ -1,0 +1,866 @@
+/* ==========================================================================
+   管理后台 · macOS 原生感视觉层
+   --------------------------------------------------------------------------
+   本文件只改外观，不改结构与行为。
+
+   作用域：body.macos-admin（仅 /admin 页面由 Base.astro 挂载），所有规则都收在它下面，
+   不会溢出到站内其他页面。凡是需要压过 admin.astro 里 scoped 样式的规则，
+   选择器都写成「.macos-admin .admin .xxx」三级类（specificity 0,3,0）——
+   scoped 样式是「.xxx[data-astro-cid]」（0,2,0），靠 specificity 稳定压过，
+   不依赖样式表的打包顺序。
+
+   参照与借鉴（详见《后台UI改造说明.md》）：
+   · Apple HIG —— 材质分层、系统色、控件规格、44pt 触控目标、0.15/0.3/0.5s 动效档
+   · Puppertino（codedgar/Puppertino, MIT, 纯 CSS）—— Apple 官方色板与材质分级的组织方式、
+     侧边栏/工具栏/弹出菜单的形态、"降透明/降动态"的无障碍降级策略
+   · shadcn-admin / Studio Admin —— 后台分栏信息架构（左侧导航 + 详情区）
+   · LiqUIdify（记录的 iOS 17 / macOS 14 规格）—— 圆角标尺（窗 12 / 卡 10 / 控件 6 / 输入 7）、
+     控件抬升层级、动效曲线
+   · Radix Colors —— 语义 token 收敛，避免散落色值
+
+   字体：后台控件与对话用 --font-sans（栈首即 PingFang SC，正是 macOS 中文界面所用字体），
+        页面标题保留 --font-display-cn，站点的阅读字体不参与工具界面。
+   ========================================================================== */
+
+.macos-admin {
+  /* —— Apple 系统色（浅色）—— */
+  --mac-blue: #007aff;
+  --mac-green: #34c759;
+  --mac-red: #ff3b30;
+  --mac-orange: #ff9500;
+
+  /* —— 材质（浅色）：三层透明材质 + 填充/分隔线 —— */
+  --mac-win: #ffffff;
+  --mac-sidebar: rgba(242, 242, 247, 0.72);
+  --mac-toolbar: rgba(255, 255, 255, 0.72);
+  --mac-pop: rgba(246, 246, 248, 0.82);
+  --mac-canvas: rgba(120, 120, 128, 0.08);
+  --mac-fill: rgba(120, 120, 128, 0.12);
+  --mac-fill-hover: rgba(120, 120, 128, 0.18);
+  --mac-sep: rgba(60, 60, 67, 0.18);
+
+  /* —— 文字层级（Apple 六级语义色的浅色版）—— */
+  --mac-label: #1d1d1f;
+  --mac-label-2: rgba(60, 60, 67, 0.62);
+  --mac-label-3: rgba(60, 60, 67, 0.34);
+
+  /* —— 控件外观 —— */
+  --mac-control: #ffffff;
+  --mac-control-line: rgba(60, 60, 67, 0.24);
+  --mac-placeholder: rgba(60, 60, 67, 0.34);
+
+  /* —— 圆角标尺（macOS：控件小、卡片略大，胶囊只给小型控件）—— */
+  --mac-r-window: 12px;
+  --mac-r-card: 10px;
+  --mac-r-control: 6px;
+  --mac-r-field: 7px;
+
+  /* —— 抬升：只给真正浮起的三层，其余靠描边 —— */
+  --mac-e1: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  --mac-e2: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.05);
+  --mac-e3: 0 14px 40px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+
+  /* —— 动效：macOS 标准曲线与时长档 —— */
+  --mac-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --mac-t-fast: 0.18s;
+  --mac-t: 0.28s;
+
+  --mac-blur: saturate(180%) blur(20px);
+}
+
+/* 暗色：跟随站点主题，材质与色阶按 macOS 深色版重算 */
+[data-theme='dark'] .macos-admin {
+  --mac-blue: #0a84ff;
+  --mac-green: #30d158;
+  --mac-red: #ff453a;
+  --mac-orange: #ff9f0a;
+
+  --mac-win: #1e1e1e;
+  --mac-sidebar: rgba(40, 40, 42, 0.72);
+  --mac-toolbar: rgba(30, 30, 30, 0.72);
+  --mac-pop: rgba(52, 52, 54, 0.82);
+  --mac-canvas: rgba(120, 120, 128, 0.16);
+  --mac-fill: rgba(120, 120, 128, 0.24);
+  --mac-fill-hover: rgba(120, 120, 128, 0.32);
+  --mac-sep: rgba(84, 84, 88, 0.55);
+
+  --mac-label: #f5f5f7;
+  --mac-label-2: rgba(235, 235, 245, 0.62);
+  --mac-label-3: rgba(235, 235, 245, 0.32);
+
+  --mac-control: #2c2c2e;
+  --mac-control-line: rgba(84, 84, 88, 0.65);
+  --mac-placeholder: rgba(235, 235, 245, 0.34);
+}
+
+/* 浏览器自带表面也要归属设计：滚动条、焦点环、选中色、光标 */
+.macos-admin * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mac-label-3) transparent;
+}
+.macos-admin ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.macos-admin ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--mac-label-3) 55%, transparent);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.macos-admin ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.macos-admin :focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--mac-blue) 72%, transparent);
+  outline-offset: 2px;
+}
+.macos-admin ::selection {
+  background: color-mix(in srgb, var(--mac-blue) 24%, transparent);
+}
+.macos-admin input,
+.macos-admin textarea,
+.macos-admin select {
+  caret-color: var(--mac-blue);
+}
+
+/* ── 顶部：工具栏 ───────────────────────────────────────────────── */
+
+.macos-admin .admin .admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  margin-top: 28px;
+  background: var(--mac-toolbar);
+  -webkit-backdrop-filter: var(--mac-blur);
+  backdrop-filter: var(--mac-blur);
+  border: 1px solid var(--mac-sep);
+  border-radius: var(--mac-r-window);
+  box-shadow: var(--mac-e1);
+}
+.macos-admin .admin .admin-head h1 {
+  font-family: var(--font-display-cn);
+  font-weight: 400;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+}
+.macos-admin .admin .admin-greet {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--mac-label-2);
+}
+.macos-admin .admin .admin-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  padding: 4px 6px 4px 4px;
+  background: var(--mac-fill);
+  border: 1px solid transparent;
+  border-radius: 999px;
+}
+.macos-admin .admin .admin-user b {
+  font-weight: 600;
+  color: var(--mac-label);
+}
+
+/* 统计条：macOS 偏好设置里的胶囊读数 */
+.macos-admin .admin .admin-overview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 4px;
+  padding: 0;
+  font-size: 0.82rem;
+  color: var(--mac-label-2);
+}
+.macos-admin .admin .admin-overview span {
+  padding: 4px 10px;
+  background: var(--mac-fill);
+  border-radius: 999px;
+}
+.macos-admin .admin .admin-overview b {
+  color: var(--mac-label);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 登录：macOS 对话框 */
+.macos-admin .admin .admin-login {
+  max-width: 470px;
+  margin: 46px auto;
+  padding: 30px 32px 26px;
+  background: var(--mac-win);
+  border: 1px solid var(--mac-sep);
+  border-radius: var(--mac-r-window);
+  box-shadow: var(--mac-e3);
+}
+.macos-admin .admin .login-title {
+  font-family: var(--font-display-cn);
+  font-weight: 400;
+  font-size: 1.4rem;
+}
+.macos-admin .admin .login-sub {
+  margin-top: 8px;
+  font-size: 0.88rem;
+  color: var(--mac-label-2);
+  line-height: 1.85;
+}
+.macos-admin .admin .admin-login ol {
+  margin: 16px 0 22px;
+  padding-left: 1.3em;
+  color: var(--mac-label-2);
+  font-size: 0.83rem;
+  line-height: 2;
+}
+.macos-admin .admin .admin-login a {
+  color: var(--mac-blue);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--mac-blue) 45%, transparent);
+  text-underline-offset: 3px;
+}
+
+/* ── 主体：侧边栏 + 详情区（分栏信息架构取自 shadcn-admin / Studio Admin）── */
+
+.macos-admin .admin .admin-body {
+  margin-top: 14px;
+  font-family: var(--font-sans);
+}
+
+/* 后台是工具界面，用宽栏（站点正文栏只有 680px，表单会被挤扁） */
+.macos-admin .container.admin {
+  max-width: 1120px;
+}
+
+/* 桌面：整块是一个"窗口"，左栏毛玻璃材质，右栏内容 */
+@media (min-width: 960px) {
+  .macos-admin .admin .admin-body {
+    display: grid;
+    grid-template-columns: 208px minmax(0, 1fr);
+    background: var(--mac-win);
+    border: 1px solid var(--mac-sep);
+    border-radius: var(--mac-r-window);
+    box-shadow: var(--mac-e2);
+    overflow: hidden;
+  }
+  .macos-admin .admin .admin-tabs {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    margin: 0;
+    padding: 10px 8px;
+    background: var(--mac-sidebar);
+    -webkit-backdrop-filter: var(--mac-blur);
+    backdrop-filter: var(--mac-blur);
+    border: none;
+    border-right: 1px solid var(--mac-sep);
+    border-radius: 0;
+    overflow: visible;
+  }
+  .macos-admin .admin .admin-tab {
+    flex-shrink: 0;
+    text-align: left;
+    padding: 7px 10px;
+    font-size: 0.875rem;
+    color: var(--mac-label);
+    border-radius: var(--mac-r-control);
+    background: none;
+    border: none;
+  }
+  .macos-admin .admin .admin-tab.active {
+    background: var(--mac-blue);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+  }
+  .macos-admin .admin .admin-tab:hover:not(.active) {
+    background: var(--mac-fill-hover);
+    color: var(--mac-label);
+  }
+  .macos-admin .admin .admin-panel {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 22px 24px 26px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .macos-admin .admin .admin-msg {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 0;
+    padding: 10px 24px 18px;
+  }
+}
+
+/* 窄屏：横向分段控件 + 独立卡片 */
+@media (max-width: 959px) {
+  .macos-admin .admin .admin-tabs {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+    margin: 16px 0 14px;
+    padding: 3px;
+    background: var(--mac-fill);
+    border: none;
+    border-radius: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .macos-admin .admin .admin-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .macos-admin .admin .admin-tab {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    font-size: 0.875rem;
+    color: var(--mac-label);
+    border-radius: 8px;
+  }
+  .macos-admin .admin .admin-tab.active {
+    background: var(--mac-win);
+    color: var(--mac-label);
+    font-weight: 600;
+    box-shadow: var(--mac-e1);
+  }
+  .macos-admin .admin .admin-panel {
+    padding: 18px 16px 20px;
+    background: var(--mac-win);
+    border: 1px solid var(--mac-sep);
+    border-radius: var(--mac-r-window);
+    box-shadow: var(--mac-e1);
+  }
+}
+
+/* 面板内的组标题：macOS 设置里的 13px 半粗次级标题 */
+.macos-admin .admin .admin-panel h3 {
+  margin: 22px 0 8px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--mac-label-2);
+}
+.macos-admin .admin .admin-panel h3:first-of-type {
+  margin-top: 0;
+}
+.macos-admin .admin .admin-panel .hint {
+  font-size: 0.83rem;
+  line-height: 1.8;
+  color: var(--mac-label-2);
+}
+.macos-admin .admin .admin-panel .hint code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--mac-fill);
+  padding: 0.1em 0.38em;
+  border-radius: 5px;
+}
+
+/* ── 控件 ───────────────────────────────────────────────────────── */
+
+/* 按钮：macOS 推按钮 */
+.macos-admin .admin-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--mac-label);
+  background: var(--mac-win);
+  border: 1px solid var(--mac-control-line);
+  border-radius: var(--mac-r-control);
+  padding: 6px 14px;
+  min-height: 30px;
+  box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.07), 0 0 0 0.5px rgba(0, 0, 0, 0.02);
+  transition:
+    background-color var(--mac-t-fast) var(--mac-ease),
+    transform var(--mac-t-fast) var(--mac-ease),
+    box-shadow var(--mac-t-fast) var(--mac-ease);
+}
+.macos-admin .admin-btn:hover {
+  background: color-mix(in srgb, var(--mac-fill-hover) 60%, var(--mac-win));
+}
+.macos-admin .admin-btn:active {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+.macos-admin .admin-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.macos-admin .admin-btn.primary {
+  background: var(--mac-blue);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.macos-admin .admin-btn.primary:hover {
+  background: color-mix(in srgb, var(--mac-blue) 86%, #fff);
+}
+.macos-admin .admin-btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--mac-blue);
+}
+.macos-admin .admin-btn.ghost:hover {
+  background: var(--mac-fill);
+}
+.macos-admin .admin-btn.danger {
+  color: var(--mac-red);
+}
+
+/* 输入控件：macOS 内嵌字段 */
+.macos-admin .admin .admin-panel input,
+.macos-admin .admin .admin-panel textarea,
+.macos-admin .admin .admin-panel select,
+.macos-admin .admin .login-row input,
+.macos-admin .admin .ai-session-select {
+  width: 100%;
+  margin-top: 5px;
+  padding: 7px 10px;
+  font-family: var(--font-sans);
+  font-size: 1rem; /* 低于 16px 会触发 iOS 聚焦缩放 */
+  line-height: 1.6;
+  color: var(--mac-label);
+  background: var(--mac-control);
+  border: 1px solid var(--mac-control-line);
+  border-radius: var(--mac-r-field);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.03);
+  transition:
+    border-color var(--mac-t-fast) var(--mac-ease),
+    box-shadow var(--mac-t-fast) var(--mac-ease);
+}
+.macos-admin .admin .admin-panel input::placeholder,
+.macos-admin .admin .admin-panel textarea::placeholder,
+.macos-admin .admin .login-row input::placeholder {
+  color: var(--mac-placeholder);
+}
+.macos-admin .admin .admin-panel input:focus,
+.macos-admin .admin .admin-panel textarea:focus,
+.macos-admin .admin .admin-panel select:focus,
+.macos-admin .admin .login-row input:focus {
+  outline: none;
+  border-color: var(--mac-blue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mac-blue) 26%, transparent);
+}
+
+/* 弹出按钮（select）：macOS pop-up button 的箭头 */
+.macos-admin .admin .admin-panel select,
+.macos-admin .admin .ai-session-select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+}
+.macos-admin .admin .ai-session-select {
+  flex: 1;
+  min-width: 150px;
+  width: auto;
+  margin-top: 0;
+  min-height: 30px;
+  background-color: var(--mac-win);
+}
+
+/* 字段：标签在上、控件在下 */
+.macos-admin .admin .admin-panel .field {
+  display: block;
+  margin-top: 14px;
+  font-size: 0.82rem;
+  color: var(--mac-label-2);
+}
+.macos-admin .admin .admin-panel .field > span {
+  display: block;
+  font-weight: 500;
+}
+.macos-admin .admin .admin-panel .row-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* ── AI 助手：对话 ─────────────────────────────────────────────── */
+
+/* 会话工具条：macOS 工具栏材质 */
+.macos-admin .admin .admin-panel .ai-session-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0;
+  padding: 7px 8px;
+  background: var(--mac-toolbar);
+  -webkit-backdrop-filter: var(--mac-blur);
+  backdrop-filter: var(--mac-blur);
+  border: 1px solid var(--mac-sep);
+  border-radius: var(--mac-r-card);
+}
+
+/* 聊天区：消息列表底 */
+.macos-admin .admin .admin-panel .ai-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: min(58vh, 560px);
+  overflow-y: auto;
+  margin-top: 12px;
+  padding: 16px 14px;
+  background: var(--mac-canvas);
+  border: 1px solid var(--mac-sep);
+  border-radius: var(--mac-r-card);
+}
+
+/* 气泡：iMessage 式——用户蓝底反白，助手白底描边 */
+.macos-admin .ai-msg {
+  max-width: 78%;
+  padding: 9px 13px;
+  border-radius: 17px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.macos-admin .ai-msg.user {
+  background: var(--mac-blue);
+  color: #fff;
+  border: none;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.macos-admin .ai-msg.bot {
+  background: var(--mac-win);
+  color: var(--mac-label);
+  border: 1px solid var(--mac-sep);
+  border-bottom-left-radius: 5px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+.macos-admin .ai-msg.bot.thinking {
+  color: var(--mac-label-3);
+}
+.macos-admin .ai-msg.bot.err {
+  color: var(--mac-red);
+  border-color: color-mix(in srgb, var(--mac-red) 40%, var(--mac-sep));
+}
+/* 角色标签：小号次级文字 */
+.macos-admin .ai-role {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--mac-label-3);
+  padding: 0 4px;
+  letter-spacing: 0.02em;
+}
+.macos-admin .ai-turn.user .ai-role {
+  color: var(--mac-label-2);
+}
+/* 参考来源 */
+.macos-admin .ai-src {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--mac-sep);
+  font-size: 0.76rem;
+  color: var(--mac-label-3);
+}
+.macos-admin .ai-src a {
+  color: var(--mac-blue);
+  text-decoration: none;
+}
+.macos-admin .ai-src a:hover {
+  text-decoration: underline;
+}
+
+/* 快捷提问：建议胶囊 */
+.macos-admin .admin .admin-panel .ai-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.macos-admin .admin .admin-panel .ai-quick .admin-btn {
+  background: var(--mac-fill);
+  border-color: transparent;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  color: var(--mac-label);
+}
+
+/* 模式开关：macOS 开关（开关本体用纯 CSS 画，不引图标字体） */
+.macos-admin .admin .admin-panel .ai-modes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 14px;
+}
+.macos-admin .admin .admin-panel .ai-modes .kb-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--mac-label);
+  cursor: pointer;
+}
+.macos-admin .admin .admin-panel .ai-modes .kb-mode input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 38px;
+  height: 22px;
+  margin: 0;
+  border: none;
+  border-radius: 999px;
+  background-color: var(--mac-fill-hover);
+  background-image: radial-gradient(circle at 11px 50%, #fff 0 8px, transparent 8.5px);
+  background-repeat: no-repeat;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  transition: background-color var(--mac-t) var(--mac-ease);
+  cursor: pointer;
+}
+.macos-admin .admin .admin-panel .ai-modes .kb-mode input:checked {
+  background-color: var(--mac-blue);
+  background-image: radial-gradient(circle at 27px 50%, #fff 0 8px, transparent 8.5px);
+}
+.macos-admin .admin .admin-panel .ai-mode-note {
+  font-size: 0.78rem;
+  color: var(--mac-label-3);
+}
+
+/* 输入条：macOS 组合框（胶囊容器 + 内部无边框输入 + 蓝色发送键） */
+.macos-admin .admin .admin-panel .ai-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 5px 5px 5px 8px;
+  background: var(--mac-win);
+  border: 1px solid var(--mac-control-line);
+  border-radius: 999px;
+  box-shadow: var(--mac-e1);
+  transition:
+    border-color var(--mac-t-fast) var(--mac-ease),
+    box-shadow var(--mac-t-fast) var(--mac-ease);
+}
+.macos-admin .admin .admin-panel .ai-input-row:focus-within {
+  border-color: var(--mac-blue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mac-blue) 22%, transparent);
+}
+.macos-admin .admin .admin-panel .ai-input-row input {
+  flex: 1;
+  min-width: 120px;
+  margin-top: 0;
+  padding: 6px 2px;
+  border: none !important;
+  background: transparent;
+  box-shadow: none !important;
+  font-size: 1rem;
+}
+.macos-admin .admin .admin-panel .ai-input-row .admin-btn.primary {
+  border-radius: 999px;
+  padding: 6px 18px;
+}
+
+/* 模型切换：胶囊按钮 + 毛玻璃弹出菜单 */
+.macos-admin .admin .admin-panel .ai-model-switch {
+  position: relative;
+  flex-shrink: 0;
+}
+.macos-admin .admin .admin-panel .ai-model-pill {
+  padding: 6px 12px;
+  border: none;
+  background: var(--mac-fill);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--mac-label);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--mac-t-fast) var(--mac-ease);
+}
+.macos-admin .admin .admin-panel .ai-model-pill:hover {
+  background: var(--mac-fill-hover);
+}
+.macos-admin .admin .admin-panel .ai-model-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  min-width: 230px;
+  display: flex;
+  flex-direction: column;
+  background: var(--mac-pop);
+  -webkit-backdrop-filter: var(--mac-blur);
+  backdrop-filter: var(--mac-blur);
+  border: 1px solid var(--mac-sep);
+  border-radius: 10px;
+  box-shadow: var(--mac-e3);
+  padding: 5px;
+  z-index: 20;
+}
+.macos-admin .ai-model-item {
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--mac-label);
+  padding: 7px 10px;
+  border-radius: var(--mac-r-control);
+  cursor: pointer;
+}
+.macos-admin .ai-model-item:hover {
+  background: var(--mac-blue);
+  color: #fff;
+}
+.macos-admin .ai-model-item.active {
+  color: var(--mac-label);
+  font-weight: 600;
+  background: var(--mac-fill-hover);
+}
+.macos-admin .ai-model-empty,
+.macos-admin .ai-profile-empty {
+  font-size: 0.84rem;
+  color: var(--mac-label-3);
+  padding: 8px 10px;
+}
+
+/* ── 模型配置：档案卡 + 表单 ───────────────────────────────────── */
+
+.macos-admin .admin .admin-panel .ai-profiles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.macos-admin .ai-profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--mac-win);
+  border: 1px solid var(--mac-sep);
+  border-radius: var(--mac-r-card);
+  box-shadow: var(--mac-e1);
+  transition:
+    border-color var(--mac-t-fast) var(--mac-ease),
+    box-shadow var(--mac-t-fast) var(--mac-ease);
+}
+.macos-admin .ai-profile-chip.active {
+  border-color: color-mix(in srgb, var(--mac-blue) 55%, transparent);
+  background: color-mix(in srgb, var(--mac-blue) 6%, var(--mac-win));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mac-blue) 30%, transparent);
+}
+.macos-admin .ai-profile-name {
+  flex: 1;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--mac-label);
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+.macos-admin .ai-profile-del {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: var(--mac-label-3);
+  cursor: pointer;
+  font-size: 0.78rem;
+  border-radius: 6px;
+}
+/* 常态：把 Unicode ✕ 换成画的 SVG 图标（craft-floor：字形不能当图标）。
+   两段式确认时按钮文字会变成「确认删除？」，用 :not([data-armed]) 让出这时不生效 */
+.macos-admin .ai-profile-del:not([data-armed]) {
+  font-size: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 11px;
+}
+.macos-admin .ai-profile-del:not([data-armed]):hover {
+  background-color: color-mix(in srgb, var(--mac-red) 14%, transparent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3b30' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+}
+.macos-admin .ai-profile-del[data-armed] {
+  width: auto;
+  padding: 0 8px;
+  font-size: 0.78rem;
+  color: var(--mac-red);
+}
+.macos-admin .ai-profile-del:hover {
+  background: color-mix(in srgb, var(--mac-red) 14%, transparent);
+  color: var(--mac-red);
+}
+
+/* ── 无障碍与降级 ─────────────────────────────────────────────── */
+
+/* 触屏：按钮放大到易点尺寸（HIG 44pt 触控目标） */
+@media (hover: none) and (max-width: 959px) {
+  .macos-admin .admin-btn {
+    min-height: 42px;
+    padding: 10px 16px;
+  }
+  .macos-admin .admin .admin-panel .ai-input-row .admin-btn.primary {
+    padding: 10px 20px;
+  }
+}
+
+/* 系统要求降低透明度：材质退回不透明面（Puppertino 同款降级思路） */
+@media (prefers-reduced-transparency: reduce) {
+  .macos-admin {
+    --mac-sidebar: #f2f2f7;
+    --mac-toolbar: #ffffff;
+    --mac-pop: #f6f6f8;
+  }
+  [data-theme='dark'] .macos-admin {
+    --mac-sidebar: #28282a;
+    --mac-toolbar: #1e1e1e;
+    --mac-pop: #343436;
+  }
+  .macos-admin .admin .admin-tabs,
+  .macos-admin .admin .admin-head,
+  .macos-admin .admin .admin-panel .ai-session-bar,
+  .macos-admin .admin .admin-panel .ai-model-pop {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* 浏览器不支持毛玻璃：退回不透明 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .macos-admin {
+    --mac-sidebar: #f2f2f7;
+    --mac-toolbar: #ffffff;
+    --mac-pop: #f6f6f8;
+  }
+  [data-theme='dark'] .macos-admin {
+    --mac-sidebar: #28282a;
+    --mac-toolbar: #1e1e1e;
+    --mac-pop: #343436;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .macos-admin .admin-btn,
+  .macos-admin .admin .admin-tab,
+  .macos-admin .admin .admin-panel .ai-model-pill,
+  .macos-admin .admin .admin-panel .ai-modes .kb-mode input {
+    transition: none;
+  }
+}
