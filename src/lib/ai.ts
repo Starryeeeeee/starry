@@ -77,6 +77,75 @@ export const AI_PRESETS: Array<{
 
 const STORAGE_KEY = 'sr-ai-config';
 
+/** 模型档案：一个可切换的"AI 成员"，name 同时是它在对话里的人格名 */
+export type AiProfile = {
+  id: string;
+  /** 展示名，也是它自我介绍用的名字，如「星渚（Stellula-2.5）」 */
+  name: string;
+  baseUrl: string;
+  model: string;
+  apiKey: string;
+  thinkingModel?: string;
+  thinkingKwargs?: boolean;
+  thinkingParam?: boolean;
+  webSearchTool?: boolean;
+};
+
+/** 站主起的模型艺名：按底层模型自动建议，有浓厚的人文气息 */
+export const MODEL_PERSONAS: Array<{ match: RegExp; name: string }> = [
+  { match: /^agnes-2\.5-flash/i, name: '星渚（Stellula-2.5）' },
+  { match: /^agnes-3\.0-flash/i, name: '曜魄（Sidera-3.0）' },
+  { match: /^deepseek/i, name: '云渚（Nubifer-4.1）' },
+];
+
+export const personaForModel = (model: string): string | undefined =>
+  MODEL_PERSONAS.find((p) => p.match.test(model))?.name;
+
+// ---- 模型档案存取（localStorage，绝不进仓库） ----
+const PROFILES_KEY = 'sr-ai-profiles';
+const ACTIVE_KEY = 'sr-ai-active';
+
+export function loadProfiles(): AiProfile[] {
+  try {
+    const raw = localStorage.getItem(PROFILES_KEY);
+    if (raw) {
+      const list = JSON.parse(raw) as AiProfile[];
+      if (Array.isArray(list) && list.length) return list;
+    }
+  } catch {
+    /* 损坏则走迁移 */
+  }
+  // 从旧的单配置迁移过来，档案名按模型艺名自动起
+  const old = loadAiConfig();
+  if (!old) return [];
+  return [
+    {
+      id: 'p-migrated',
+      name: personaForModel(old.model) ?? old.model,
+      baseUrl: old.baseUrl,
+      model: old.model,
+      apiKey: old.apiKey,
+      thinkingModel: old.thinkingModel,
+      thinkingKwargs: old.thinkingKwargs,
+      thinkingParam: old.thinkingParam,
+      webSearchTool: old.webSearchTool,
+    },
+  ];
+}
+
+export function saveProfiles(list: AiProfile[]) {
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(list));
+}
+
+export function loadActiveProfileId(): string | null {
+  return localStorage.getItem(ACTIVE_KEY);
+}
+
+export function saveActiveProfileId(id: string | null) {
+  if (id) localStorage.setItem(ACTIVE_KEY, id);
+  else localStorage.removeItem(ACTIVE_KEY);
+}
+
 export function loadAiConfig(): AiConfig | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
