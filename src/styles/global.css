@@ -1358,6 +1358,50 @@ html.no-decor .bg-decor {
   display: none;
 }
 
+/* 背景四芒星：与水彩晕染同一层，呼吸频率各不相同；页脚「背景」开关一并控制 */
+.bg-stars {
+  position: absolute;
+  inset: 0;
+}
+
+.bg-star {
+  position: absolute;
+  fill: #d9a441; /* 柔金 */
+  opacity: 0.3;
+  animation: star-breathe 8s ease-in-out infinite;
+}
+
+.bg-star.blue {
+  fill: #8fa9c2;
+}
+
+[data-theme="dark"] .bg-star {
+  fill: #f0b429;
+  opacity: 0.4;
+}
+
+[data-theme="dark"] .bg-star.blue {
+  fill: #aebfd9;
+}
+
+@keyframes star-breathe {
+  0%,
+  100% {
+    opacity: 0.22;
+    transform: scale(0.92) rotate(0deg);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.06) rotate(10deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .bg-star:nth-child(n + 5) {
+    display: none;
+  }
+}
+
 /* ---------- 画廊 v2：瀑布流 + 无卡片框 + 灯箱 ---------- */
 
 /* 瀑布流：CSS 多列，不同比例的照片各自自然排布 */
