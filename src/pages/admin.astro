@@ -1461,7 +1461,8 @@ import Base from '../layouts/Base.astro';
       const blob = await compressImage(f);
       const buf = new Uint8Array(await blob.arrayBuffer());
       const ext = blob.type === 'image/jpeg' && !/\.jpe?g$/i.test(f.name) ? 'jpg' : (f.name.match(/\.([^.]+)$/)?.[1] ?? 'jpg').toLowerCase();
-      const stem = caption || f.name.replace(/\.[^.]+$/, '').replace(/^\d{4}-\d{2}-\d{2}[\s_-]?/, '') || '图片';
+      const rawStem = caption || f.name.replace(/\.[^.]+$/, '').replace(/^\d{4}-\d{2}-\d{2}[\s_-]?/, '') || '图片';
+      const stem = rawStem.replace(/[/\\?#%*"<>|:]/g, '').trim() || '图片';
       const name = `${date} ${stem}.${ext}`;
       await api(`/repos/${REPO}/contents/${encodeURIComponent('src/assets/gallery/' + name)}`, {
         method: 'PUT',
