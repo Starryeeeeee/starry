@@ -1,0 +1,18 @@
+# Supabase 免费档 7 天无活动会被暂停 → 每周自动 ping 一次点赞表保活
+# key 是 publishable key（本来就是公开的前端密钥），放在这里没有安全问题
+name: Supabase keepalive
+
+on:
+  schedule:
+    - cron: '0 22 * * 1' # UTC 周一 22:00 = 北京周二 06:00
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping likes table
+        run: |
+          curl -fsS "https://noueumqoguhikzmjetuu.supabase.co/rest/v1/likes?select=count&limit=1" \
+            -H "apikey: sb_publishable_m_aCm2fn9GEJRV9hokGAmg_NBamZWOe" \
+            -H "Authorization: Bearer sb_publishable_m_aCm2fn9GEJRV9hokGAmg_NBamZWOe"

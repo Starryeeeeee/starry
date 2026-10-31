@@ -317,6 +317,11 @@ import Base from '../layouts/Base.astro';
     padding: 4px 12px;
     font-size: 0.82rem;
   }
+  .admin-btn.danger {
+    color: #b4766b;
+    border-color: #b4766b;
+    background: color-mix(in srgb, #b4766b 10%, var(--surface));
+  }
   .admin-panel h3 {
     margin-top: 30px;
     font-family: var(--font-display-cn);
@@ -445,6 +450,32 @@ import Base from '../layouts/Base.astro';
       method: 'POST',
       body: JSON.stringify({ ref: BRANCH }),
     });
+
+  // ---------- 删除确认：两段式自绘按钮（替代浏览器原生 confirm） ----------
+  // 第一次点 → 按钮变红显示「确认删除？」，4 秒内再点才真删，超时自动还原
+  function armDelete(btn: HTMLButtonElement, run: () => Promise<void>) {
+    if (btn.dataset.armed) {
+      btn.disabled = true;
+      try {
+        void run();
+      } catch (e) {
+        msg('删除失败：' + (e as Error).message);
+      }
+      return;
+    }
+    btn.dataset.armed = '1';
+    btn.dataset.original = btn.textContent ?? '';
+    btn.textContent = '确认删除？';
+    btn.classList.add('danger');
+    window.setTimeout(() => disarmDelete(btn), 4000);
+  }
+
+  function disarmDelete(btn: HTMLButtonElement) {
+    btn.dataset.armed = '';
+    btn.classList.remove('danger');
+    btn.disabled = false;
+    if (btn.dataset.original) btn.textContent = btn.dataset.original;
+  }
 
   // ---------- 登录态 ----------
   async function showLogin(loggedIn: { login: string; avatar_url: string } | null) {
@@ -605,9 +636,8 @@ import Base from '../layouts/Base.astro';
       del.className = 'admin-btn ghost';
       del.type = 'button';
       del.textContent = '删除';
-      del.onclick = async () => {
-        del.disabled = true;
-        try {
+      del.onclick = () => {
+        armDelete(del, async () => {
           await api(`/repos/${REPO}/issues/${it.number}`, {
             method: 'PATCH',
             body: JSON.stringify({ state: 'closed' }),
@@ -615,10 +645,7 @@ import Base from '../layouts/Base.astro';
           await dispatchBuild();
           msg('已删除，站点构建中（1-2 分钟生效）');
           await refreshMoments();
-        } catch (e) {
-          msg('删除失败：' + (e as Error).message);
-          del.disabled = false;
-        }
+        });
       };
       li.appendChild(del);
       list.appendChild(li);
@@ -651,20 +678,15 @@ import Base from '../layouts/Base.astro';
       del.className = 'admin-btn ghost';
       del.type = 'button';
       del.textContent = '删除';
-      del.onclick = async () => {
-        if (!confirm(`删除《${f.name}》？构建后即从站点消失。`)) return;
-        del.disabled = true;
-        try {
+      del.onclick = () => {
+        armDelete(del, async () => {
           await api(`/repos/${REPO}/contents/src/content/posts/${f.name}`, {
             method: 'DELETE',
             body: JSON.stringify({ message: `删文章 ${f.name}`, sha: f.sha, branch: BRANCH }),
           });
           msg('已删除，构建中…（push 自动触发）');
           await refreshPosts();
-        } catch (e) {
-          msg('删除失败：' + (e as Error).message);
-          del.disabled = false;
-        }
+        });
       };
       li.append(name, edit, del);
       list.appendChild(li);
@@ -770,18 +792,13 @@ import Base from '../layouts/Base.astro';
     del.className = 'admin-btn ghost';
     del.type = 'button';
     del.textContent = '删除';
-    del.onclick = async () => {
-      if (!confirm('删除后构建即从站点消失，确定？')) return;
-      del.disabled = true;
-      try {
+    del.onclick = () => {
+      armDelete(del, async () => {
         await fn();
         await dispatchBuild();
         msg('已删除，站点构建中（1-2 分钟生效）');
         await refreshKb();
-      } catch (e) {
-        msg('删除失败：' + (e as Error).message);
-        del.disabled = false;
-      }
+      });
     };
     return del;
   }
