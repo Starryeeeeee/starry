@@ -37,6 +37,7 @@ import Base from '../layouts/Base.astro';
         <button class="admin-tab" type="button" data-tab="post" role="tab">文章</button>
         <button class="admin-tab" type="button" data-tab="kb" role="tab">知识库</button>
         <button class="admin-tab" type="button" data-tab="site" role="tab">站点</button>
+        <button class="admin-tab" type="button" data-tab="ai" role="tab">AI 助手</button>
       </nav>
 
       <!-- 废话条 -->
@@ -197,6 +198,47 @@ import Base from '../layouts/Base.astro';
 
         <h3>音乐</h3>
         <p class="hint">在「站点」之外操作：把 mp3 放进仓库 <code>public/music/</code>，再改 <code>src/components/MusicPlayer.astro</code> 顶部的曲目列表。</p>
+      </div>
+
+      <!-- AI 助手 -->
+      <div class="admin-panel" data-panel="ai" hidden>
+        <h3>接口配置</h3>
+        <p class="hint">任何 OpenAI 兼容接口都能接（Agnes / DeepSeek / …），换服务商 = 换三个配置项。API Key 只保存在本浏览器 localStorage（和登录令牌同级），不会写入网站仓库。</p>
+        <label class="field">
+          <span>服务商预设</span>
+          <select data-ai="preset"></select>
+        </label>
+        <p class="hint" data-ai="preset-note"></p>
+        <div class="field-grid">
+          <label class="field">
+            <span>Base URL</span>
+            <input type="text" data-ai="baseUrl" placeholder="https://api.agnes-ai.cn/v1" spellcheck="false" />
+          </label>
+          <label class="field">
+            <span>模型</span>
+            <input type="text" data-ai="model" placeholder="agnes-2.5-flash" spellcheck="false" />
+          </label>
+        </div>
+        <label class="field">
+          <span>API Key</span>
+          <input type="password" data-ai="apiKey" placeholder="sk-…" autocomplete="off" spellcheck="false" />
+        </label>
+        <div class="row-end">
+          <button class="admin-btn" type="button" data-act="ai-test">测试连接</button>
+          <button class="admin-btn primary" type="button" data-act="ai-save">保存配置</button>
+        </div>
+
+        <h3>资料问答</h3>
+        <p class="hint">AI 会先从全站索引（构建时生成的 <code>/api-index.json</code>）里检索最相关的几条内容，再据此回答；新发布的内容要等构建完成后才能被检索到。</p>
+        <div class="ai-chat" data-ai-chat hidden></div>
+        <div class="ai-quick">
+          <button class="admin-btn ghost" type="button" data-ai-q="用几句话总结一下我的网站上都有哪些内容">总结站上内容</button>
+          <button class="admin-btn ghost" type="button" data-ai-q="帮我把下面这句话润色成一条废话条，保持原意、语言更有味道，只输出润色后的一句话：">润色废话条</button>
+        </div>
+        <div class="login-row">
+          <input type="text" data-ai="input" placeholder="问点什么…（Enter 发送）" />
+          <button class="admin-btn primary" type="button" data-act="ai-send">发送</button>
+        </div>
       </div>
 
       <p class="admin-msg" role="status"></p>
@@ -427,10 +469,71 @@ import Base from '../layouts/Base.astro';
   .edit-banner .admin-btn {
     margin-left: auto;
   }
+  .ai-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 420px;
+    overflow-y: auto;
+    margin-top: 10px;
+    padding: 4px;
+  }
+  .ai-msg {
+    max-width: 92%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .ai-msg.user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: #fff;
+  }
+  .ai-msg.bot {
+    align-self: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .ai-msg.bot.thinking {
+    color: var(--ink-3);
+  }
+  .ai-src {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--line);
+    font-size: 0.78rem;
+    color: var(--ink-3);
+  }
+  .ai-src a {
+    color: var(--accent-ink);
+  }
+  .ai-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
 </style>
 
 <script>
   // ============ 管理面板：GitHub API 即后端 ============
+  import { u } from '../lib/base';
+  import {
+    AI_PRESETS,
+    loadAiConfig,
+    saveAiConfig,
+    aiChat,
+    aiTestConnection,
+    searchIndex,
+    buildContextBlock,
+    type AiConfig,
+    type AiIndexEntry,
+    type AiMessage,
+  } from '../lib/ai';
+
   const REPO = 'Starryeeeeee/starry';
   const BRANCH = 'main';
   const TOKEN_KEY = 'sr-admin-token';
@@ -1106,10 +1209,183 @@ import Base from '../layouts/Base.astro';
     }
   });
 
+  // ---------- AI 助手（配置 + 资料问答） ----------
+  const aiFields = (k: string) => $(`[data-ai="${k}"]`) as HTMLInputElement;
+  let aiIndex: AiIndexEntry[] | null = null;
+  let aiIndexAt = 0;
+  const aiHistory: AiMessage[] = [];
+
+  // 全站索引带 10 分钟缓存，避免每问一次都重新拉
+  async function ensureAiIndex(): Promise<AiIndexEntry[]> {
+    if (aiIndex && Date.now() - aiIndexAt < 10 * 60 * 1000) return aiIndex;
+    const r = await fetch(u('/api-index.json'));
+    if (!r.ok) throw new Error('读不到全站索引 /api-index.json（站点还没构建？先触发一次构建）');
+    const data = (await r.json()) as { entries: AiIndexEntry[] };
+    aiIndex = data.entries ?? [];
+    aiIndexAt = Date.now();
+    return aiIndex;
+  }
+
+  function initAiPanel() {
+    const presetSel = aiFields('preset') as unknown as HTMLSelectElement;
+    for (const p of AI_PRESETS) {
+      const opt = document.createElement('option');
+      opt.value = p.key;
+      opt.textContent = p.label;
+      presetSel.appendChild(opt);
+    }
+    const applyPreset = () => {
+      const p = AI_PRESETS.find((x) => x.key === presetSel.value);
+      (aiFields('preset-note') as HTMLElement).textContent = p?.note ?? '';
+      if (p && p.key !== 'custom') {
+        aiFields('baseUrl').value = p.baseUrl;
+        aiFields('model').value = p.model;
+      }
+    };
+    presetSel.addEventListener('change', applyPreset);
+    // 已有配置就回填；预设按 baseUrl 反推，对不上就落在自定义
+    const saved = loadAiConfig();
+    if (saved) {
+      const matched = AI_PRESETS.find((p) => p.baseUrl === saved.baseUrl && p.key !== 'custom');
+      presetSel.value = matched?.key ?? 'custom';
+      aiFields('baseUrl').value = saved.baseUrl;
+      aiFields('model').value = saved.model;
+      aiFields('apiKey').value = saved.apiKey;
+      // 回填后不能再跑 applyPreset（会拿预设默认模型覆盖用户改过的模型名），只补说明文字
+      (aiFields('preset-note') as HTMLElement).textContent = matched?.note ?? AI_PRESETS[2].note;
+    } else {
+      presetSel.value = AI_PRESETS[0].key;
+      applyPreset();
+    }
+  }
+
+  const readAiForm = (): AiConfig | null => {
+    const baseUrl = aiFields('baseUrl').value.trim();
+    const model = aiFields('model').value.trim();
+    const apiKey = aiFields('apiKey').value.trim();
+    if (!baseUrl || !model || !apiKey) {
+      msg('Base URL、模型、API Key 都要填');
+      return null;
+    }
+    return { baseUrl, model, apiKey };
+  };
+
+  function appendAiMsg(kind: 'user' | 'bot', text: string): HTMLElement {
+    const box = $('[data-ai-chat]') as HTMLElement;
+    box.hidden = false;
+    const div = document.createElement('div');
+    div.className = `ai-msg ${kind}${kind === 'bot' && !text ? ' thinking' : ''}`;
+    div.textContent = text || (kind === 'bot' ? '思考中…' : '');
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+    return div;
+  }
+
+  function appendAiSources(hits: Array<{ entry: AiIndexEntry }>) {
+    const named = hits.filter((h) => h.entry.path);
+    if (!named.length) return;
+    const src = document.createElement('div');
+    src.className = 'ai-src';
+    src.append('参考：');
+    named.forEach(({ entry }, i) => {
+      if (i > 0) src.append('、');
+      const a = document.createElement('a');
+      a.href = u(entry.path!);
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = `《${entry.title}》`;
+      src.appendChild(a);
+    });
+    ($('[data-ai-chat]') as HTMLElement).lastElementChild?.appendChild(src);
+  }
+
+  async function sendAiQuestion() {
+    const cfg = loadAiConfig();
+    if (!cfg) {
+      msg('先填好上面的接口配置并点「保存配置」');
+      return;
+    }
+    const q = aiFields('input').value.trim();
+    if (!q) return;
+    aiFields('input').value = '';
+    appendAiMsg('user', q);
+    const bubble = appendAiMsg('bot', '');
+    try {
+      const index = await ensureAiIndex();
+      const hits = searchIndex(index, q, 5);
+      const system =
+        '你是个人网站「星野漫游」的站内助手。下面是站长站上内容的检索结果。' +
+        '请优先依据这些资料回答；资料里没有的就直说没有，不要编造。' +
+        '用简体中文回答，简洁自然。\n\n' +
+        (buildContextBlock(hits) || '（本次未检索到相关资料）');
+      const reply = await aiChat(cfg, [
+        { role: 'system', content: system },
+        ...aiHistory.slice(-6),
+        { role: 'user', content: q },
+      ]);
+      aiHistory.push({ role: 'user', content: q }, { role: 'assistant', content: reply });
+      while (aiHistory.length > 8) aiHistory.shift();
+      bubble.textContent = reply;
+      bubble.classList.remove('thinking');
+      appendAiSources(hits);
+      const box = $('[data-ai-chat]') as HTMLElement;
+      box.scrollTop = box.scrollHeight;
+      msg('');
+    } catch (e) {
+      bubble.textContent = '出错了：' + (e as Error).message;
+      bubble.classList.add('thinking');
+    }
+  }
+
+  // AI tab 的事件绑定
+  document.addEventListener('click', async (e) => {
+    const t = e.target as HTMLElement;
+    const act = t.closest('[data-act]')?.getAttribute('data-act');
+    const quickQ = (t.closest('[data-ai-q]') as HTMLElement | null)?.getAttribute('data-ai-q');
+    if (quickQ) {
+      aiFields('input').value = quickQ;
+      aiFields('input').focus();
+      return;
+    }
+    if (act !== 'ai-save' && act !== 'ai-test' && act !== 'ai-send') return;
+    try {
+      if (act === 'ai-save') {
+        const cfg = readAiForm();
+        if (!cfg) return;
+        saveAiConfig(cfg);
+        msg('AI 配置已保存（只存在本浏览器）');
+      }
+      if (act === 'ai-test') {
+        const cfg = readAiForm();
+        if (!cfg) return;
+        const btn = t.closest('button') as HTMLButtonElement;
+        btn.disabled = true;
+        msg('测试中…');
+        try {
+          const reply = await aiTestConnection(cfg);
+          msg('连接成功，模型回复：' + reply);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+      if (act === 'ai-send') await sendAiQuestion();
+    } catch (err) {
+      msg('出错了：' + (err as Error).message);
+    }
+  });
+  aiFields('input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !(e as KeyboardEvent).isComposing) {
+      e.preventDefault();
+      sendAiQuestion();
+    }
+  });
+
   // Tab 切换
   for (const tab of document.querySelectorAll<HTMLButtonElement>('.admin-tab')) {
     tab.addEventListener('click', () => activateTab(tab.dataset.tab ?? 'moment'));
   }
+
+  initAiPanel();
 
   // 知识库：写笔记 / 传文档 两种模式切换
   for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="kb-mode"]')) {
