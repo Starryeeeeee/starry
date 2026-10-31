@@ -1,0 +1,299 @@
+---
+// 全站快速输入：右下角浮动笔，点开即写、回车即发
+// 仅在站长已登录（localStorage 有 PAT）时显示；访客不可见
+// 发布通道与 /admin 相同：GitHub Issues API + 自动触发构建
+import penIcon from '../icons/ui/pen-line.svg?raw';
+---
+
+<div class="quick-capture" data-open="false" hidden>
+  <div class="qc-panel" data-qc-panel hidden>
+    <div class="qc-types" role="radiogroup" aria-label="发布到">
+      <button type="button" class="qc-type active" data-qc-type="moment" aria-pressed="true">废话条</button>
+      <button type="button" class="qc-type" data-qc-type="quote" aria-pressed="false">箴言</button>
+      <button type="button" class="qc-type" data-qc-type="view" aria-pressed="false">看法</button>
+    </div>
+    <textarea class="qc-text" data-qc-text rows="3" maxlength="500" placeholder="记一笔…（Enter 发送，Shift+Enter 换行）"></textarea>
+    <div class="qc-foot">
+      <span class="qc-hint" data-qc-hint></span>
+      <button class="qc-send" type="button" data-qc-send>发布</button>
+    </div>
+  </div>
+  <button class="qc-fab" type="button" aria-label="快速记录" aria-expanded="false">
+    <span class="qc-fab-icon" aria-hidden="true"><Fragment set:html={penIcon} /></span>
+  </button>
+</div>
+
+<style>
+  .quick-capture {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 60; /* 唱片 40、灯箱 100 之下 */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  .quick-capture[hidden] {
+    display: none;
+  }
+
+  /* 面板 */
+  .qc-panel {
+    width: min(340px, calc(100vw - 44px));
+    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(22, 22, 45, 0.16);
+  }
+  .qc-panel[hidden] {
+    display: none;
+  }
+  .qc-types {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .qc-type {
+    padding: 4px 12px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    color: var(--ink-2);
+    background: none;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
+  }
+  .qc-type.active {
+    color: var(--accent-ink);
+    background: var(--wash);
+    font-weight: 650;
+  }
+  .qc-text {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    resize: vertical;
+    min-height: 72px;
+  }
+  .qc-text:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+    border-color: transparent;
+  }
+  .qc-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .qc-hint {
+    font-size: 0.78rem;
+    color: var(--ink-3);
+    line-height: 1.5;
+    min-height: 1.2em;
+  }
+  .qc-hint a {
+    color: var(--accent-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .qc-hint.err {
+    color: #b4766b;
+  }
+  .qc-send {
+    flex-shrink: 0;
+    padding: 6px 18px;
+    font-family: inherit;
+    font-size: 0.86rem;
+    font-weight: 550;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 0.15s ease, filter 0.2s ease;
+  }
+  .qc-send:hover {
+    filter: brightness(1.06);
+  }
+  .qc-send:active {
+    transform: scale(0.96);
+  }
+  .qc-send[disabled] {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  /* 浮动笔按钮 */
+  .qc-fab {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--bg);
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(22, 22, 45, 0.22);
+    transition: transform 0.2s var(--ease-out, ease), background 0.2s ease;
+  }
+  .qc-fab:hover {
+    transform: translateY(-2px) rotate(6deg);
+  }
+  .qc-fab:active {
+    transform: scale(0.94);
+  }
+  .qc-fab-icon svg {
+    display: block;
+    width: 19px;
+    height: 19px;
+  }
+  /* 打开时笔变成关闭态（旋转 45° 提示可收起） */
+  .quick-capture[data-open='true'] .qc-fab {
+    transform: rotate(8deg);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  @media (max-width: 640px) {
+    .quick-capture {
+      right: 16px;
+      bottom: 16px;
+    }
+    .qc-fab {
+      width: 42px;
+      height: 42px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .qc-fab,
+    .qc-send {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // ============ 快速输入：GitHub Issues API 即后端（与 /admin 同通道） ============
+  import { u } from '../lib/base';
+
+  const REPO = 'Starryeeeeee/starry';
+  const TOKEN_KEY = 'sr-admin-token';
+  const TYPE_NAMES: Record<string, string> = { moment: '废话条', quote: '箴言', view: '看法' };
+
+  const root = document.querySelector<HTMLElement>('.quick-capture')!;
+  const panel = root.querySelector<HTMLElement>('[data-qc-panel]')!;
+  const fab = root.querySelector<HTMLButtonElement>('.qc-fab')!;
+  const text = root.querySelector<HTMLTextAreaElement>('[data-qc-text]')!;
+  const hint = root.querySelector<HTMLElement>('[data-qc-hint]')!;
+  const sendBtn = root.querySelector<HTMLButtonElement>('[data-qc-send]')!;
+  const typeBtns = [...root.querySelectorAll<HTMLButtonElement>('.qc-type')];
+
+  const token = () => localStorage.getItem(TOKEN_KEY) ?? '';
+  const label = () => root.querySelector<HTMLInputElement>('[data-qc-type].active')?.dataset.qcType ?? 'moment';
+  const typeName = () => TYPE_NAMES[label()] ?? '废话条';
+
+  let hintTimer: number | undefined;
+  function say(m: string, isErr = false) {
+    hint.textContent = m;
+    hint.classList.toggle('err', isErr);
+    clearTimeout(hintTimer);
+    hintTimer = window.setTimeout(() => (hint.textContent = ''), 3600);
+  }
+
+  function setOpen(open: boolean) {
+    root.dataset.open = String(open);
+    fab.setAttribute('aria-expanded', String(open));
+    panel.hidden = !open;
+    if (open) {
+      // 未登录：给出登录指引，不显示输入框
+      const loggedIn = !!token();
+      text.hidden = !loggedIn;
+      sendBtn.hidden = !loggedIn;
+      root.querySelector('.qc-types')!.hidden = !loggedIn;
+      const hintEl = hint;
+      if (!loggedIn) {
+        hintEl.innerHTML =
+          '还没有登录——先去 <a href="' +
+          u('/admin/') +
+          '">管理面板</a> 用令牌登录，回来就能一键记录。';
+        hintEl.classList.add('err');
+      } else {
+        hintEl.classList.remove('err');
+        hintEl.textContent = '发布到「' + typeName() + '」';
+      }
+      if (loggedIn) text.focus();
+    }
+  }
+
+  fab.addEventListener('click', () => setOpen(root.dataset.open !== 'true'));
+
+  for (const b of typeBtns) {
+    b.addEventListener('click', () => {
+      typeBtns.forEach((x) => {
+        x.classList.toggle('active', x === b);
+        x.setAttribute('aria-pressed', String(x === b));
+      });
+      hint.textContent = '发布到「' + typeName() + '」';
+    });
+  }
+
+  text.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendBtn.click();
+    }
+    if (e.key === 'Escape') setOpen(false);
+  });
+
+  sendBtn.addEventListener('click', async () => {
+    const value = text.value.trim();
+    if (!value) return say('写点什么再发', true);
+    sendBtn.disabled = true;
+    say('发布中…');
+    try {
+      const r = await fetch(`https://api.github.com/repos/${REPO}/issues`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token()}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title: value, labels: [label()] }),
+      });
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        throw new Error(`${r.status} ${body.message ?? ''}`);
+      }
+      // 发布成功 → 触发构建（Issue 事件本身也会触发，这里保底再触发一次）
+      await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/deploy.yml/dispatches`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token()}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ref: 'main' }),
+      }).catch(() => {});
+      text.value = '';
+      say('已发布到「' + typeName() + '」，1-2 分钟上站');
+      window.setTimeout(() => setOpen(false), 900);
+    } catch (e) {
+      say('发布失败：' + (e as Error).message + '（令牌过期就去 /admin 重登）', true);
+    }
+    sendBtn.disabled = false;
+  });
+</script>

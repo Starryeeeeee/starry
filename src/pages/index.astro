@@ -1,4 +1,4 @@
----
+﻿---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { getMoments } from '../lib/moments';
@@ -107,7 +107,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
             <p class="list-empty">还没有动态——去仓库发一条带 <code>moment</code> 标签的 Issue 试试。</p>
           ) : (
             moments.map((m) => (
-              <article class="card moment">
+              <article class="moment">
                 <div class="moment-head">
                   <img src={avatar.src} alt="" width="28" height="28" />
                   <span class="caption-1"><b>Starry</b></span>
@@ -139,18 +139,20 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
           <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-projects" class="heading-5">作品</h2></div>
           <a class="more" href={u('/projects/')}>全部作品 →</a>
         </div>
-        {projects.map((p) => (
-          <a
-            class="card card-c-sand"
-            href={p.data.demo ?? p.data.repo ?? u('/projects/')}
-            target={(p.data.demo ?? p.data.repo) ? '_blank' : undefined}
-            rel="noopener"
-          >
-            <h3 class="title-2">{p.data.title}</h3>
-            <p>{p.data.description}</p>
-            {p.data.tags.length > 0 && <div class="card-tag">{p.data.tags.map((t) => <span>{t}</span>)}</div>}
-          </a>
-        ))}
+        <div class="project-list">
+          {projects.map((p) => (
+            <a
+              class="project-item"
+              href={p.data.demo ?? p.data.repo ?? u('/projects/')}
+              target={(p.data.demo ?? p.data.repo) ? '_blank' : undefined}
+              rel="noopener"
+            >
+              <h3 class="title-2">{p.data.title}<span class="arr" aria-hidden="true">→</span></h3>
+              <p>{p.data.description}</p>
+              {p.data.tags.length > 0 && <div class="card-tag">{p.data.tags.map((t) => <span>{t}</span>)}</div>}
+            </a>
+          ))}
+        </div>
       </section>
 
       <section class="sec sec-green" aria-labelledby="latest-kb">
@@ -162,7 +164,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
           <p class="list-empty">知识库还空着。</p>
         ) : (
           kbEntries.map((e) => (
-            <a class="card kb-item" href={u(`/kb/${e.slug}/`)}>
+            <a class="kb-row" href={u(`/kb/${e.slug}/`)}>
               <span class="kb-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg></span>
               <span class="kb-text">
                 <span class="title-3 kb-title">{e.title}</span>
@@ -319,21 +321,25 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .hero-social a:active { transform: scale(0.96); }
   .hero-social a :global(svg) { width: 16px; height: 16px; }
 
-  .card {
-    position: relative; display: block; overflow: hidden;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
-    padding: 24px; transition: transform 0.5s var(--ease), border-color 0.5s var(--ease), box-shadow 0.5s var(--ease);
-  }
-  .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--sec-c); opacity: 0; transition: opacity 0.5s var(--ease); }
-  .card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--sec-c) 45%, var(--line)); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1); }
-  .card:hover::before { opacity: 1; }
-  .card h3 { margin-bottom: 4px; }
-  .card p { font-size: 14px; line-height: 20px; color: var(--ink-2); }
-  .card-c-sand { --card-c: var(--sec-sand-c, #a98e67); }
-  .card-tag { margin-top: 12px; display: flex; gap: 8px; }
-  .card-tag span { font-size: 12px; line-height: 16px; padding: 2px 12px; border-radius: 999px; background: color-mix(in srgb, var(--sec-c) 14%, var(--surface-2)); color: var(--sec-c-ink); }
+  /* 作品：Shiro 式去壳裸排，悬停只有水彩底与标题变色 */
+  .project-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; margin-top: 4px; }
+  .project-item { display: block; padding: 16px 18px; border-radius: 14px; transition: background 0.3s var(--ease); }
+  .project-item:hover { background: color-mix(in srgb, var(--sec-c) 7%, transparent); }
+  .project-item h3 { display: flex; align-items: center; gap: 8px; transition: color 0.3s var(--ease); }
+  .project-item:hover h3 { color: var(--sec-c-ink); }
+  .project-item h3 .arr { opacity: 0; transform: translateX(-4px); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease); color: var(--sec-c-ink); }
+  .project-item:hover h3 .arr { opacity: 1; transform: none; }
+  .project-item p { margin-top: 6px; font-size: 14px; line-height: 20px; color: var(--ink-2); }
+  .card-tag { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .card-tag span { font-size: 12px; line-height: 16px; padding: 2px 12px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); }
 
-  .moment { display: flex; flex-direction: column; gap: 12px; }
+  .moment {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 20px 22px; border-radius: 16px;
+    transition: background 0.3s var(--ease);
+  }
+  .moment:hover { background: color-mix(in srgb, var(--sec-c) 6%, transparent); }
+  .moment + .moment { margin-top: 4px; }
   .moment-head { display: flex; align-items: center; gap: 8px; }
   .moment-head img { width: 28px; height: 28px; border-radius: 50%; }
   .moment-head .caption-1 b { font-weight: 600; }
@@ -354,11 +360,13 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .mini-item:hover .t { color: var(--sec-c-ink); }
   .mini-item time { flex-shrink: 0; font-size: 12px; color: var(--ink-3); }
 
-  .kb-item { display: flex; gap: 12px; align-items: flex-start; }
+  .kb-row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .kb-row:last-of-type { border-bottom: none; }
+  .kb-row:hover .kb-title { color: var(--sec-c-ink); }
   .kb-ico { flex-shrink: 0; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: color-mix(in srgb, var(--sec-c) 14%, var(--surface-2)); color: var(--sec-c-ink); }
   .kb-ico :global(svg) { width: 18px; height: 18px; }
   .kb-text { min-width: 0; }
-  .kb-title { display: block; }
+  .kb-title { display: block; transition: color 0.3s var(--ease); }
   .kb-desc { display: block; margin-top: 4px; color: var(--ink-2); }
   .kb-date { display: block; margin-top: 8px; color: var(--ink-3); }
 
