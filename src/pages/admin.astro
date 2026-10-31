@@ -44,20 +44,30 @@ import Base from '../layouts/Base.astro';
     <!-- 主体 -->
     <section class="admin-body" hidden>
       <nav class="admin-tabs" role="tablist">
-        <button class="admin-tab active" type="button" data-tab="moment" role="tab">废话条</button>
+        <button class="admin-tab active" type="button" data-tab="moment" role="tab">动态</button>
         <button class="admin-tab" type="button" data-tab="post" role="tab">文章</button>
         <button class="admin-tab" type="button" data-tab="kb" role="tab">知识库</button>
         <button class="admin-tab" type="button" data-tab="site" role="tab">站点</button>
         <button class="admin-tab" type="button" data-tab="ai" role="tab">AI 助手</button>
       </nav>
 
-      <!-- 废话条 -->
+      <!-- 动态（废话条 / 箴言 / 看法，同一入口不同标签） -->
       <div class="admin-panel" data-panel="moment">
-        <textarea rows="3" placeholder="这一刻的想法…" maxlength="300"></textarea>
+        <div class="field-grid">
+          <label class="field">
+            <span>发布到</span>
+            <select data-moment-label>
+              <option value="moment">废话条</option>
+              <option value="quote">箴言</option>
+              <option value="view">看法</option>
+            </select>
+          </label>
+        </div>
+        <textarea rows="3" placeholder="这一刻的想法…"></textarea>
         <div class="row-end">
           <button class="admin-btn primary" type="button" data-act="publish-moment">发布</button>
         </div>
-        <h3>已发布的动态<i class="sec-count" data-sec-count="moments"></i></h3>
+        <h3><span data-moment-list-title>已发布的动态</span><i class="sec-count" data-sec-count="moments"></i></h3>
         <ul class="admin-list" data-list="moments"></ul>
       </div>
 
@@ -637,6 +647,79 @@ import Base from '../layouts/Base.astro';
   .ai-msg.bot.thinking {
     color: var(--ink-3);
   }
+  /* Markdown 渲染后的气泡：从 pre-wrap 切回正常流，按元素排版 */
+  .ai-msg.bot.md {
+    white-space: normal;
+  }
+  .ai-msg.bot.md > :first-child {
+    margin-top: 0;
+  }
+  .ai-msg.bot.md > :last-child {
+    margin-bottom: 0;
+  }
+  .ai-msg.bot.md h3,
+  .ai-msg.bot.md h4,
+  .ai-msg.bot.md h5,
+  .ai-msg.bot.md h6 {
+    margin: 12px 0 4px;
+    font-family: var(--font-display-cn);
+    font-weight: 450;
+  }
+  .ai-msg.bot.md p {
+    margin: 6px 0;
+  }
+  .ai-msg.bot.md ul,
+  .ai-msg.bot.md ol {
+    margin: 6px 0;
+    padding-left: 1.4em;
+  }
+  .ai-msg.bot.md li {
+    margin: 2px 0;
+  }
+  .ai-msg.bot.md code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: 6px;
+  }
+  .ai-msg.bot.md pre {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  .ai-msg.bot.md pre code {
+    background: none;
+    padding: 0;
+  }
+  .ai-msg.bot.md blockquote {
+    margin: 6px 0;
+    padding: 2px 12px;
+    border-left: 3px solid var(--line);
+    color: var(--ink-2);
+  }
+  .ai-msg.bot.md table {
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 0.86em;
+  }
+  .ai-msg.bot.md th,
+  .ai-msg.bot.md td {
+    border: 1px solid var(--line);
+    padding: 4px 10px;
+    text-align: left;
+  }
+  .ai-msg.bot.md a {
+    color: var(--accent-ink);
+  }
+  .ai-msg.bot.md hr {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 10px 0;
+  }
   .ai-src {
     margin-top: 8px;
     padding-top: 6px;
@@ -684,6 +767,7 @@ import Base from '../layouts/Base.astro';
     buildContextBlock,
     webSearch,
     buildWebBlock,
+    renderMarkdown,
     type AiConfig,
     type AiIndexEntry,
     type AiMessage,
@@ -956,14 +1040,22 @@ import Base from '../layouts/Base.astro';
     if (el) el.textContent = String(n);
   }
 
-  // ---------- 废话条（Issues） ----------
+  // ---------- 动态（废话条 / 箴言 / 看法，同一入口不同标签） ----------
+  const MOMENT_TYPES: Record<string, string> = { moment: '废话条', quote: '箴言', view: '看法' };
+  const currentMomentLabel = () =>
+    ($('[data-moment-label]') as HTMLSelectElement | null)?.value ?? 'moment';
+
   async function refreshMoments() {
+    const label = currentMomentLabel();
+    const typeName = MOMENT_TYPES[label] ?? '动态';
+    const titleEl = document.querySelector('[data-moment-list-title]');
+    if (titleEl) titleEl.textContent = `已发布的${typeName}`;
     const list = $('[data-list="moments"]');
     list.innerHTML = '<li class="meta">加载中…</li>';
-    const issues = await api(`/repos/${REPO}/issues?labels=moment&state=open&per_page=30`);
+    const issues = await api(`/repos/${REPO}/issues?labels=${encodeURIComponent(label)}&state=open&per_page=30`);
     list.innerHTML = '';
     if (!issues.length) {
-      list.innerHTML = '<li class="meta">还没有动态</li>';
+      list.innerHTML = `<li class="meta">还没有${typeName}</li>`;
       setCount('moments', 0);
       return;
     }
@@ -1168,14 +1260,16 @@ import Base from '../layouts/Base.astro';
         const ta = $('[data-panel="moment"] textarea') as HTMLTextAreaElement;
         const text = ta.value.trim();
         if (!text) return msg('写点什么再发');
+        const label = ($('[data-moment-label]') as HTMLSelectElement).value;
+        const typeName = label === 'quote' ? '箴言' : label === 'view' ? '看法' : '废话条';
         t.setAttribute('disabled', '');
         await api(`/repos/${REPO}/issues`, {
           method: 'POST',
-          body: JSON.stringify({ title: text, labels: ['moment'] }),
+          body: JSON.stringify({ title: text, labels: [label] }),
         });
         await dispatchBuild();
         ta.value = '';
-        msg('已发布，站点构建中（1-2 分钟上站）');
+        msg(`已发布到「${typeName}」，站点构建中（1-2 分钟上站）`);
         await refreshMoments();
         t.removeAttribute('disabled');
       }
@@ -1577,7 +1671,10 @@ import Base from '../layouts/Base.astro';
       );
       aiHistory.push({ role: 'user', content: q }, { role: 'assistant', content: reply });
       while (aiHistory.length > 8) aiHistory.shift();
-      bubble.textContent = reply;
+      // 模型输出常是 Markdown（加粗/列表/代码/公式），渲染成 HTML；
+      // renderMarkdown 转义优先，模型输出里的任何 HTML 都只会被当纯文本显示
+      bubble.classList.add('md');
+      bubble.innerHTML = await renderMarkdown(reply);
       bubble.classList.remove('thinking');
       appendAiSources(hits);
       const note = document.createElement('div');

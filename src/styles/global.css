@@ -982,6 +982,19 @@ main {
   transform: scale(0.95);
 }
 
+.moment-like[hidden] {
+  display: none;
+}
+
+.moment-like.is-liked {
+  color: #b4766b; /* 陶土玫瑰：点过的心是有温度的 */
+  background: color-mix(in srgb, #b4766b 12%, var(--surface-2));
+}
+
+.moment-like.is-liked .moment-like-icon svg {
+  fill: currentColor;
+}
+
 .moment-like:hover:not(:disabled) {
   color: #b4766b; /* 陶土玫瑰，给“喜欢”一点温度但不刺眼 */
   background: color-mix(in srgb, #b4766b 12%, var(--surface-2));

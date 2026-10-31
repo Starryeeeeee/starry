@@ -1,0 +1,54 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getViews } from '../../lib/moments';
+import { fmtDateShort } from '../../lib/format';
+import avatar from '../../assets/avatar.jpg';
+import heartIcon from '../../icons/ui/heart.svg?raw';
+
+const views = await getViews();
+---
+
+<Base title="看法 · 星野漫游" description="Starry 的观点和态度，一句话版本。">
+  <div class="container">
+    <h1 class="page-title">看法</h1>
+    <p class="page-desc">观点和态度，一句话版本。想展开说的会写成文章。</p>
+
+    {views.length === 0 ? (
+      <div class="list-empty">还没有看法。</div>
+    ) : (
+      views.map((m) => (
+        <article class="moment-card">
+          <div class="moment-head">
+            <span class="moment-avatar" aria-hidden="true"><img src={avatar.src} alt="" /></span>
+            <span class="moment-name">Starry</span>
+            <time datetime={m.date.toISOString()}>{fmtDateShort(m.date)}</time>
+          </div>
+          <p class="moment-body">{m.text}</p>
+          <div class="moment-actions">
+            <button class="moment-like" type="button" data-like-id={m.id} hidden disabled aria-label="喜欢" aria-pressed="false">
+              <span class="moment-like-icon" aria-hidden="true"><Fragment set:html={heartIcon} /></span>
+              <span class="count">0</span>
+            </button>
+          </div>
+        </article>
+      ))
+    )}
+  </div>
+</Base>
+
+<style>
+  .page-title {
+    margin-top: 56px;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+  .page-desc {
+    margin: 10px 0 26px;
+    color: var(--ink-2);
+  }
+</style>
+
+<script>
+  import { initLikeButtons } from '../../lib/likes';
+  initLikeButtons();
+</script>

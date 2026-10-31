@@ -1,0 +1,54 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getQuotes } from '../../lib/moments';
+import { fmtDateShort } from '../../lib/format';
+import avatar from '../../assets/avatar.jpg';
+import heartIcon from '../../icons/ui/heart.svg?raw';
+
+const quotes = await getQuotes();
+---
+
+<Base title="箴言 · 星野漫游" description="Starry 收集和记下的句子——值得反复看的那种。">
+  <div class="container">
+    <h1 class="page-title">箴言</h1>
+    <p class="page-desc">收集和记下的句子，值得反复看的那种。</p>
+
+    {quotes.length === 0 ? (
+      <div class="list-empty">还没有箴言。</div>
+    ) : (
+      quotes.map((m) => (
+        <article class="moment-card">
+          <div class="moment-head">
+            <span class="moment-avatar" aria-hidden="true"><img src={avatar.src} alt="" /></span>
+            <span class="moment-name">Starry</span>
+            <time datetime={m.date.toISOString()}>{fmtDateShort(m.date)}</time>
+          </div>
+          <p class="moment-body">{m.text}</p>
+          <div class="moment-actions">
+            <button class="moment-like" type="button" data-like-id={m.id} hidden disabled aria-label="喜欢" aria-pressed="false">
+              <span class="moment-like-icon" aria-hidden="true"><Fragment set:html={heartIcon} /></span>
+              <span class="count">0</span>
+            </button>
+          </div>
+        </article>
+      ))
+    )}
+  </div>
+</Base>
+
+<style>
+  .page-title {
+    margin-top: 56px;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+  .page-desc {
+    margin: 10px 0 26px;
+    color: var(--ink-2);
+  }
+</style>
+
+<script>
+  import { initLikeButtons } from '../../lib/likes';
+  initLikeButtons();
+</script>

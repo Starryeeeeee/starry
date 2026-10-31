@@ -25,7 +25,7 @@ const moments = await getMoments();
           </div>
           <p class="moment-body">{m.text}</p>
           <div class="moment-actions">
-            <button class="moment-like" type="button" data-like-id={m.id} disabled aria-label="喜欢" aria-pressed="false">
+            <button class="moment-like" type="button" data-like-id={m.id} hidden disabled aria-label="喜欢" aria-pressed="false">
               <span class="moment-like-icon" aria-hidden="true"><Fragment set:html={heartIcon} /></span>
               <span class="count">0</span>
             </button>
@@ -72,48 +72,7 @@ const moments = await getMoments();
 </style>
 
 <script>
-  // 点赞：Supabase 匿名计数（fetchLikes/sendLike 失败全部静默降级）
-  import { fetchLikes, sendLike } from '../lib/likes';
-
-  const liked: Set<string> = new Set(JSON.parse(localStorage.getItem('sr-liked') ?? '[]'));
-
-  function paint(btn: HTMLButtonElement, count: number, isLiked: boolean) {
-    (btn.querySelector('.count') as HTMLElement).textContent = String(count);
-    btn.classList.toggle('is-liked', isLiked);
-    btn.setAttribute('aria-pressed', String(isLiked));
-  }
-
-  const btns = [...document.querySelectorAll<HTMLButtonElement>('.moment-like')];
-  btns.forEach((b) => (b.disabled = true)); // 计数回来之前先不可点
-
-  fetchLikes().then((map) => {
-    for (const btn of btns) {
-      const id = btn.dataset.likeId as string;
-      paint(btn, map[id] ?? 0, liked.has(id));
-      btn.disabled = false;
-    }
-  });
-
-  for (const btn of btns) {
-    btn.addEventListener('click', async () => {
-      const id = btn.dataset.likeId as string;
-      if (liked.has(id) || btn.disabled) return; // 一人一条一次
-      btn.disabled = true;
-      liked.add(id);
-      const countEl = btn.querySelector('.count') as HTMLElement;
-      countEl.textContent = String(Number(countEl.textContent ?? '0') + 1);
-      btn.classList.add('is-liked');
-      btn.setAttribute('aria-pressed', 'true');
-      const server = await sendLike(id);
-      if (server !== null) countEl.textContent = String(server);
-      else {
-        // 发送失败就当没点过
-        btn.classList.remove('is-liked');
-        btn.setAttribute('aria-pressed', 'false');
-        liked.delete(id);
-      }
-      localStorage.setItem('sr-liked', JSON.stringify([...liked]));
-      btn.disabled = false;
-    });
-  }
+  // 点赞：Supabase 匿名计数（表未就绪时按钮自动隐藏）
+  import { initLikeButtons } from '../lib/likes';
+  initLikeButtons();
 </script>
