@@ -227,6 +227,7 @@ import Base from '../layouts/Base.astro';
           <button class="admin-btn" type="button" data-act="ai-test">测试连接</button>
           <button class="admin-btn primary" type="button" data-act="ai-save">保存配置</button>
         </div>
+        <p class="hint" data-ai="status" role="status"></p>
 
         <h3>资料问答</h3>
         <p class="hint">AI 会先从全站索引（构建时生成的 <code>/api-index.json</code>）里检索最相关的几条内容，再据此回答；新发布的内容要等构建完成后才能被检索到。</p>
@@ -561,8 +562,9 @@ import Base from '../layouts/Base.astro';
 
   const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
   const msg = (m: string) => {
-    const el = $('.admin-msg');
-    el.textContent = m;
+    // 页面里有两个提示位（登录区一个、面板底部一个），全都要更新——
+    // 只更新第一个的话，登录后第一个正好是隐藏的，所有反馈都会"消失"
+    for (const el of document.querySelectorAll('.admin-msg')) el.textContent = m;
     console.log('[admin]', m);
   };
 
@@ -1338,6 +1340,10 @@ import Base from '../layouts/Base.astro';
   }
 
   // AI tab 的事件绑定
+  // 配置区自己的状态行：反馈就显示在按钮正下方，不依赖全局 msg
+  const aiStatus = (m: string) => {
+    (aiFields('status') as HTMLElement).textContent = m;
+  };
   document.addEventListener('click', async (e) => {
     const t = e.target as HTMLElement;
     const act = t.closest('[data-act]')?.getAttribute('data-act');
@@ -1353,17 +1359,20 @@ import Base from '../layouts/Base.astro';
         const cfg = readAiForm();
         if (!cfg) return;
         saveAiConfig(cfg);
-        msg('AI 配置已保存（只存在本浏览器）');
+        aiStatus('✓ 配置已保存（只存在本浏览器）');
       }
       if (act === 'ai-test') {
         const cfg = readAiForm();
         if (!cfg) return;
         const btn = t.closest('button') as HTMLButtonElement;
         btn.disabled = true;
-        msg('测试中…');
+        aiStatus('测试中…');
         try {
           const reply = await aiTestConnection(cfg);
-          msg('连接成功，模型回复：' + reply);
+          aiStatus('✓ 连接成功，模型回复：' + reply);
+        } catch (err) {
+          aiStatus('✗ 连接失败：' + (err as Error).message);
+          throw err;
         } finally {
           btn.disabled = false;
         }
