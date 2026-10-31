@@ -17,6 +17,8 @@
 - [x] AI 接入·第一阶段（2026-10-31 上线）：`src/lib/ai.ts` OpenAI 兼容接入层 + 构建时全站索引 `/api-index.json` + /admin「AI 助手」tab（Agnes/DeepSeek/自定义预设、测试连接、资料问答）；站长在 AI tab 选 Agnes 预设、粘贴 key、保存即可用
 - [x] AI 接入·二期：深度思考 / 联网搜索双开关（2026-10-31）。思考按服务商自动适配（DeepSeek→reasoner 模型 / Agnes→enable_thinking / 智谱→thinking.type）；联网搜索智谱 GLM 走服务端原生 web_search（稳），Agnes/DeepSeek 走公共 CORS 中转抓必应 RSS（尽力而为，失败自动降级为仅站内资料）；实现细节见《对接文档.md》第十三节
 - [ ] AI 接入·第三阶段：正式使用时在 /admin 切 DeepSeek 或智谱预设换 key；**给访客开放 AI 前必须加代理**（Supabase Edge Function 或 Cloudflare Worker 转发 chat/completions），否则 key 会暴露在前端；代理落地后可把联网搜索也改成服务端做（比公共中转稳定）
+- [x] AI 接入·四期：首页星球挂件（2026-10-31 上线）——右下角 Fluent Emoji 星球宠物（MIT）+ 深空终端风问答，复用 ai.ts；站长浏览器直接用，访客经 Cloudflare Worker 代理
+- [ ] AI 挂件·等站主一次性操作：按 `cloudflare/README.md` 部署 Worker（Dashboard 粘贴 worker.js + 配 AI_API_KEY Secret，约 5 分钟），然后在 /admin「模型配置」页填 Worker 地址保存——完成后访客在首页就能用星球挂件
 - [ ] giscus 评论：**等用户两件一次性操作**——仓库 Settings 勾选 Discussions、安装 giscus App（github.com/apps/giscus），然后在 /admin「站点」页点"一键配置评论"即完成；配置时把 data-mapping 从 pathname 切到 specific（内容 ID），评论不再随 URL 变化丢失
 - [x] 匿名点赞（2026-10-30 代码上线）：Supabase REST 直连，RLS 设计（anon 只读+只能调 increment_like 原子自增函数）；**等站主跑一次 `scripts/supabase-setup.sql`**（Dashboard → SQL Editor 粘贴 Run），跑完点赞按钮自动激活（**2026-10-31 站主决定搁置**：SQL 未跑前点赞按钮在全站自动隐藏，不影响任何功能；想激活随时跑 SQL）
 - [x] Supabase 保活：.github/workflows/supabase-keepalive.yml，每周一自动 ping，防免费档 7 天无活动被暂停

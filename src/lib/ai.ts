@@ -200,7 +200,8 @@ export async function aiChat(
     method: 'POST',
     signal: opts.signal,
     headers: {
-      Authorization: `Bearer ${cfg.apiKey}`,
+      // 空 apiKey = 走代理（如 Cloudflare Worker），由代理注入真实密钥
+      ...(cfg.apiKey ? { Authorization: `Bearer ${cfg.apiKey}` } : {}),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({

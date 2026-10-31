@@ -2,6 +2,7 @@
 // 站长管理面板：纯客户端，通过 GitHub API 直接读写仓库（等于把 GitHub 当后端）
 // 登录方式：GitHub 个人访问令牌（PAT），只存在站长自己浏览器的 localStorage 里
 import Base from '../layouts/Base.astro';
+import '../styles/admin-mac.css'; // 后台 macOS 视觉层（只改样式，不改结构与行为）
 ---
 
 <Base title="管理 · 星野漫游" description="站长管理面板。">
@@ -311,6 +312,16 @@ import Base from '../layouts/Base.astro';
           <button class="admin-btn primary" type="button" data-act="ai-save">保存模型</button>
         </div>
         <p class="hint" data-ai="status" role="status"></p>
+
+        <h3>访客挂件代理</h3>
+        <p class="hint">首页右下角的星球挂件：你自己的浏览器直接用上面的模型档案；<b>访客</b>则经由 Cloudflare Worker 代理接入（密钥在 Worker 的 Secret 里，不进前端）。部署步骤见仓库 <code>cloudflare/README.md</code>，部署后把 Worker 地址（形如 <code>https://…workers.dev</code>）填到这里并保存。</p>
+        <label class="field">
+          <span>Worker 代理地址（可空 = 挂件仅站长浏览器可用）</span>
+          <input type="text" data-ai="proxy" placeholder="https://starry-ai-proxy.你的子域.workers.dev" spellcheck="false" />
+        </label>
+        <div class="row-end">
+          <button class="admin-btn" type="button" data-act="ai-proxy-save">保存代理设置</button>
+        </div>
       </div>
 
       <p class="admin-msg" role="status"></p>
@@ -1613,6 +1624,28 @@ import Base from '../layouts/Base.astro';
       }),
     });
 
+  // ---------- 站点配置（public/site-config.json）：读取-合并-写回，避免整份覆盖 ----------
+  // giscus 和 AI 挂件代理都写这份文件；任何写入方都必须先读旧值再合并
+  const getSiteConfig = async (): Promise<{ sha: string | null; cfg: Record<string, unknown> }> => {
+    try {
+      const r = await api(`/repos/${REPO}/contents/public/site-config.json?ref=${BRANCH}`);
+      return { sha: r.sha, cfg: JSON.parse(b64ToText(r.content.replace(/\s/g, ''))) };
+    } catch (e) {
+      if (String((e as Error).message).startsWith('404')) return { sha: null, cfg: {} };
+      throw e;
+    }
+  };
+  const putSiteConfig = (cfg: Record<string, unknown>, sha: string | null, message: string) =>
+    api(`/repos/${REPO}/contents/public/site-config.json`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        message,
+        branch: BRANCH,
+        content: b64(JSON.stringify(cfg, null, 2) + '\n'),
+        ...(sha ? { sha } : {}),
+      }),
+    });
+
   const safeName = (n: string) =>
     n.replace(/^.*[/\\]/, '').replace(/[#?%*"<>|]/g, '').replace(/\s+/g, '-').slice(-80) || 'file';
 
@@ -1934,22 +1967,33 @@ import Base from '../layouts/Base.astro';
         }
         const cats = repo.discussionCategories.nodes;
         const cat = cats.find((c: { name: string }) => c.name === 'Announcements') ?? cats[0];
-        await api(`/repos/${REPO}/contents/public/site-config.json`, {
-          method: 'PUT',
-          body: JSON.stringify({
-            message: '配置 giscus 评论',
-            branch: BRANCH,
-            content: b64(
-              JSON.stringify(
-                { giscus: { repoId: repo.id, categoryId: cat.id, category: cat.name } },
-                null,
-                2,
-              ),
-            ),
-          }),
-        });
+        // 先读旧配置再合并：site-config 里还有 AI 挂件代理等别的东西，不能整份覆盖
+        const { sha, cfg } = await getSiteConfig();
+        await putSiteConfig(
+          { ...cfg, giscus: { repoId: repo.id, categoryId: cat.id, category: cat.name } },
+          sha,
+          '配置 giscus 评论',
+        );
         msg(`评论已配置（分类：${cat.name}），构建完成后文章页即可评论`);
         t.removeAttribute('disabled');
+      }
+      if (act === 'ai-proxy-save') {
+        const input = aiFields('proxy') as HTMLInputElement;
+        const url = input.value.trim();
+        if (url && !/^https:\/\/.+/.test(url)) return msg('代理地址要以 https:// 开头');
+        const { sha, cfg } = await getSiteConfig();
+        const ai = { ...((cfg.ai as Record<string, unknown> | undefined) ?? {}) };
+        if (url) ai.proxyUrl = url;
+        else delete ai.proxyUrl;
+        const next: Record<string, unknown> = { ...cfg };
+        if (Object.keys(ai).length) next.ai = ai;
+        else delete next.ai;
+        await putSiteConfig(next, sha, url ? '设置访客挂件代理' : '清除访客挂件代理');
+        msg(
+          url
+            ? '代理已保存，构建完成后访客的星球挂件即可用（用无痕窗口验证）'
+            : '已清除代理，挂件回到仅站长浏览器可用',
+        );
       }
     } catch (err) {
       msg('出错了：' + (err as Error).message);
@@ -2385,6 +2429,13 @@ import Base from '../layouts/Base.astro';
     // 会话下拉 + 恢复上次对话
     refreshSessionSelect();
     if (aiSessionId && curSession()) void openSession(aiSessionId);
+    // 预填访客挂件代理（从已发布的站点配置读）
+    fetch(u('/site-config.json'))
+      .then((r) => r.json())
+      .then((c: { ai?: { proxyUrl?: string } }) => {
+        if (c?.ai?.proxyUrl) (aiFields('proxy') as HTMLInputElement).value = c.ai.proxyUrl;
+      })
+      .catch(() => {});
   }
 
   // 深度思考 / 联网搜索两个开关：记住上次的选择

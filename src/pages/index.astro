@@ -13,6 +13,7 @@ import githubIcon from '../icons/social/github.svg?raw';
 import bilibiliIcon from '../icons/social/bilibili.svg?raw';
 import neteaseIcon from '../icons/social/netease-cloud-music.svg?raw';
 import outlookIcon from '../icons/social/outlook.svg?raw';
+import AiPet from '../components/AiPet.astro';
 
 const allPosts = (await getCollection('posts')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
@@ -177,6 +178,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
       </section>
     </div>
   </main>
+  <AiPet />
 </Base>
 
 <style>

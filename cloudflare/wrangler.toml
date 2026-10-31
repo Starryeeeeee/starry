@@ -1,0 +1,9 @@
+name = "starry-ai-proxy"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+# 非敏感变量（Secret 用 `wrangler secret put` 或 Dashboard 设置，绝不写在这里）
+[vars]
+AI_BASE_URL = "https://api.agnes-ai.cn/v1"
+AI_ALLOWED_MODELS = "agnes-2.5-flash,agnes-3.0-flash"
+AI_MAX_TOKENS = "1500"

@@ -1,0 +1,546 @@
+---
+// 星野挂件：右下角的星球宠物 + 终端风问答面板。
+// 复用 src/lib/ai.ts 的全部能力（模型档案 / 站内资料检索 / Markdown 渲染）。
+// 接通方式二选一：
+//   1) 站长浏览器里有模型档案（localStorage，与 /admin 共用）→ 浏览器直连服务商；
+//   2) 否则读 site-config.json 的 ai.proxyUrl（Cloudflare Worker 代理）→ 访客也能用；
+//   两者都没有 → 宠物照常显示，发消息时温和说明未接通。
+// 宠物形象：Microsoft Fluent Emoji "ringed-planet"（MIT），见 src/icons/friendly/planet.svg。
+import planetSvg from '../icons/friendly/planet.svg?raw';
+---
+
+<div class="starp-root">
+  <section class="starp-panel" data-starp-panel hidden role="dialog" aria-label="星野助手 · 观测终端">
+    <header class="starp-head">
+      <span class="starp-head-name">星渚<i> · 观测终端</i></span>
+      <span class="starp-head-actions">
+        <button class="starp-mini" type="button" data-starp-clear title="清空对话">清空</button>
+        <button class="starp-mini" type="button" data-starp-close aria-label="收起终端">×</button>
+      </span>
+    </header>
+    <div class="starp-chat" data-starp-chat aria-live="polite"></div>
+    <form class="starp-inputrow" data-starp-form>
+      <span class="starp-prompt" aria-hidden="true">❯</span>
+      <input type="text" data-starp-input placeholder="问点什么…" aria-label="向星野助手提问" autocomplete="off" />
+      <button class="starp-send" type="submit" aria-label="发送">↑</button>
+    </form>
+    <p class="starp-foot" data-starp-foot>基于站内资料回答 · 由星野漫游驱动</p>
+  </section>
+
+  <button class="starp-fab" type="button" data-starp-fab aria-label="召唤星野助手" aria-expanded="false">
+    <span class="starp-pet" set:html={planetSvg} />
+  </button>
+</div>
+
+<style>
+  .starp-root {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 90;
+  }
+  /* 宠物按钮：星球悬浮 + 呼吸，安静地待在角落 */
+  .starp-fab {
+    display: block;
+    width: 58px;
+    height: 58px;
+    padding: 0;
+    border: none;
+    background: none;
+    border-radius: 50%;
+    cursor: pointer;
+    animation: starp-float 4.5s ease-in-out infinite;
+    transition: transform 0.2s var(--ease-out, ease);
+  }
+  .starp-fab:hover {
+    transform: scale(1.08);
+  }
+  .starp-fab:active {
+    transform: scale(0.94);
+  }
+  .starp-pet {
+    display: block;
+    width: 46px;
+    height: 46px;
+    margin: 0 auto;
+    filter: drop-shadow(0 4px 10px rgba(48, 53, 58, 0.18));
+  }
+  .starp-pet :global(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  /* AI 思考时：星球倾斜着轻轻摇摆 */
+  .starp-root.thinking .starp-pet {
+    animation: starp-wiggle 0.9s ease-in-out infinite;
+  }
+  @keyframes starp-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+  @keyframes starp-wiggle {
+    0%,
+    100% {
+      transform: rotate(-6deg);
+    }
+    50% {
+      transform: rotate(8deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .starp-fab,
+    .starp-root.thinking .starp-pet {
+      animation: none;
+    }
+  }
+  /* 观测终端面板：深空底、等宽字、❯ 提示符——刻意的终端隐喻 */
+  .starp-panel {
+    position: absolute;
+    right: 0;
+    bottom: 70px;
+    width: min(360px, calc(100vw - 24px));
+    display: flex;
+    flex-direction: column;
+    background: #171a21;
+    border: 1px solid #2a2f3a;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .starp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid #2a2f3a;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: #d6dee8;
+  }
+  .starp-head-name i {
+    font-style: normal;
+    color: #8a94a3;
+  }
+  .starp-head-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .starp-mini {
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 0.75rem;
+    color: #8a94a3;
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .starp-mini:hover {
+    color: #d6dee8;
+    background: #232833;
+  }
+  .starp-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 320px;
+    overflow-y: auto;
+    padding: 14px 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #2a2f3a transparent;
+  }
+  .starp-inputrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-top: 1px solid #2a2f3a;
+  }
+  .starp-prompt {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: #8fb3d9;
+    flex-shrink: 0;
+  }
+  .starp-inputrow input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: none;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: #d6dee8;
+    outline: none;
+  }
+  .starp-inputrow input::placeholder {
+    color: #5c6673;
+  }
+  .starp-send {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #2a2f3a;
+    background: #1d222b;
+    color: #8fb3d9;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .starp-send:hover {
+    border-color: #8fb3d9;
+  }
+  .starp-send:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .starp-foot {
+    margin: 0;
+    padding: 6px 12px 8px;
+    border-top: 1px solid #2a2f3a;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: #5c6673;
+  }
+  @media (max-width: 560px) {
+    .starp-root {
+      right: 12px;
+      bottom: 12px;
+    }
+    .starp-panel {
+      right: -60px;
+      bottom: 74px;
+    }
+  }
+</style>
+
+<!-- 聊天消息是 JS 运行时创建的：scoped 样式匹配不到，必须走全局块（.starp- 前缀防污染） -->
+<style is:global>
+  .starp-msg {
+    max-width: 94%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .starp-msg.user {
+    align-self: flex-end;
+    background: #232c3a;
+    color: #d6dee8;
+    border-bottom-right-radius: 3px;
+  }
+  .starp-msg.bot {
+    align-self: flex-start;
+    background: #1d222b;
+    color: #c4cdd8;
+    border: 1px solid #262c37;
+    border-bottom-left-radius: 3px;
+  }
+  .starp-msg.bot.md {
+    white-space: normal;
+  }
+  .starp-msg.bot.md > :first-child {
+    margin-top: 0;
+  }
+  .starp-msg.bot.md > :last-child {
+    margin-bottom: 0;
+  }
+  .starp-msg.bot.md p {
+    margin: 5px 0;
+  }
+  .starp-msg.bot.md ul,
+  .starp-msg.bot.md ol {
+    margin: 5px 0;
+    padding-left: 1.3em;
+  }
+  .starp-msg.bot.md code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: #12151b;
+    padding: 0.1em 0.4em;
+    border-radius: 5px;
+  }
+  .starp-msg.bot.md pre {
+    background: #12151b;
+    border: 1px solid #262c37;
+    border-radius: 8px;
+    padding: 8px 10px;
+    overflow-x: auto;
+    margin: 6px 0;
+  }
+  .starp-msg.bot.md pre code {
+    background: none;
+    padding: 0;
+  }
+  .starp-msg.bot.md a {
+    color: #8fb3d9;
+  }
+  .starp-msg.bot.md h3,
+  .starp-msg.bot.md h4,
+  .starp-msg.bot.md h5 {
+    margin: 8px 0 3px;
+    font-size: 0.9em;
+    font-weight: 650;
+  }
+  .starp-msg .starp-src {
+    margin-top: 6px;
+    padding-top: 5px;
+    border-top: 1px dashed #262c37;
+    font-size: 0.7rem;
+    color: #5c6673;
+    overflow-wrap: anywhere;
+  }
+  .starp-msg .starp-src a {
+    color: #8fb3d9;
+  }
+  .starp-msg.bot.err {
+    color: #d99a90;
+    border-color: #4a3038;
+  }
+  /* 思考中：三个固定尺寸圆点透明度呼吸，不改布局 */
+  .starp-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 7px;
+    height: 1em;
+  }
+  .starp-dots i {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.25;
+    animation: starp-dot 1.2s ease-in-out infinite;
+  }
+  .starp-dots i:nth-child(2) {
+    animation-delay: 0.18s;
+  }
+  .starp-dots i:nth-child(3) {
+    animation-delay: 0.36s;
+  }
+  @keyframes starp-dot {
+    0%,
+    100% {
+      opacity: 0.25;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .starp-dots i {
+      animation: none;
+      opacity: 0.5;
+    }
+  }
+</style>
+
+<script>
+  import { u } from '../lib/base';
+  import {
+    loadProfiles,
+    loadActiveProfileId,
+    aiChat,
+    searchIndex,
+    buildContextBlock,
+    renderMarkdown,
+    type AiConfig,
+    type AiIndexEntry,
+    type AiMessage,
+  } from '../lib/ai';
+
+  const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
+  const root = $('.starp-root');
+  const panel = $('[data-starp-panel]');
+  const fab = $('[data-starp-fab]');
+  const chat = $('[data-starp-chat]');
+  const form = $('[data-starp-form]') as HTMLFormElement;
+  const input = $('[data-starp-input]') as HTMLInputElement;
+  const send = $('.starp-send') as HTMLButtonElement;
+
+  const HISTORY_KEY = 'sr-pet-chat';
+  type PetMsg = { role: 'user' | 'bot'; content: string };
+  let history: PetMsg[] = [];
+  try {
+    const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '[]') as PetMsg[];
+    if (Array.isArray(raw)) history = raw.slice(-24);
+  } catch {
+    history = [];
+  }
+  const saveHistory = () =>
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-24)));
+
+  let index: AiIndexEntry[] | null = null;
+  let indexAt = 0;
+  async function ensureIndex(): Promise<AiIndexEntry[]> {
+    if (index && Date.now() - indexAt < 10 * 60 * 1000) return index;
+    const r = await fetch(u('/api-index.json'));
+    if (!r.ok) throw new Error('站内索引还没构建好');
+    index = ((await r.json()) as { entries: AiIndexEntry[] }).entries ?? [];
+    indexAt = Date.now();
+    return index;
+  }
+
+  // 站点配置（ai.proxyUrl）带缓存；站长自己的浏览器里有模型档案时优先直连
+  let siteCfg: { ai?: { proxyUrl?: string; model?: string } } | null = null;
+  async function proxyEndpoint(): Promise<AiConfig | null> {
+    if (siteCfg === null) {
+      try {
+        const r = await fetch(u('/site-config.json'));
+        siteCfg = (await r.json()) as typeof siteCfg;
+      } catch {
+        siteCfg = {};
+      }
+    }
+    const url = siteCfg?.ai?.proxyUrl?.trim();
+    return url
+      ? {
+          baseUrl: url.replace(/\/+$/, ''),
+          model: siteCfg?.ai?.model?.trim() || 'agnes-2.5-flash',
+          apiKey: '',
+        }
+      : null;
+  }
+
+  async function currentEndpoint(): Promise<{ cfg: AiConfig; name: string } | null> {
+    const profiles = loadProfiles();
+    const prof = profiles.find((p) => p.id === loadActiveProfileId()) ?? profiles[0] ?? null;
+    if (prof) return { cfg: prof, name: prof.name };
+    const proxied = await proxyEndpoint();
+    if (proxied) return { cfg: proxied, name: '星渚' };
+    return null;
+  }
+
+  function appendMsg(kind: 'user' | 'bot'): HTMLElement {
+    const div = document.createElement('div');
+    div.className = `starp-msg ${kind}`;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  function setThinking(el: HTMLElement, label: string) {
+    el.textContent = label;
+    const dots = document.createElement('span');
+    dots.className = 'starp-dots';
+    for (let i = 0; i < 3; i++) dots.appendChild(document.createElement('i'));
+    el.appendChild(dots);
+  }
+
+  function renderBot(el: HTMLElement, content: string) {
+    el.classList.add('md');
+    el.innerHTML = content;
+  }
+
+  async function ask(q: string) {
+    const userEl = appendMsg('user');
+    userEl.textContent = q;
+    const bubble = appendMsg('bot');
+    setThinking(bubble, '接入观测终端');
+    const ep = await currentEndpoint();
+    if (!ep) {
+      bubble.classList.add('err');
+      bubble.textContent =
+        '观测终端还没有接通模型：站长在 /admin 配好模型后，这台浏览器就能直接用；访客则等站长部署好 Cloudflare Worker 代理后自动接入。';
+      return;
+    }
+    root.classList.add('thinking');
+    send.disabled = true;
+    try {
+      const entries = await ensureIndex();
+      const hits = searchIndex(entries, q, 4);
+      const persona = ep.name.split('（')[0].trim() || ep.name;
+      const system =
+        `你是「${persona}」，个人网站「星野漫游」的站内助手，由站长亲手配置并起了这个名字。` +
+        `有人问你是谁、是什么模型、来自哪家公司时：你就是${persona}，是星野漫游的一员，不要提及底层模型与服务商。` +
+        '请优先依据站内资料回答；资料里没有的就直说没有，不要编造。用简体中文回答，简洁自然。' +
+        '\n\n== 站内资料 ==\n' +
+        (buildContextBlock(hits) || '（本次未检索到相关站内资料）');
+      const recent: AiMessage[] = history.slice(-6).map((m) => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.content,
+      }));
+      const reply = await aiChat(
+        ep.cfg,
+        [
+          { role: 'system', content: system },
+          ...recent,
+          { role: 'user', content: q },
+        ],
+        { maxTokens: 1500 },
+      );
+      history.push({ role: 'user', content: q }, { role: 'bot', content: reply });
+      saveHistory();
+      bubble.classList.remove('thinking');
+      renderBot(bubble, await renderMarkdown(reply));
+      if (hits.length) {
+        const src = document.createElement('div');
+        src.className = 'starp-src';
+        src.textContent = '参考：' + hits.map((h) => h.entry.title).slice(0, 3).join('、');
+        bubble.appendChild(src);
+      }
+      chat.scrollTop = chat.scrollHeight;
+    } catch (e) {
+      bubble.classList.remove('thinking');
+      bubble.classList.add('err');
+      bubble.textContent = '出错了：' + (e as Error).message;
+    } finally {
+      root.classList.remove('thinking');
+      send.disabled = false;
+    }
+  }
+
+  // ---------- 事件 ----------
+  async function setOpen(open: boolean) {
+    panel.hidden = !open;
+    fab.setAttribute('aria-expanded', String(open));
+    if (open) {
+      if (!chat.children.length) {
+        if (history.length) {
+          for (const m of history) {
+            if (m.role === 'user') {
+              appendMsg('user').textContent = m.content;
+            } else {
+              renderBot(appendMsg('bot'), await renderMarkdown(m.content));
+            }
+          }
+        } else {
+          renderBot(
+            appendMsg('bot'),
+            '叮——观测终端已上线 ✦<br />我是星渚，这个星球的管理员。问我关于站上的一切：文章、知识库、废话条，都可以。',
+          );
+        }
+        chat.scrollTop = chat.scrollHeight;
+      }
+      input.focus();
+    }
+  }
+
+  fab.addEventListener('click', () => setOpen(panel.hidden));
+  $('[data-starp-close]').addEventListener('click', () => setOpen(false));
+  $('[data-starp-clear]').addEventListener('click', () => {
+    history = [];
+    saveHistory();
+    chat.innerHTML = '';
+    setOpen(true);
+  });
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    void ask(q);
+  });
+  document.addEventListener('keydown', (e) => {
+    if ((e as KeyboardEvent).key === 'Escape' && !panel.hidden) setOpen(false);
+  });
+</script>
