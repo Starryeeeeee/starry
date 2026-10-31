@@ -386,3 +386,171 @@ export function buildWebBlock(results: WebResult[]): string {
     )
     .join('\n\n');
 }
+
+// ---------------- AI 回复的 Markdown 渲染 ----------------
+// 模型输出常带 **加粗**、列表、代码块甚至 $公式$，直接 textContent 会很难读。
+// 这里用一个转义优先的迷你渲染器（零新依赖）：先转义再按白名单生成 HTML，
+// 保证模型输出里任何 <script> 之类的内容都只会被当纯文本显示。
+// 公式复用站点已有的 katex 依赖，按需动态加载（回复里没有 $ 就不加载）。
+
+const escHtml = (s: string) =>
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+/** 生成一个不会撞上正文的占位符 token（先于转义保护代码块/公式等敏感片段） */
+const ph = (store: string[]) => {
+  const i = store.length;
+  store.push('');
+  return `\u0000${i}\u0000`;
+};
+
+/** 行内处理：链接（仅 http/https 与站内相对路径）、加粗、斜体、删除线 */
+function inlineFmt(s: string): string {
+  return s
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, t: string, u: string) => {
+      if (!/^(https?:\/\/|\/)/.test(u)) return t;
+      const safe = u.replace(/[<>"']/g, '');
+      return `<a href="${safe}" target="_blank" rel="noopener">${t}</a>`;
+    })
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
+    .replace(/~~([^~]+)~~/g, '<del>$1</del>');
+}
+
+export async function renderMarkdown(md: string): Promise<string> {
+  const store: string[] = [];
+
+  // 1) 围栏代码块 ```lang ... ``` → 占位（内容转义后进 <pre><code>）
+  let text = md.replace(/```([\w-]*)\n?([\s\S]*?)```/g, (_m, _lang, code: string) => {
+    const t = ph(store);
+    store[store.length - 1] = `<pre><code>${escHtml(code.replace(/\n$/, ''))}</code></pre>`;
+    return t;
+  });
+
+  // 2) 数学公式：$$...$$（块）与 $...$（行内）→ katex 渲染占位；katex 加载失败则原样转义显示
+  const hasMath = /\$\$[\s\S]+?\$\$|(?<![\w$])\$(?!\s)[^$\n]+?(?<!\s)\$(?![\w$])/.test(text);
+  if (hasMath) {
+    let katex: typeof import('katex') | null = null;
+    try {
+      katex = await import('katex');
+    } catch {
+      /* 公式降级为纯文本 */
+    }
+    const renderTex = (src: string, display: boolean) => {
+      const t = ph(store);
+      store[store.length - 1] = katex
+        ? katex.default.renderToString(src, { throwOnError: false, displayMode: display })
+        : `<code>${escHtml(display ? `$$${src}$$` : `$${src}$`)}</code>`;
+      return t;
+    };
+    text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_m, src: string) => renderTex(src.trim(), true));
+    text = text.replace(/(?<![\w$])\$(?!\s)([^$\n]+?)(?<!\s)\$(?![\w$])/g, (_m, src: string) =>
+      renderTex(src, false),
+    );
+  }
+
+  // 3) 行内代码 `x` → 占位（先转义存好，防止后续行内格式误伤）
+  text = text.replace(/`([^`\n]+)`/g, (_m, code: string) => {
+    const t = ph(store);
+    store[store.length - 1] = `<code>${escHtml(code)}</code>`;
+    return t;
+  });
+
+  // 4) 剩余文本整体转义 + 行内格式
+  text = escHtml(text).replace(/\u0000(\d+)\u0000/g, (_m, i: string) => store[Number(i)]);
+  const lines = text.split(/\n/).map((l) => inlineFmt(l));
+
+  // 5) 组装块级结构：标题/分隔线/引用/列表/表格/段落
+  const out: string[] = [];
+  let list: { tag: 'ul' | 'ol'; items: string[] } | null = null;
+  let para: string[] = [];
+  let quote: string[] = [];
+  let table: string[][] | null = null;
+
+  const flush = () => {
+    if (list) out.push(`<${list.tag}>${list.items.map((i) => `<li>${i}</li>`).join('')}</${list.tag}>`);
+    if (quote.length) out.push(`<blockquote>${quote.join('<br />')}</blockquote>`);
+    if (table) {
+      const [head, ...rows] = table;
+      out.push(
+        `<table><thead><tr>${head.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows
+          .map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`)
+          .join('')}</tbody></table>`,
+      );
+    }
+    if (para.length) out.push(`<p>${para.join('<br />')}</p>`);
+    list = null;
+    quote = [];
+    table = null;
+    para = [];
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      flush();
+      continue;
+    }
+    const h = line.match(/^(#{1,4})\s+(.*)$/);
+    if (h) {
+      flush();
+      const lv = h[1].length;
+      out.push(`<h${lv + 2}>${h[2]}</h${lv + 2}>`); // h3-h6，不跟页面标题抢层级
+      continue;
+    }
+    if (/^(-{3,}|\*{3,})$/.test(line)) {
+      flush();
+      out.push('<hr />');
+      continue;
+    }
+    // 占位还原出来的完整 HTML 块（代码块等）直接输出，不能包进 <p>
+    if (/^<(pre|table|div)\b/.test(line)) {
+      flush();
+      out.push(line);
+      continue;
+    }
+    if (/^&gt;\s?/.test(line)) {
+      if (para.length || list || table) flush();
+      quote.push(line.replace(/^&gt;\s?/, ''));
+      continue;
+    }
+    const ul = line.match(/^[-*•]\s+(.*)$/);
+    if (ul) {
+      if (quote.length || table) flush();
+      para = [];
+      if (!list || list.tag !== 'ul') {
+        flush();
+        list = { tag: 'ul', items: [] };
+      }
+      list.items.push(ul[1]);
+      continue;
+    }
+    const ol = line.match(/^\d+[.、]\s+(.*)$/);
+    if (ol) {
+      if (quote.length || table) flush();
+      para = [];
+      if (!list || list.tag !== 'ol') {
+        flush();
+        list = { tag: 'ol', items: [] };
+      }
+      list.items.push(ol[1]);
+      continue;
+    }
+    if (/^\|.*\|$/.test(line)) {
+      const cells = line.split('|').slice(1, -1).map((c) => c.trim());
+      if (cells.every((c) => /^:?-{2,}:?$/.test(c))) continue; // 表头分隔行
+      if (para.length || list || quote.length) flush();
+      if (!table) table = [];
+      table.push(cells);
+      continue;
+    }
+    if (quote.length || list || table) flush();
+    para.push(line);
+  }
+  flush();
+
+  return out.join('\n').replace(/\u0000(\d+)\u0000/g, (_m, i: string) => store[Number(i)]);
+}
