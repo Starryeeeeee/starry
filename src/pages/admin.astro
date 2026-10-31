@@ -619,33 +619,81 @@ import Base from '../layouts/Base.astro';
   .ai-chat {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    max-height: 420px;
+    gap: 18px;
+    max-height: 480px;
     overflow-y: auto;
     margin-top: 10px;
-    padding: 4px;
+    padding: 14px 12px;
+    background: var(--wash);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  /* 一问一答为一个 turn：问靠右、答靠左，角色标签置顶，一眼可分 */
+  .ai-turn {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ai-turn.user {
+    align-items: flex-end;
+  }
+  .ai-turn.bot {
+    align-items: flex-start;
+  }
+  .ai-role {
+    font-size: 0.72rem;
+    color: var(--ink-3);
+    padding: 0 6px;
+    letter-spacing: 0.05em;
+  }
+  .ai-turn.user .ai-role {
+    color: var(--accent-ink);
   }
   .ai-msg {
-    max-width: 92%;
+    max-width: 88%;
     padding: 10px 14px;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 0.92rem;
     line-height: 1.8;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
   .ai-msg.user {
-    align-self: flex-end;
-    background: var(--accent);
-    color: #fff;
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+    border-bottom-right-radius: 4px;
   }
   .ai-msg.bot {
-    align-self: flex-start;
     background: var(--surface);
     border: 1px solid var(--line);
+    border-bottom-left-radius: 4px;
   }
   .ai-msg.bot.thinking {
     color: var(--ink-3);
+  }
+  .ai-msg.bot.thinking::after {
+    content: '…';
+    animation: ai-dots 1.2s steps(4, end) infinite;
+  }
+  @keyframes ai-dots {
+    0% {
+      content: '';
+    }
+    25% {
+      content: '·';
+    }
+    50% {
+      content: '··';
+    }
+    75% {
+      content: '···';
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ai-msg.bot.thinking::after {
+      animation: none;
+      content: '…';
+    }
   }
   /* Markdown 渲染后的气泡：从 pre-wrap 切回正常流，按元素排版 */
   .ai-msg.bot.md {
@@ -1592,15 +1640,22 @@ import Base from '../layouts/Base.astro';
   function appendAiMsg(kind: 'user' | 'bot', text: string): HTMLElement {
     const box = $('[data-ai-chat]') as HTMLElement;
     box.hidden = false;
+    // 每条消息一个 turn：角色标签 + 气泡，问答两侧对齐一眼可分
+    const turn = document.createElement('div');
+    turn.className = `ai-turn ${kind}`;
+    const role = document.createElement('span');
+    role.className = 'ai-role';
+    role.textContent = kind === 'user' ? '你' : '星野助手';
     const div = document.createElement('div');
     div.className = `ai-msg ${kind}${kind === 'bot' && !text ? ' thinking' : ''}`;
     div.textContent = text || (kind === 'bot' ? '思考中…' : '');
-    box.appendChild(div);
+    turn.append(role, div);
+    box.appendChild(turn);
     box.scrollTop = box.scrollHeight;
     return div;
   }
 
-  function appendAiSources(hits: Array<{ entry: AiIndexEntry }>) {
+  function appendAiSources(bubble: HTMLElement, hits: Array<{ entry: AiIndexEntry }>) {
     const named = hits.filter((h) => h.entry.path);
     if (!named.length) return;
     const src = document.createElement('div');
@@ -1615,7 +1670,7 @@ import Base from '../layouts/Base.astro';
       a.textContent = `《${entry.title}》`;
       src.appendChild(a);
     });
-    ($('[data-ai-chat]') as HTMLElement).lastElementChild?.appendChild(src);
+    bubble.insertAdjacentElement('afterend', src);
   }
 
   async function sendAiQuestion() {
@@ -1676,7 +1731,7 @@ import Base from '../layouts/Base.astro';
       bubble.classList.add('md');
       bubble.innerHTML = await renderMarkdown(reply);
       bubble.classList.remove('thinking');
-      appendAiSources(hits);
+      appendAiSources(bubble, hits);
       const note = document.createElement('div');
       note.className = 'ai-src';
       if (nativeSearch && webOn) {
@@ -1694,7 +1749,7 @@ import Base from '../layouts/Base.astro';
       } else if (web && !web.ok) {
         note.textContent = '联网搜索失败，本次仅基于站内资料回答';
       }
-      if (note.textContent) ($('[data-ai-chat]') as HTMLElement).lastElementChild?.appendChild(note);
+      if (note.textContent) bubble.insertAdjacentElement('afterend', note);
       const box = $('[data-ai-chat]') as HTMLElement;
       box.scrollTop = box.scrollHeight;
       msg('');
