@@ -26,7 +26,6 @@
 - [ ] `src/pages/icon-preview.astro` 是图标预览页，部署前可以删掉
 
 ## 字体（已接入 2026-10-25）
-- [x] 三套 cn-font-split 子集从你的仓库搬到 `public/fonts/`：alihei（阿里汉仪AI黑体，正文/UI）、hanchan（寒蝉全圆体，标语/废话条/引用）、zihun（字魂正酷超级黑，品牌与章节标题）
-- [ ] **版权确认**：字魂「正酷超级黑」是字魂网的付费商用字体，个人学习站风险低，但若网站以后有商业用途请换思源黑体 Heavy（免费商用）并重新跑 cn-font-split
+- [x] 两套 cn-font-split 子集在 `public/fonts/`：alihei（阿里汉仪AI黑体，官方免费商用，正文/UI/标题）、hanchan（寒蝉全圆体，开源免费，标语/废话条/引用）；字魂正酷黑已按站长要求全站移除（2026-10-31，文件与引用均无残留）
 - [ ] 英文/衬线用 STIX Two Text（@fontsource 自托管）；以后站长子集化思源宋体，可替换章节标题字体
 - 工具说明：`fonts-transform.md`（cn-font-split 用法）已从 class-fund 仓库拷到项目根目录
