@@ -51,6 +51,7 @@ import Base from '../layouts/Base.astro';
         <button class="admin-tab" type="button" data-tab="gallery" role="tab">画廊</button>
         <button class="admin-tab" type="button" data-tab="site" role="tab">站点</button>
         <button class="admin-tab" type="button" data-tab="ai" role="tab">AI 助手</button>
+        <button class="admin-tab" type="button" data-tab="aimodel" role="tab">模型配置</button>
       </nav>
 
       <!-- 动态（废话条 / 箴言 / 看法，同一入口不同标签） -->
@@ -249,10 +250,37 @@ import Base from '../layouts/Base.astro';
         <p class="hint">在「站点」之外操作：把 mp3 放进仓库 <code>public/music/</code>，再改 <code>src/components/MusicPlayer.astro</code> 顶部的曲目列表。</p>
       </div>
 
-      <!-- AI 助手 -->
+      <!-- AI 助手：只放聊天 -->
       <div class="admin-panel" data-panel="ai" hidden>
-        <h3>模型管理</h3>
-        <p class="hint">每个「模型」是一位成员：起一个名字（也是它在对话里的身份），配一套接口。任何 OpenAI 兼容接口都能接；API Key 只保存在本浏览器 localStorage，不会写入网站仓库。聊天时用输入框左侧的小切换器随时换人。</p>
+        <p class="hint">AI 会先从全站索引（构建时生成的 <code>/api-index.json</code>）里检索最相关的几条内容，再据此回答；新发布的内容要等构建完成后才能被检索到。对话记录保存在本浏览器；模型在「模型配置」页管理。</p>
+        <div class="ai-session-bar">
+          <button class="admin-btn ghost" type="button" data-act="ai-new-chat">＋ 新对话</button>
+          <select class="ai-session-select" data-ai="session"></select>
+          <button class="admin-btn ghost" type="button" data-act="ai-del-chat">删除此对话</button>
+        </div>
+        <div class="ai-chat" data-ai-chat hidden></div>
+        <div class="ai-quick">
+          <button class="admin-btn ghost" type="button" data-ai-q="用几句话总结一下我的网站上都有哪些内容">总结站上内容</button>
+          <button class="admin-btn ghost" type="button" data-ai-q="帮我把下面这句话润色成一条废话条，保持原意、语言更有味道，只输出润色后的一句话：">润色废话条</button>
+        </div>
+        <div class="ai-modes">
+          <label class="kb-mode"><input type="checkbox" data-ai="think" /> 深度思考</label>
+          <label class="kb-mode"><input type="checkbox" data-ai="web" /> 联网搜索</label>
+          <span class="ai-mode-note">都不开 = 快速模式，只基于站内资料；开思考更缜密但更慢；开联网则站内资料与网上结果结合分析</span>
+        </div>
+        <div class="ai-input-row">
+          <div class="ai-model-switch">
+            <button class="ai-model-pill" type="button" data-ai="model-pill">模型</button>
+            <div class="ai-model-pop" data-ai="model-pop" hidden></div>
+          </div>
+          <input type="text" data-ai="input" placeholder="问点什么…（Enter 发送）" />
+          <button class="admin-btn primary" type="button" data-act="ai-send">发送</button>
+        </div>
+      </div>
+
+      <!-- 模型配置 -->
+      <div class="admin-panel" data-panel="aimodel" hidden>
+        <p class="hint">每个「模型」是一位成员：起一个名字（也是它在对话里的身份），配一套接口。任何 OpenAI 兼容接口都能接；API Key 只保存在本浏览器 localStorage，不会写入网站仓库。保存后回到「AI 助手」，用输入框左侧的小切换器随时换人。</p>
         <div class="ai-profiles" data-ai="profiles"></div>
         <label class="field">
           <span>名字（显示名，也是它的自我介绍身份）</span>
@@ -283,32 +311,6 @@ import Base from '../layouts/Base.astro';
           <button class="admin-btn primary" type="button" data-act="ai-save">保存模型</button>
         </div>
         <p class="hint" data-ai="status" role="status"></p>
-
-        <h3>资料问答</h3>
-        <p class="hint">AI 会先从全站索引（构建时生成的 <code>/api-index.json</code>）里检索最相关的几条内容，再据此回答；新发布的内容要等构建完成后才能被检索到。对话记录保存在本浏览器。</p>
-        <div class="ai-session-bar">
-          <button class="admin-btn ghost" type="button" data-act="ai-new-chat">＋ 新对话</button>
-          <select class="ai-session-select" data-ai="session"></select>
-          <button class="admin-btn ghost" type="button" data-act="ai-del-chat">删除此对话</button>
-        </div>
-        <div class="ai-chat" data-ai-chat hidden></div>
-        <div class="ai-quick">
-          <button class="admin-btn ghost" type="button" data-ai-q="用几句话总结一下我的网站上都有哪些内容">总结站上内容</button>
-          <button class="admin-btn ghost" type="button" data-ai-q="帮我把下面这句话润色成一条废话条，保持原意、语言更有味道，只输出润色后的一句话：">润色废话条</button>
-        </div>
-        <div class="ai-modes">
-          <label class="kb-mode"><input type="checkbox" data-ai="think" /> 深度思考</label>
-          <label class="kb-mode"><input type="checkbox" data-ai="web" /> 联网搜索</label>
-          <span class="ai-mode-note">都不开 = 快速模式，只基于站内资料；开思考更缜密但更慢；开联网则站内资料与网上结果结合分析</span>
-        </div>
-        <div class="ai-input-row">
-          <div class="ai-model-switch">
-            <button class="ai-model-pill" type="button" data-ai="model-pill">模型</button>
-            <div class="ai-model-pop" data-ai="model-pop" hidden></div>
-          </div>
-          <input type="text" data-ai="input" placeholder="问点什么…（Enter 发送）" />
-          <button class="admin-btn primary" type="button" data-act="ai-send">发送</button>
-        </div>
       </div>
 
       <p class="admin-msg" role="status"></p>
@@ -839,9 +841,18 @@ import Base from '../layouts/Base.astro';
   .ai-msg.bot.thinking {
     color: var(--ink-3);
   }
+  /* 点点固定占位宽度，动画时不引起气泡宽度抖动 */
   .ai-msg.bot.thinking::after {
-    content: '…';
+    content: '';
+    display: inline-block;
+    width: 1.6em;
+    text-align: left;
+    vertical-align: bottom;
     animation: ai-dots 1.2s steps(4, end) infinite;
+  }
+  .ai-msg.bot.err {
+    color: #b4766b;
+    border-color: color-mix(in srgb, #b4766b 40%, var(--line));
   }
   @keyframes ai-dots {
     0% {
@@ -2103,7 +2114,7 @@ import Base from '../layouts/Base.astro';
       kind === 'user' ? '你' : byLabel ?? (p ? shortName(p.name) : '星野助手');
     const div = document.createElement('div');
     div.className = `ai-msg ${kind}${kind === 'bot' && !text ? ' thinking' : ''}`;
-    div.textContent = text || (kind === 'bot' ? '思考中…' : '');
+    div.textContent = text || (kind === 'bot' ? '思考中' : '');
     turn.append(role, div);
     box.appendChild(turn);
     box.scrollTop = box.scrollHeight;
@@ -2131,7 +2142,9 @@ import Base from '../layouts/Base.astro';
   async function sendAiQuestion() {
     const profile = activeProfile();
     if (!profile) {
-      aiStatus('先在「模型管理」里配置并保存一个模型');
+      // 状态行在「模型配置」页，直接把人带过去
+      activateTab('aimodel');
+      aiStatus('先在这里配置并保存一个模型，再回「AI 助手」聊天');
       return;
     }
     const q = aiFields('input').value.trim();
@@ -2141,7 +2154,7 @@ import Base from '../layouts/Base.astro';
     const thinkOn = (aiFields('think') as HTMLInputElement).checked;
     const webOn = (aiFields('web') as HTMLInputElement).checked;
     const bubble = appendAiMsg('bot', '');
-    bubble.textContent = thinkOn ? '深度思考中…' : '思考中…';
+    bubble.textContent = thinkOn ? '深度思考中' : '思考中';
     try {
       const index = await ensureAiIndex();
       const hits = searchIndex(index, q, 5);
@@ -2189,11 +2202,10 @@ import Base from '../layouts/Base.astro';
         ],
         { thinking: thinkOn, webSearch: webOn && nativeSearch },
       );
-      // 模型输出常是 Markdown（加粗/列表/代码/公式），渲染成 HTML；
-      // renderMarkdown 转义优先，模型输出里的任何 HTML 都只会被当纯文本显示
+      // 回复一到就先停掉点点动画，再慢慢渲染 Markdown
+      bubble.classList.remove('thinking');
       bubble.classList.add('md');
       bubble.innerHTML = await renderMarkdown(reply);
-      bubble.classList.remove('thinking');
       const sources: AiStoredSource[] = hits
         .filter((h) => h.entry.path)
         .map((h) => ({ title: h.entry.title, path: h.entry.path }));
@@ -2235,8 +2247,9 @@ import Base from '../layouts/Base.astro';
       box.scrollTop = box.scrollHeight;
       msg('');
     } catch (e) {
+      bubble.classList.remove('thinking');
+      bubble.classList.add('err');
       bubble.textContent = '出错了：' + (e as Error).message;
-      bubble.classList.add('thinking');
     }
   }
 
