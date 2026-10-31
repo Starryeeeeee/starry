@@ -36,7 +36,7 @@ import Base from '../layouts/Base.astro';
         <li>粘贴到下面，登录</li>
       </ol>
       <div class="login-row">
-        <input type="password" placeholder="ghp_…" autocomplete="off" spellcheck="false" />
+        <input type="password" placeholder="ghp_…" autocomplete="off" spellcheck="false" aria-label="GitHub 个人访问令牌" />
         <button class="admin-btn primary" type="button" data-act="login">登录</button>
       </div>
       <p class="admin-msg" role="status"></p>
@@ -66,7 +66,7 @@ import Base from '../layouts/Base.astro';
             </select>
           </label>
         </div>
-        <textarea rows="3" placeholder="这一刻的想法…"></textarea>
+        <textarea rows="3" placeholder="这一刻的想法…（Ctrl+Enter 快捷发布）" aria-label="动态内容"></textarea>
         <div class="row-end">
           <button class="admin-btn primary" type="button" data-act="publish-moment">发布</button>
         </div>
@@ -258,7 +258,7 @@ import Base from '../layouts/Base.astro';
           <select class="ai-session-select" data-ai="session"></select>
           <button class="admin-btn ghost" type="button" data-act="ai-del-chat">删除此对话</button>
         </div>
-        <div class="ai-chat" data-ai-chat hidden></div>
+        <div class="ai-chat" data-ai-chat hidden aria-live="polite"></div>
         <div class="ai-quick">
           <button class="admin-btn ghost" type="button" data-ai-q="用几句话总结一下我的网站上都有哪些内容">总结站上内容</button>
           <button class="admin-btn ghost" type="button" data-ai-q="帮我把下面这句话润色成一条废话条，保持原意、语言更有味道，只输出润色后的一句话：">润色废话条</button>
@@ -270,10 +270,10 @@ import Base from '../layouts/Base.astro';
         </div>
         <div class="ai-input-row">
           <div class="ai-model-switch">
-            <button class="ai-model-pill" type="button" data-ai="model-pill">模型</button>
+            <button class="ai-model-pill" type="button" data-ai="model-pill" aria-haspopup="true" aria-expanded="false">模型</button>
             <div class="ai-model-pop" data-ai="model-pop" hidden></div>
           </div>
-          <input type="text" data-ai="input" placeholder="问点什么…（Enter 发送）" />
+          <input type="text" data-ai="input" placeholder="问点什么…（Enter 发送）" aria-label="向 AI 提问" />
           <button class="admin-btn primary" type="button" data-act="ai-send">发送</button>
         </div>
       </div>
@@ -359,6 +359,10 @@ import Base from '../layouts/Base.astro';
   }
   .admin-user b {
     font-weight: 650;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .admin-overview {
     margin-top: 18px;
@@ -491,19 +495,28 @@ import Base from '../layouts/Base.astro';
       padding: 18px 16px 22px;
     }
   }
+  /* 登录输入框一并纳入输入样式体系（此前游离在外，还是 UA 默认外观） */
   .admin-panel textarea,
   .admin-panel input,
-  .admin-panel select {
+  .admin-panel select,
+  .login-row input,
+  .ai-session-select {
     width: 100%;
     margin-top: 6px;
     padding: 10px 14px;
     font-family: inherit;
-    font-size: 0.95rem;
+    /* 1rem = 16px：低于它会触发 iOS Safari 聚焦自动缩放，整页跳动 */
+    font-size: 1rem;
     line-height: 1.8;
     color: var(--ink);
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 8px;
+  }
+  .admin-panel textarea::placeholder,
+  .admin-panel input::placeholder,
+  .login-row input::placeholder {
+    color: var(--ink-3);
   }
   .admin-panel textarea:focus,
   .admin-panel input:focus,
@@ -531,6 +544,7 @@ import Base from '../layouts/Base.astro';
   .row-end {
     display: flex;
     justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 8px;
     margin-top: 12px;
   }
@@ -561,6 +575,23 @@ import Base from '../layouts/Base.astro';
   :global(.admin-btn.ghost) {
     padding: 4px 12px;
     font-size: 0.82rem;
+  }
+  :global(.admin-btn:disabled) {
+    opacity: 0.55;
+    cursor: default;
+    transform: none;
+    border-color: var(--line);
+  }
+  /* 触屏设备：ghost 按钮从 ~28px 拉到接近 44px 触控标准 */
+  @media (pointer: coarse) {
+    :global(.admin-btn.ghost) {
+      padding: 9px 16px;
+      font-size: 0.88rem;
+    }
+    :global(.ai-profile-del) {
+      padding: 8px 10px;
+      font-size: 0.85rem;
+    }
   }
   :global(.admin-btn.danger) {
     color: #b4766b;
@@ -771,16 +802,17 @@ import Base from '../layouts/Base.astro';
   .ai-session-bar {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
     margin-top: 12px;
   }
   .ai-session-select {
     flex: 1;
-    min-width: 0;
+    min-width: 140px;
     width: auto;
     margin-top: 0;
-    padding: 6px 10px;
-    font-size: 0.85rem;
+    padding: 8px 10px;
+    font-size: 1rem;
     color: var(--ink);
     background: var(--surface);
     border: 1px solid var(--line);
@@ -789,12 +821,13 @@ import Base from '../layouts/Base.astro';
   .ai-input-row {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
     margin-top: 10px;
   }
   .ai-input-row input {
     flex: 1;
-    min-width: 0;
+    min-width: 180px;
     margin-top: 0;
   }
   .ai-model-switch {
@@ -997,6 +1030,7 @@ import Base from '../layouts/Base.astro';
     border-top: 1px dashed var(--line);
     font-size: 0.78rem;
     color: var(--ink-3);
+    overflow-wrap: anywhere;
   }
   .ai-src a {
     color: var(--accent-ink);
@@ -1107,7 +1141,23 @@ import Base from '../layouts/Base.astro';
     });
     if (!r.ok) {
       const body = await r.json().catch(() => ({}));
-      throw new Error(`${r.status} ${body.message ?? r.statusText}`);
+      // 令牌失效是高频且需要引导的错误：就地登出并说明出路，而不是甩 GitHub 原文
+      if (r.status === 401) {
+        localStorage.removeItem(TOKEN_KEY);
+        await showLogin(null);
+        window.dispatchEvent(new Event('sr-token-changed'));
+        msg('登录已过期，请重新粘贴令牌（表单里的草稿都还在）', true);
+        throw new Error('登录已过期');
+      }
+      const friendly =
+        r.status === 404
+          ? '内容不存在（可能刚被删除）'
+          : r.status === 403
+            ? 'GitHub 拒绝了请求：令牌权限不够或触发限流'
+            : r.status === 422
+              ? 'GitHub 拒绝了这个请求：内容可能重复或格式不对'
+              : (body.message ?? r.statusText);
+      throw new Error(`${friendly}（${r.status}）`);
     }
     return r.status === 204 ? null : r.json();
   };
@@ -1142,11 +1192,11 @@ import Base from '../layouts/Base.astro';
 
   const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
   let msgTimer: number | undefined;
-  const msg = (m: string) => {
+  const msg = (m: string, isErrForced = false) => {
     // 页面里有两个提示位（登录区一个、面板底部一个），全都要更新——
     // 只更新第一个的话，登录后第一个正好是隐藏的，所有反馈都会"消失"
     // 样式：底部居中气泡，自动消散；报错时变陶土玫瑰
-    const isErr = /失败|出错/.test(m);
+    const isErr = isErrForced || /失败|出错/.test(m);
     for (const el of document.querySelectorAll<HTMLElement>('.admin-msg')) {
       el.textContent = m;
       el.classList.add('show');
@@ -1177,11 +1227,11 @@ import Base from '../layouts/Base.astro';
   function armDelete(btn: HTMLButtonElement, run: () => Promise<void>) {
     if (btn.dataset.armed) {
       btn.disabled = true;
-      try {
-        void run();
-      } catch (e) {
-        msg('删除失败：' + (e as Error).message);
-      }
+      // run 是 async：同步 try/catch 接不到拒绝，必须显式 .catch，
+      // 否则删除失败时按钮永久卡在「确认删除？」且毫无提示
+      run()
+        .catch((e) => msg('删除失败：' + (e as Error).message, true))
+        .finally(() => disarmDelete(btn));
       return;
     }
     btn.dataset.armed = '1';
@@ -1216,15 +1266,17 @@ import Base from '../layouts/Base.astro';
     try {
       const me = await api('/user');
       await showLogin(me);
-      await refreshMoments();
-      await refreshPosts();
-      await refreshKb().catch((e) => console.warn('[admin] 知识库列表加载失败', e));
-      await refreshGallery().catch((e) => console.warn('[admin] 画廊列表加载失败', e));
     } catch {
       localStorage.removeItem(TOKEN_KEY);
       await showLogin(null);
-      msg('令牌无效或已过期，请重新登录');
+      msg('令牌无效或已过期，请重新登录', true);
+      return;
     }
+    // 各列表独立兜底：某个列表拉取失败不应该被误判成"令牌无效"而登出
+    await refreshMoments().catch((e) => msg('动态列表加载失败：' + (e as Error).message, true));
+    await refreshPosts().catch((e) => msg('文章列表加载失败：' + (e as Error).message, true));
+    await refreshKb().catch((e) => console.warn('[admin] 知识库列表加载失败', e));
+    await refreshGallery().catch((e) => console.warn('[admin] 画廊列表加载失败', e));
   }
 
   // ---------- 编辑模式状态 ----------
@@ -1282,10 +1334,13 @@ import Base from '../layouts/Base.astro';
   }
 
   function activateTab(name: string) {
-    document.querySelectorAll('.admin-tab').forEach((el) => el.classList.remove('active'));
-    document
-      .querySelector<HTMLButtonElement>(`.admin-tab[data-tab="${name}"]`)
-      ?.classList.add('active');
+    document.querySelectorAll('.admin-tab').forEach((el) => {
+      el.classList.remove('active');
+      (el as HTMLElement).setAttribute('aria-selected', 'false');
+    });
+    const tab = document.querySelector<HTMLElement>(`.admin-tab[data-tab="${name}"]`);
+    tab?.classList.add('active');
+    tab?.setAttribute('aria-selected', 'true');
     document.querySelectorAll('.admin-panel').forEach((p) => {
       (p as HTMLElement).hidden = p.getAttribute('data-panel') !== name;
     });
@@ -1648,34 +1703,9 @@ import Base from '../layouts/Base.astro';
         if (!input.value.trim()) return msg('先粘贴令牌');
         localStorage.setItem(TOKEN_KEY, input.value.trim());
         input.value = '';
-        // 画廊：点击/拖拽选图
-  const drop = document.querySelector('[data-gallery-drop]');
-  const gInput = document.querySelector<HTMLInputElement>('[data-gallery-input]');
-  drop?.addEventListener('click', () => gInput?.click());
-  drop?.addEventListener('keydown', (e) => {
-    if ((e as KeyboardEvent).key === 'Enter') gInput?.click();
-  });
-  ['dragover', 'dragenter'].forEach((ev) =>
-    drop?.addEventListener(ev, (e) => {
-      e.preventDefault();
-      drop.classList.add('dragging');
-    }),
-  );
-  ['dragleave', 'drop'].forEach((ev) =>
-    drop?.addEventListener(ev, () => drop?.classList.remove('dragging')),
-  );
-  drop?.addEventListener('drop', (e) => {
-    e.preventDefault();
-    const files = [...(e as DragEvent).dataTransfer!.files].filter((f) => f.type.startsWith('image/'));
-    if (gInput && files.length) {
-      const dt = new DataTransfer();
-      files.forEach((f) => dt.items.add(f));
-      gInput.files = dt.files;
-    }
-  });
-
-  await verify();
-        msg('登录成功');
+        await verify();
+        // verify 在令牌无效时会自行清 token 并提示，此时不要再说"登录成功"
+        if (localStorage.getItem(TOKEN_KEY)) msg('登录成功');
       }
       if (act === 'logout') {
         localStorage.removeItem(TOKEN_KEY);
@@ -1698,6 +1728,7 @@ import Base from '../layouts/Base.astro';
         msg(`已发布到「${typeName}」，站点构建中（1-2 分钟上站）`);
         await refreshMoments();
         t.removeAttribute('disabled');
+        ta.focus(); // 连发场景：发布完焦点回到输入框
       }
       if (act === 'publish-post') {
         const g = (k: string) => ($(`[data-post="${k}"]`) as HTMLInputElement).value.trim();
@@ -1998,6 +2029,7 @@ import Base from '../layouts/Base.astro';
       del.className = 'ai-profile-del';
       del.textContent = '✕';
       del.title = '删除这个模型';
+      del.setAttribute('aria-label', '删除模型 ' + p.name);
       del.onclick = () => {
         armDelete(del, async () => {
           aiProfiles = aiProfiles.filter((x) => x.id !== p.id);
@@ -2407,16 +2439,18 @@ import Base from '../layouts/Base.astro';
     const t = e.target as HTMLElement;
     const act = t.closest('[data-act]')?.getAttribute('data-act');
     const quickQ = (t.closest('[data-ai-q]') as HTMLElement | null)?.getAttribute('data-ai-q');
-    // 模型切换 pill：点击弹出/收起；点其他地方收起
+    // 模型切换 pill：点击弹出/收起；点其他地方或按 Esc 收起
+    const pop = $('[data-ai="model-pop"]') as HTMLElement;
+    const pill = $('[data-ai="model-pill"]') as HTMLElement;
     if (t.closest('[data-ai="model-pill"]')) {
-      const pop = $('[data-ai="model-pop"]') as HTMLElement;
       pop.hidden = !pop.hidden;
+      pill.setAttribute('aria-expanded', pop.hidden ? 'false' : 'true');
       return;
     }
-    const pill = $('[data-ai="model-pill"]') as HTMLElement;
-    const pop = $('[data-ai="model-pop"]') as HTMLElement;
-    if (!pop.hidden && !t.closest('[data-ai="model-pop"]')) pop.hidden = true;
-    void pill;
+    if (!pop.hidden && !t.closest('[data-ai="model-pop"]')) {
+      pop.hidden = true;
+      pill.setAttribute('aria-expanded', 'false');
+    }
     if (quickQ) {
       aiFields('input').value = quickQ;
       aiFields('input').focus();
@@ -2524,6 +2558,23 @@ import Base from '../layouts/Base.astro';
     const id = (e.target as HTMLSelectElement).value;
     if (id && id !== aiSessionId) void openSession(id);
   });
+  // Esc 关闭模型切换弹层
+  document.addEventListener('keydown', (e) => {
+    if ((e as KeyboardEvent).key !== 'Escape') return;
+    const pop = $('[data-ai="model-pop"]') as HTMLElement;
+    if (!pop.hidden) {
+      pop.hidden = true;
+      (aiFields('model-pill') as HTMLElement).setAttribute('aria-expanded', 'false');
+    }
+  });
+  // 动态输入框 Ctrl/Cmd+Enter 快捷发布（高频路径的加速器）
+  document.querySelector('[data-panel="moment"] textarea')?.addEventListener('keydown', (e) => {
+    const k = e as KeyboardEvent;
+    if (k.key === 'Enter' && (k.ctrlKey || k.metaKey)) {
+      e.preventDefault();
+      (document.querySelector('[data-act="publish-moment"]') as HTMLButtonElement)?.click();
+    }
+  });
 
   // Tab 切换
   for (const tab of document.querySelectorAll<HTMLButtonElement>('.admin-tab')) {
@@ -2546,7 +2597,12 @@ import Base from '../layouts/Base.astro';
   const gInput = document.querySelector<HTMLInputElement>('[data-gallery-input]');
   drop?.addEventListener('click', () => gInput?.click());
   drop?.addEventListener('keydown', (e) => {
-    if ((e as KeyboardEvent).key === 'Enter') gInput?.click();
+    // role="button" 要求 Enter 和 Space 都能触发
+    const k = (e as KeyboardEvent).key;
+    if (k === 'Enter' || k === ' ') {
+      e.preventDefault();
+      gInput?.click();
+    }
   });
   ['dragover', 'dragenter'].forEach((ev) =>
     drop?.addEventListener(ev, (e) => {
