@@ -1303,6 +1303,7 @@ import Base from '../layouts/Base.astro';
       if (act === 'logout') {
         localStorage.removeItem(TOKEN_KEY);
         await showLogin(null);
+        window.dispatchEvent(new Event('sr-token-changed')); // 快速输入按钮即时隐藏
       }
       if (act === 'publish-moment') {
         const ta = $('[data-panel="moment"] textarea') as HTMLTextAreaElement;
