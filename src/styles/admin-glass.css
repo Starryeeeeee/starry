@@ -1,0 +1,114 @@
+﻿/* ==========================================================================
+   管理后台 · 玻璃点缀层（admin-glass.css）
+   --------------------------------------------------------------------------
+   叠在 admin-mac.css（macOS 原生感层）之上的可选材质层：把 Uiverse.io
+   narmesh_sah 的玻璃音乐条组件（MIT）的工艺——rgba 白玻璃填充 + backdrop
+   blur + 1px 白描边 + 悬停上浮/按压缩放——翻译给后台的「控制条」类元素：
+   标签轨、AI 会话栏、快捷按钮、模式开关。窗口、表单、列表仍归 mac 层管。
+
+   加载顺序：Base.astro 在 admin-mac.css 之后挂载本文件，仅 /admin 页面。
+   优先级：关键规则用「.macos-admin .admin .x.x」四级类（0,4,0）稳定压过
+   mac 层的 0,3,0。Uiverse 原件里的 `20Q` 等非法单位已修正为 px。
+   玻璃只在有纵深背景处启用：本层给 .admin 画布铺了星野深空水彩洗。
+   ========================================================================== */
+
+/* —— 画布：深空水彩洗，让玻璃材质有东西可透 —— */
+.macos-admin .admin {
+  background-image:
+    radial-gradient(420px 260px at 14% 8%, rgba(70, 111, 154, 0.16), transparent 70%),
+    radial-gradient(360px 240px at 88% 12%, rgba(107, 143, 125, 0.14), transparent 70%),
+    radial-gradient(480px 300px at 78% 88%, rgba(180, 118, 107, 0.1), transparent 72%),
+    radial-gradient(300px 220px at 8% 82%, rgba(169, 142, 103, 0.1), transparent 70%);
+}
+
+[data-theme='dark'] .macos-admin .admin {
+  background-image:
+    radial-gradient(420px 260px at 14% 8%, rgba(143, 169, 194, 0.14), transparent 70%),
+    radial-gradient(360px 240px at 88% 12%, rgba(157, 184, 166, 0.12), transparent 70%),
+    radial-gradient(480px 300px at 78% 88%, rgba(207, 141, 129, 0.1), transparent 72%);
+}
+
+/* —— AI 会话栏：音乐条主件的玻璃胶囊 —— */
+.macos-admin .admin .ai-session-bar.ai-session-bar {
+  gap: 8px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  backdrop-filter: blur(10px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(13, 38, 38, 0.12);
+}
+
+[data-theme='dark'] .macos-admin .admin .ai-session-bar.ai-session-bar {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.macos-admin .admin .ai-session-bar .admin-btn.ghost:hover {
+  transform: translateY(-2px);
+}
+
+.macos-admin .admin .ai-session-bar .admin-btn.ghost:active {
+  transform: scale(0.94);
+}
+
+/* 会话下拉与输入框：玻璃填充 */
+.macos-admin .admin .ai-session-bar select,
+.macos-admin .admin .ai-session-bar input {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+}
+
+/* —— 快捷按钮与模式开关：磨砂小胶囊 —— */
+.macos-admin .admin .ai-quick .admin-btn.ghost,
+.macos-admin .admin .kb-mode {
+  border-radius: 999px;
+  transition: background 0.18s var(--mac-ease), transform 0.18s var(--mac-ease),
+    color 0.18s var(--mac-ease);
+}
+
+.macos-admin .admin .ai-quick .admin-btn.ghost:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+
+.macos-admin .admin .ai-quick .admin-btn.ghost:active {
+  transform: scale(0.94);
+}
+
+/* —— 登录行：磨砂胶囊（进门第一眼） —— */
+.macos-admin .admin .login-row.login-row {
+  padding: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  backdrop-filter: blur(10px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(13, 38, 38, 0.12);
+}
+
+/* —— 降级：不支持 blur 的浏览器退回实底描边 —— */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .macos-admin .admin .admin-tabs.admin-tabs,
+  .macos-admin .admin .ai-session-bar.ai-session-bar,
+  .macos-admin .admin .login-row.login-row {
+    background: var(--mac-toolbar);
+    border-color: var(--mac-sep);
+  }
+}
+
+/* —— 减少动态：关掉位移类微交互 —— */
+@media (prefers-reduced-motion: reduce) {
+  .macos-admin .admin .admin-tab.admin-tab,
+  .macos-admin .admin .ai-session-bar .admin-btn.ghost,
+  .macos-admin .admin .ai-quick .admin-btn.ghost {
+    transition: none;
+  }
+  .macos-admin .admin .admin-tab.admin-tab:hover,
+  .macos-admin .admin .ai-session-bar .admin-btn.ghost:hover,
+  .macos-admin .admin .ai-quick .admin-btn.ghost:hover {
+    transform: none;
+  }
+}
