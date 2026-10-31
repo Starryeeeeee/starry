@@ -700,6 +700,102 @@ import Base from '../layouts/Base.astro';
     border: 1px solid var(--line);
     border-radius: 12px;
   }
+  /* 聊天气泡/turn/来源等 JS 动态创建的元素样式在本文件末尾的 is:global 块里——
+     Astro 的 scoped 样式匹配不到运行时创建的节点（前人会过的坑） */
+  .ai-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .ai-modes {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 12px;
+    font-size: 0.92rem;
+  }
+  .ai-modes input {
+    width: auto;
+    margin-top: 0;
+  }
+  .ai-mode-note {
+    font-size: 0.78rem;
+    color: var(--ink-3);
+  }
+  .ai-profiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .ai-session-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .ai-session-select {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    margin-top: 0;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .ai-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .ai-input-row input {
+    flex: 1;
+    min-width: 0;
+    margin-top: 0;
+  }
+  .ai-model-switch {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .ai-model-pill {
+    padding: 9px 14px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ai-model-pill:hover {
+    border-color: var(--accent);
+  }
+  .ai-model-pop {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    min-width: 230px;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(30, 30, 60, 0.1);
+    padding: 6px;
+    z-index: 20;
+  }
+</style>
+
+<!-- AI 聊天里 JS 动态创建的元素（气泡/turn/来源/模型胶囊等）拿不到 scoped 样式，
+     必须用全局块；选择器都带 .ai- 前缀，不会污染站内其他页面 -->
+<style is:global>
   /* 一问一答为一个 turn：问靠右、答靠左，角色标签置顶，一眼可分 */
   .ai-turn {
     display: flex;
@@ -850,34 +946,6 @@ import Base from '../layouts/Base.astro';
   .ai-src a {
     color: var(--accent-ink);
   }
-  .ai-quick {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .ai-modes {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px 16px;
-    margin-top: 12px;
-    font-size: 0.92rem;
-  }
-  .ai-modes input {
-    width: auto;
-    margin-top: 0;
-  }
-  .ai-mode-note {
-    font-size: 0.78rem;
-    color: var(--ink-3);
-  }
-  .ai-profiles {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-  }
   .ai-profile-chip {
     display: inline-flex;
     align-items: center;
@@ -915,67 +983,6 @@ import Base from '../layouts/Base.astro';
   .ai-profile-empty {
     font-size: 0.85rem;
     color: var(--ink-3);
-  }
-  .ai-session-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 12px;
-  }
-  .ai-session-select {
-    flex: 1;
-    min-width: 0;
-    width: auto;
-    margin-top: 0;
-    padding: 6px 10px;
-    font-size: 0.85rem;
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-  }
-  .ai-input-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .ai-input-row input {
-    flex: 1;
-    min-width: 0;
-    margin-top: 0;
-  }
-  .ai-model-switch {
-    position: relative;
-    flex-shrink: 0;
-  }
-  .ai-model-pill {
-    padding: 9px 14px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 0.85rem;
-    color: var(--ink);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .ai-model-pill:hover {
-    border-color: var(--accent);
-  }
-  .ai-model-pop {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 0;
-    min-width: 230px;
-    display: flex;
-    flex-direction: column;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    box-shadow: 0 6px 20px rgba(30, 30, 60, 0.1);
-    padding: 6px;
-    z-index: 20;
   }
   .ai-model-item {
     border: none;
