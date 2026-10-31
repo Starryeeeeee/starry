@@ -1547,3 +1547,20 @@ html.no-decor .bg-decor {
     scroll-behavior: auto;
   }
 }
+
+/* ---------- 右下角悬浮操作区（P0 统一约定） ----------
+   下方：AI 星球（仅首页）；上方：快速记录笔（登录后全站）。
+   两个悬浮组件都从这几个变量取位，保证边距、间距、安全区一致。 */
+:root {
+  --fab-right: 16px;
+  --fab-bottom: 16px;
+  --fab-size: 58px;
+  --fab-gap: 14px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --fab-right: 12px;
+    --fab-bottom: 12px;
+  }
+}

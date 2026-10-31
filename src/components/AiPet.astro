@@ -23,7 +23,6 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
       <span class="starp-host" aria-hidden="true">guest@starry:~$</span>
       <input type="text" data-starp-input aria-label="向星野助手提问" autocomplete="off"
              spellcheck="false" enterkeyhint="send" />
-      <span class="starp-cursor" aria-hidden="true"></span>
     </form>
   </section>
 
@@ -35,9 +34,14 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
 <style>
   .starp-root {
     position: fixed;
-    right: 16px;
-    bottom: 16px;
+    /* 悬浮操作区统一取位（global.css 约定），带安全区 */
+    right: calc(var(--fab-right) + env(safe-area-inset-right, 0px));
+    bottom: calc(var(--fab-bottom) + env(safe-area-inset-bottom, 0px));
     z-index: 90;
+  }
+  /* hidden 会被下面的 display:flex 覆盖（全站第三次踩这个坑），统一压回来 */
+  .starp-root [hidden] {
+    display: none !important;
   }
   .starp-fab {
     display: block;
@@ -96,12 +100,13 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
       animation: none;
     }
   }
-  /* 深空观测终端：Game1 的玻璃窗语言 */
+  /* 深空观测终端：Game1 的玻璃窗语言
+     面板开在 dock 左侧（而不是上方），快速记录入口保持可见可点 */
   .starp-panel {
     position: absolute;
-    right: 0;
-    bottom: 70px;
-    width: min(400px, calc(100vw - 24px));
+    right: calc(var(--fab-size) + 12px);
+    bottom: 0;
+    width: min(400px, calc(100vw - var(--fab-right) * 2 - var(--fab-size) - 12px));
     height: 420px;
     display: flex;
     flex-direction: column;
@@ -203,37 +208,15 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
   .starp-inputline input::placeholder {
     color: rgba(140, 180, 220, 0.4);
   }
-  /* 方块光标：输入框未聚焦时在行尾闪烁，聚焦后让位给真光标 */
-  .starp-cursor {
-    display: inline-block;
-    width: 8px;
-    height: 1.1em;
-    background: #79a8dc;
-    flex-shrink: 0;
-    animation: starp-blink 1s steps(1) infinite;
-    opacity: 0;
-  }
-  .starp-inputline.idle .starp-cursor {
-    opacity: 1;
-  }
-  @keyframes starp-blink {
-    50% {
-      opacity: 0;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .starp-cursor {
-      animation: none;
-    }
-  }
-  @media (max-width: 560px) {
-    .starp-root {
-      right: 12px;
-      bottom: 12px;
-    }
+  @media (max-width: 640px) {
+    /* 手机端：dock 竖排（星球在下、快速记录在上 42px），
+       终端面板整体叠在 dock 之上，两个入口仍然可见 */
     .starp-panel {
-      right: -60px;
-      bottom: 74px;
+      right: var(--fab-right);
+      left: var(--fab-right);
+      bottom: calc(var(--fab-bottom) + env(safe-area-inset-bottom, 0px) + var(--fab-size) + var(--fab-gap) + 42px + 12px);
+      width: auto;
+      height: min(420px, calc(100dvh - 190px));
     }
   }
 </style>
@@ -380,7 +363,6 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
   const chat = $('[data-starp-chat]');
   const form = $('[data-starp-form]') as HTMLFormElement;
   const input = $('[data-starp-input]') as HTMLInputElement;
-  const inputLine = $('.starp-inputline');
 
   const HISTORY_KEY = 'sr-pet-chat';
   type PetMsg = { role: 'user' | 'bot'; content: string };
@@ -565,10 +547,7 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
   closeBy(dotMin, () => panel.classList.toggle('min'));
   closeBy(dotGrow, () => panel.classList.toggle('tall'));
 
-  // 输入框聚焦态切换方块光标（聚焦时用真光标）
-  input.addEventListener('focus', () => inputLine.classList.remove('idle'));
-  input.addEventListener('blur', () => inputLine.classList.add('idle'));
-  inputLine.classList.add('idle');
+  // 输入状态由真实插入光标（caret-color 蓝色）表达，点击输入框才出现
 
   // 提交 + ↑↓ 历史记录（终端惯例）
   const cmdHistory: string[] = [];

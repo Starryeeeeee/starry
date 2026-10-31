@@ -1,21 +1,25 @@
 ---
-// 全站快速输入：右下角浮动笔，点开即写、回车即发
+// 全站快速记录：右下角浮动笔，点开弹出居中 Modal（手机端底部面板），写完即走
 // 仅在站长已登录（localStorage 有 PAT）时显示；访客不可见
 // 发布通道与 /admin 相同：GitHub Issues API + 自动触发构建
+// 位置走 global.css 的悬浮操作区约定（--fab-*），与 AI 星球挂件共用一条 dock 列
 import penIcon from '../icons/ui/pen-line.svg?raw';
 ---
 
 <div class="quick-capture" data-open="false" hidden>
-  <div class="qc-panel" data-qc-panel hidden>
-    <div class="qc-types" role="radiogroup" aria-label="发布到">
-      <button type="button" class="qc-type active" data-qc-type="moment" aria-pressed="true">废话条</button>
-      <button type="button" class="qc-type" data-qc-type="quote" aria-pressed="false">箴言</button>
-      <button type="button" class="qc-type" data-qc-type="view" aria-pressed="false">看法</button>
-    </div>
-    <textarea class="qc-text" data-qc-text rows="3" maxlength="500" placeholder="记一笔…（Enter 发送，Shift+Enter 换行）"></textarea>
-    <div class="qc-foot">
-      <span class="qc-hint" data-qc-hint></span>
-      <button class="qc-send" type="button" data-qc-send>发布</button>
+  <!-- 遮罩 + 居中 Modal（手机端贴底弹出） -->
+  <div class="qc-overlay" data-qc-overlay hidden>
+    <div class="qc-modal" role="dialog" aria-modal="true" aria-label="快速记录">
+      <div class="qc-types" role="radiogroup" aria-label="发布到">
+        <button type="button" class="qc-type active" data-qc-type="moment" aria-pressed="true">废话条</button>
+        <button type="button" class="qc-type" data-qc-type="quote" aria-pressed="false">箴言</button>
+        <button type="button" class="qc-type" data-qc-type="view" aria-pressed="false">看法</button>
+      </div>
+      <textarea class="qc-text" data-qc-text rows="4" maxlength="500" placeholder="记一笔…（Enter 发送，Shift+Enter 换行）"></textarea>
+      <div class="qc-foot">
+        <span class="qc-hint" data-qc-hint></span>
+        <button class="qc-send" type="button" data-qc-send>发布</button>
+      </div>
     </div>
   </div>
   <button class="qc-fab" type="button" aria-label="快速记录" aria-expanded="false">
@@ -26,39 +30,75 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
 <style>
   .quick-capture {
     position: fixed;
-    right: 22px;
-    bottom: 22px;
-    z-index: 60; /* 唱片 40、灯箱 100 之下 */
+    /* dock 上位：星球在下方 --fab-bottom，快速记录在它上面一格（仅首页有星球时） */
+    right: calc(var(--fab-right) + env(safe-area-inset-right, 0px));
+    bottom: calc(var(--fab-bottom) + env(safe-area-inset-bottom, 0px));
+    z-index: 91; /* 星球挂件 90、画廊灯箱 100 之下 */
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 12px;
+    gap: var(--fab-gap);
   }
   .quick-capture[hidden] {
     display: none;
   }
+  /* 首页有星球挂件：快速记录让出它的位置，竖排成一列 */
+  .quick-capture.has-pet {
+    bottom: calc(
+      var(--fab-bottom) + env(safe-area-inset-bottom, 0px) + var(--fab-size) + var(--fab-gap)
+    );
+  }
 
-  /* 面板 */
-  .qc-panel {
-    width: min(340px, calc(100vw - 44px));
-    padding: 14px;
+  /* ---- 遮罩 + Modal ---- */
+  .qc-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120; /* 星球挂件 90、画廊灯箱 100 之上 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: color-mix(in srgb, var(--ink) 30%, transparent);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+  }
+  .qc-overlay[hidden] {
+    display: none;
+  }
+  .qc-modal {
+    width: min(500px, 100%);
+    padding: 18px;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 14px;
-    box-shadow: 0 12px 40px rgba(22, 22, 45, 0.16);
+    box-shadow: 0 18px 60px rgba(22, 22, 45, 0.22);
+    animation: qc-in 0.22s var(--ease-out, ease);
   }
-  .qc-panel[hidden] {
-    display: none;
+  @keyframes qc-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
+  @media (prefers-reduced-motion: reduce) {
+    .qc-modal {
+      animation: none;
+    }
+  }
+
   .qc-types {
     display: flex;
     gap: 4px;
     margin-bottom: 10px;
   }
   .qc-type {
-    padding: 4px 12px;
+    padding: 5px 13px;
     font-family: inherit;
-    font-size: 0.82rem;
+    font-size: 0.84rem;
     color: var(--ink-2);
     background: none;
     border: none;
@@ -75,14 +115,15 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
     width: 100%;
     padding: 10px 12px;
     font-family: var(--font-body);
-    font-size: 0.95rem;
+    /* 1rem：低于 16px 会触发 iOS 聚焦自动缩放 */
+    font-size: 1rem;
     line-height: 1.7;
     color: var(--ink);
     background: var(--bg);
     border: 1px solid var(--line);
     border-radius: 10px;
     resize: vertical;
-    min-height: 72px;
+    min-height: 96px;
   }
   .qc-text:focus {
     outline: 2px solid var(--accent);
@@ -97,7 +138,7 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
     margin-top: 10px;
   }
   .qc-hint {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     color: var(--ink-3);
     line-height: 1.5;
     min-height: 1.2em;
@@ -112,9 +153,9 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
   }
   .qc-send {
     flex-shrink: 0;
-    padding: 6px 18px;
+    padding: 8px 22px;
     font-family: inherit;
-    font-size: 0.86rem;
+    font-size: 0.88rem;
     font-weight: 550;
     color: #fff;
     background: var(--accent);
@@ -132,9 +173,10 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
   .qc-send[disabled] {
     opacity: 0.55;
     cursor: default;
+    transform: none;
   }
 
-  /* 浮动笔按钮 */
+  /* ---- 浮动笔按钮 ---- */
   .qc-fab {
     display: grid;
     place-items: center;
@@ -168,13 +210,33 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
   }
 
   @media (max-width: 640px) {
-    .quick-capture {
-      right: 16px;
-      bottom: 16px;
+    /* 手机端：Modal 贴底弹出，适配安全区，不被键盘顶住关键内容 */
+    .qc-overlay {
+      align-items: flex-end;
+      padding: 0;
+    }
+    .qc-modal {
+      width: 100%;
+      border-radius: 16px 16px 0 0;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+      animation: qc-sheet 0.26s var(--ease-out, ease);
     }
     .qc-fab {
       width: 42px;
       height: 42px;
+    }
+  }
+  @keyframes qc-sheet {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
     }
   }
 
@@ -187,7 +249,8 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
 </style>
 
 <script>
-  // ============ 快速输入：GitHub Issues API 即后端（与 /admin 同通道） ============
+  // ============ 快速记录：GitHub Issues API 即后端（与 /admin 同通道） ============
+  // Token 只从 localStorage 读取：不进 URL、不进控制台、不出现在错误信息里。
   import { u } from '../lib/base';
 
   const REPO = 'Starryeeeeee/starry';
@@ -195,7 +258,7 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
   const TYPE_NAMES: Record<string, string> = { moment: '废话条', quote: '箴言', view: '看法' };
 
   const root = document.querySelector<HTMLElement>('.quick-capture')!;
-  const panel = root.querySelector<HTMLElement>('[data-qc-panel]')!;
+  const overlay = root.querySelector<HTMLElement>('[data-qc-overlay]')!;
   const fab = root.querySelector<HTMLButtonElement>('.qc-fab')!;
   const text = root.querySelector<HTMLTextAreaElement>('[data-qc-text]')!;
   const hint = root.querySelector<HTMLElement>('[data-qc-hint]')!;
@@ -203,8 +266,11 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
   const typeBtns = [...root.querySelectorAll<HTMLButtonElement>('.qc-type')];
 
   const token = () => localStorage.getItem(TOKEN_KEY) ?? '';
-  const label = () => root.querySelector<HTMLInputElement>('[data-qc-type].active')?.dataset.qcType ?? 'moment';
+  const label = () => root.querySelector<HTMLButtonElement>('[data-qc-type].active')?.dataset.qcType ?? 'moment';
   const typeName = () => TYPE_NAMES[label()] ?? '废话条';
+
+  // 首页有星球挂件 → 快速记录让出下位，竖排成 dock（其他页面独占下位）
+  root.classList.toggle('has-pet', !!document.querySelector('.starp-root'));
 
   // 仅站长可见：有令牌才显示（访客看不到这个入口）
   function refreshVisible() {
@@ -223,35 +289,41 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
     hint.textContent = m;
     hint.classList.toggle('err', isErr);
     clearTimeout(hintTimer);
-    hintTimer = window.setTimeout(() => (hint.textContent = ''), 3600);
+    hintTimer = window.setTimeout(() => (hint.textContent = ''), 4200);
   }
 
   function setOpen(open: boolean) {
     root.dataset.open = String(open);
     fab.setAttribute('aria-expanded', String(open));
-    panel.hidden = !open;
+    overlay.hidden = !open;
     if (open) {
       // 未登录：给出登录指引，不显示输入框
       const loggedIn = !!token();
       text.hidden = !loggedIn;
       sendBtn.hidden = !loggedIn;
       root.querySelector('.qc-types')!.hidden = !loggedIn;
-      const hintEl = hint;
       if (!loggedIn) {
-        hintEl.innerHTML =
+        hint.classList.add('err');
+        hint.innerHTML =
           '还没有登录——先去 <a href="' +
           u('/admin/') +
           '">管理面板</a> 用令牌登录，回来就能一键记录。';
-        hintEl.classList.add('err');
       } else {
-        hintEl.classList.remove('err');
-        hintEl.textContent = '发布到「' + typeName() + '」';
+        hint.classList.remove('err');
+        hint.textContent = '发布到「' + typeName() + '」';
+        text.focus();
       }
-      if (loggedIn) text.focus();
+    } else {
+      // 关闭后焦点回到快速记录按钮（键盘可达性）
+      fab.focus();
     }
   }
 
   fab.addEventListener('click', () => setOpen(root.dataset.open !== 'true'));
+  // 点遮罩空白处关闭（点 Modal 本身不关）
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) setOpen(false);
+  });
 
   for (const b of typeBtns) {
     b.addEventListener('click', () => {
@@ -271,12 +343,24 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
     if (e.key === 'Escape') setOpen(false);
   });
 
+  /** 把 GitHub 错误翻译成人话；令牌内容绝不进入错误信息 */
+  function friendlyError(status: number, message: string): string {
+    if (status === 401) return '登录已过期，请到 /admin 重新粘贴令牌（草稿还留着）';
+    if (status === 403)
+      return message.includes('rate limit')
+        ? 'GitHub 限流了，休息几分钟再试（草稿还留着）'
+        : '令牌权限不够：需要 repo 权限，去 /admin 检查';
+    if (status === 422) return 'GitHub 拒绝了这条内容，换个说法再试（草稿还留着）';
+    return `发布失败（${status}）：草稿已保留，稍后重试`;
+  }
+
   sendBtn.addEventListener('click', async () => {
     const value = text.value.trim();
     if (!value) return say('写点什么再发', true);
     sendBtn.disabled = true;
     say('发布中…');
     try {
+      // 1) 创建 Issue —— 这一步成功才算记录成功
       const r = await fetch(`https://api.github.com/repos/${REPO}/issues`, {
         method: 'POST',
         headers: {
@@ -287,24 +371,43 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
         body: JSON.stringify({ title: value, labels: [label()] }),
       });
       if (!r.ok) {
-        const body = await r.json().catch(() => ({}));
-        throw new Error(`${r.status} ${body.message ?? ''}`);
+        const body = (await r.json().catch(() => ({}))) as { message?: string };
+        throw Object.assign(new Error(friendlyError(r.status, body.message ?? '')), { status: r.status });
       }
-      // 发布成功 → 触发构建（Issue 事件本身也会触发，这里保底再触发一次）
-      await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/deploy.yml/dispatches`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token()}`,
-          Accept: 'application/vnd.github+json',
-          'Content-Type': 'application/json',
+      // 2) 触发构建只是加速上站，失败不算记录失败：
+      //    Issue 事件本身也会触发部署（.github/workflows 的 issue 触发器保底）
+      const dispatchOk = await fetch(
+        `https://api.github.com/repos/${REPO}/actions/workflows/deploy.yml/dispatches`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token()}`,
+            Accept: 'application/vnd.github+json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ref: 'main' }),
         },
-        body: JSON.stringify({ ref: 'main' }),
-      }).catch(() => {});
+      )
+        .then(() => true)
+        .catch(() => false);
       text.value = '';
-      say('已发布到「' + typeName() + '」，1-2 分钟上站');
-      window.setTimeout(() => setOpen(false), 900);
+      say(
+        dispatchOk
+          ? '已发布到「' + typeName() + '」，1-2 分钟上站'
+          : '已发布到「' + typeName() + '」（手动构建没触发成功，稍后由 Issue 事件自动上站）',
+      );
+      window.setTimeout(() => setOpen(false), 1100);
     } catch (e) {
-      say('发布失败：' + (e as Error).message + '（令牌过期就去 /admin 重登）', true);
+      // 草稿（text.value）故意保留，重试不丢内容
+      const err = e as Error;
+      const isNetwork =
+        err instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(err.message ?? '');
+      say(
+        isNetwork
+          ? '网络连不上 GitHub——草稿已保留，稍后重试'
+          : err.message || '网络异常，草稿已保留，稍后重试',
+        true,
+      );
     }
     sendBtn.disabled = false;
   });
