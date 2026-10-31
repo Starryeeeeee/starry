@@ -7,21 +7,32 @@ import Base from '../layouts/Base.astro';
 <Base title="管理 · 星野漫游" description="站长管理面板。">
   <div class="container admin">
     <header class="admin-head">
-      <h1>管理面板</h1>
+      <div>
+        <h1>管理面板</h1>
+        <p class="admin-greet"><span data-greet></span>，Starry。</p>
+      </div>
       <div class="admin-user" hidden>
-        <img alt="" width="28" height="28" />
+        <img alt="" width="30" height="30" />
         <b></b>
         <button class="admin-btn ghost" type="button" data-act="logout">退出</button>
       </div>
     </header>
 
+    <p class="admin-overview" data-overview hidden>
+      <span>文章 <b data-o="posts">–</b></span>
+      <span>动态 <b data-o="moments">–</b></span>
+      <span>知识库 <b data-o="kb">–</b></span>
+    </p>
+
     <!-- 登录 -->
     <section class="admin-login" hidden>
-      <p>粘贴你的 GitHub 个人访问令牌（Token）登录。</p>
+      <img class="login-mascot" src="/starry/favicon.svg" alt="" width="88" height="88" />
+      <h2 class="login-title">站长通道</h2>
+      <p class="login-sub">粘贴 GitHub 个人访问令牌登录。令牌只存在这台电脑的浏览器里，不上站、不进仓库。</p>
       <ol>
         <li>打开 <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=starry-roam-admin" target="_blank" rel="noopener">github.com/settings/tokens/new</a>（已预选 repo + workflow 权限）</li>
-        <li>拉到底部 Generate token，复制生成的一串字符</li>
-        <li>粘贴到下面并登录</li>
+        <li>Generate token，复制生成的一串字符</li>
+        <li>粘贴到下面，登录</li>
       </ol>
       <div class="login-row">
         <input type="password" placeholder="ghp_…" autocomplete="off" spellcheck="false" />
@@ -46,7 +57,7 @@ import Base from '../layouts/Base.astro';
         <div class="row-end">
           <button class="admin-btn primary" type="button" data-act="publish-moment">发布</button>
         </div>
-        <h3>已发布的动态</h3>
+        <h3>已发布的动态<i class="sec-count" data-sec-count="moments"></i></h3>
         <ul class="admin-list" data-list="moments"></ul>
       </div>
 
@@ -89,7 +100,7 @@ import Base from '../layouts/Base.astro';
         <div class="row-end">
           <button class="admin-btn primary" type="button" data-act="publish-post">发布文章</button>
         </div>
-        <h3>已有文章</h3>
+        <h3>已有文章<i class="sec-count" data-sec-count="posts"></i></h3>
         <ul class="admin-list" data-list="posts"></ul>
       </div>
 
@@ -182,7 +193,7 @@ import Base from '../layouts/Base.astro';
           <p class="hint">上传的文件会存进仓库 public/kb/，随站点一起发布；PDF 在详情页可直接预览。</p>
         </div>
 
-        <h3>已有条目</h3>
+        <h3>已有条目<i class="sec-count" data-sec-count="kb"></i></h3>
         <ul class="admin-list" data-list="kb"></ul>
       </div>
 
@@ -236,6 +247,11 @@ import Base from '../layouts/Base.astro';
           <button class="admin-btn ghost" type="button" data-ai-q="用几句话总结一下我的网站上都有哪些内容">总结站上内容</button>
           <button class="admin-btn ghost" type="button" data-ai-q="帮我把下面这句话润色成一条废话条，保持原意、语言更有味道，只输出润色后的一句话：">润色废话条</button>
         </div>
+        <div class="ai-modes">
+          <label class="kb-mode"><input type="checkbox" data-ai="think" /> 深度思考</label>
+          <label class="kb-mode"><input type="checkbox" data-ai="web" /> 联网搜索</label>
+          <span class="ai-mode-note">都不开 = 快速模式，只基于站内资料；开思考更缜密但更慢；开联网则站内资料与网上结果结合分析</span>
+        </div>
         <div class="login-row">
           <input type="text" data-ai="input" placeholder="问点什么…（Enter 发送）" />
           <button class="admin-btn primary" type="button" data-act="ai-send">发送</button>
@@ -248,13 +264,18 @@ import Base from '../layouts/Base.astro';
 </Base>
 
 <style>
+  /* hidden 属性会被本文件的 display 规则覆盖，这里统一压回来 */
+  .admin [hidden] {
+    display: none !important;
+  }
+
   .admin {
-    padding-top: 48px;
-    padding-bottom: 96px;
+    padding-top: 44px;
+    padding-bottom: 120px; /* 给左下角音乐唱片留位 */
   }
   .admin-head {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 16px;
   }
@@ -263,21 +284,78 @@ import Base from '../layouts/Base.astro';
     font-weight: 400;
     font-size: 1.7rem;
   }
+  .admin-greet {
+    margin-top: 4px;
+    font-size: 0.9rem;
+    color: var(--ink-2);
+  }
   .admin-user {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
+    padding: 5px 8px 5px 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
   }
   .admin-user img {
     border-radius: 50%;
   }
-  .admin-login ol {
-    margin: 10px 0 18px;
-    padding-left: 1.4em;
+  .admin-user b {
+    font-weight: 650;
+  }
+  .admin-overview {
+    margin-top: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.86rem;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+  }
+  .admin-overview b {
     color: var(--ink-2);
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+  /* 登录：居中的站长通道，bloub 负责迎接 */
+  .admin-login {
+    max-width: 460px;
+    margin: 56px auto 0;
+    text-align: center;
+  }
+  .login-mascot {
+    display: block;
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 20px;
+  }
+  .login-title {
+    font-family: var(--font-display-cn);
+    font-weight: 400;
+    font-size: 1.5rem;
+  }
+  .login-sub {
+    margin-top: 10px;
     font-size: 0.94rem;
-    line-height: 2;
+    color: var(--ink-2);
+    line-height: 1.9;
+  }
+  .admin-login ol {
+    text-align: left;
+    margin: 18px 0 24px;
+    padding-left: 1.4em;
+    color: var(--ink-3);
+    font-size: 0.88rem;
+    line-height: 2.1;
+  }
+  .admin-login a {
+    color: var(--accent-ink);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    text-underline-offset: 4px;
   }
   .login-row {
     display: flex;
@@ -286,27 +364,41 @@ import Base from '../layouts/Base.astro';
   .login-row input {
     flex: 1;
   }
+  /* 页签：与站内胶囊筛选一致的分段样式 */
   .admin-tabs {
     display: flex;
-    gap: 6px;
-    margin: 26px 0 18px;
-    border-bottom: 1px solid var(--line);
+    gap: 4px;
+    margin: 34px 0 26px;
+    padding: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .admin-tabs::-webkit-scrollbar {
+    display: none;
   }
   .admin-tab {
-    padding: 8px 18px;
+    flex-shrink: 0;
+    padding: 7px 20px;
     border: none;
     background: none;
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     color: var(--ink-2);
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
+    border-radius: 999px;
+    transition: color 0.2s ease, background 0.2s ease;
   }
   .admin-tab.active {
+    background: var(--surface);
     color: var(--ink);
     font-weight: 650;
-    border-bottom-color: var(--accent);
+    box-shadow: 0 1px 5px rgba(22, 22, 45, 0.1);
+  }
+  .admin-tab:hover:not(.active) {
+    color: var(--ink);
   }
   .admin-panel textarea,
   .admin-panel input,
@@ -350,7 +442,7 @@ import Base from '../layouts/Base.astro';
     justify-content: flex-end;
     margin-top: 12px;
   }
-  .admin-btn {
+  :global(.admin-btn) {
     padding: 8px 20px;
     font-family: inherit;
     font-size: 0.92rem;
@@ -362,32 +454,45 @@ import Base from '../layouts/Base.astro';
     cursor: pointer;
     transition: transform 0.15s ease, border-color 0.2s ease, color 0.2s ease;
   }
-  .admin-btn.primary {
+  :global(.admin-btn.primary) {
     background: var(--accent);
     border-color: var(--accent);
     color: #fff;
   }
-  .admin-btn:hover {
+  :global(.admin-btn:hover) {
     transform: translateY(-1px);
     border-color: var(--accent);
   }
-  .admin-btn:active {
+  :global(.admin-btn:active) {
     transform: scale(0.97);
   }
-  .admin-btn.ghost {
+  :global(.admin-btn.ghost) {
     padding: 4px 12px;
     font-size: 0.82rem;
   }
-  .admin-btn.danger {
+  :global(.admin-btn.danger) {
     color: #b4766b;
     border-color: #b4766b;
     background: color-mix(in srgb, #b4766b 10%, var(--surface));
   }
   .admin-panel h3 {
-    margin-top: 30px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 34px;
     font-family: var(--font-display-cn);
     font-weight: 400;
     font-size: 1.1rem;
+  }
+  .sec-count {
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-size: 0.76rem;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .sec-count:empty {
+    display: none;
   }
   .hint {
     margin-top: 8px;
@@ -404,34 +509,65 @@ import Base from '../layouts/Base.astro';
   }
   .admin-list {
     list-style: none;
-    margin: 12px 0 0;
+    margin: 10px 0 0;
     padding: 0;
   }
-  .admin-list li {
+  .admin-list :global(li) {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 4px;
+    padding: 12px 12px;
+    margin-inline: -12px;
     border-bottom: 1px solid var(--line);
+    border-radius: 10px;
     font-size: 0.92rem;
+    transition: background 0.15s ease;
   }
-  .admin-list .name {
+  .admin-list :global(li:hover) {
+    background: var(--surface-2);
+  }
+  .admin-list :global(li:hover) :global(.admin-btn.ghost) {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+  }
+  .admin-list :global(.name) {
     flex: 1;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .admin-list .meta {
+  .admin-list :global(.meta) {
     flex-shrink: 0;
     font-size: 0.78rem;
     color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
   }
+  /* 状态提示：底部居中的轻气泡，自动消散 */
   .admin-msg {
-    margin-top: 16px;
+    position: fixed;
+    left: 50%;
+    bottom: 88px;
+    z-index: 80;
+    transform: translate(-50%, 10px);
+    max-width: min(560px, 92vw);
+    padding: 10px 22px;
     font-size: 0.88rem;
-    color: var(--accent-ink);
-    min-height: 1.4em;
+    line-height: 1.6;
+    text-align: center;
+    color: var(--bg);
+    background: var(--ink);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s var(--ease-out, ease), transform 0.25s var(--ease-out, ease);
+  }
+  .admin-msg.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  .admin-msg.err {
+    background: #b4766b; /* 陶土玫瑰：出错也要好看 */
   }
   .kb-modes {
     display: flex;
@@ -467,7 +603,7 @@ import Base from '../layouts/Base.astro';
     font-size: 0.78rem;
     color: var(--ink-3);
   }
-  .edit-banner .admin-btn {
+  .edit-banner :global(.admin-btn) {
     margin-left: auto;
   }
   .ai-chat {
@@ -517,6 +653,22 @@ import Base from '../layouts/Base.astro';
     gap: 8px;
     margin-top: 10px;
   }
+  .ai-modes {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 12px;
+    font-size: 0.92rem;
+  }
+  .ai-modes input {
+    width: auto;
+    margin-top: 0;
+  }
+  .ai-mode-note {
+    font-size: 0.78rem;
+    color: var(--ink-3);
+  }
 </style>
 
 <script>
@@ -530,6 +682,8 @@ import Base from '../layouts/Base.astro';
     aiTestConnection,
     searchIndex,
     buildContextBlock,
+    webSearch,
+    buildWebBlock,
     type AiConfig,
     type AiIndexEntry,
     type AiMessage,
@@ -561,12 +715,30 @@ import Base from '../layouts/Base.astro';
   const b64 = (s: string) => btoa(String.fromCharCode(...new TextEncoder().encode(s)));
 
   const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
+  let msgTimer: number | undefined;
   const msg = (m: string) => {
     // 页面里有两个提示位（登录区一个、面板底部一个），全都要更新——
     // 只更新第一个的话，登录后第一个正好是隐藏的，所有反馈都会"消失"
-    for (const el of document.querySelectorAll('.admin-msg')) el.textContent = m;
-    console.log('[admin]', m);
+    // 样式：底部居中气泡，自动消散；报错时变陶土玫瑰
+    const isErr = /失败|出错/.test(m);
+    for (const el of document.querySelectorAll<HTMLElement>('.admin-msg')) {
+      el.textContent = m;
+      el.classList.add('show');
+      el.classList.toggle('err', isErr);
+    }
+    clearTimeout(msgTimer);
+    msgTimer = window.setTimeout(() => {
+      for (const el of document.querySelectorAll<HTMLElement>('.admin-msg')) el.classList.remove('show');
+    }, 3800);
   };
+
+  // 时段问候
+  {
+    const h = new Date().getHours();
+    const greet = h < 5 ? '夜深了' : h < 11 ? '早上好' : h < 14 ? '中午好' : h < 18 ? '下午好' : '晚上好';
+    const g = document.querySelector('[data-greet]');
+    if (g) g.textContent = greet;
+  }
 
   const dispatchBuild = () =>
     api(`/repos/${REPO}/actions/workflows/deploy.yml/dispatches`, {
@@ -778,6 +950,12 @@ import Base from '../layouts/Base.astro';
       );
   }
 
+  // ---------- 总览计数（/admin 顶部一行） ----------
+  function setCount(key: string, n: number) {
+    const el = document.querySelector(`[data-o="${key}"]`);
+    if (el) el.textContent = String(n);
+  }
+
   // ---------- 废话条（Issues） ----------
   async function refreshMoments() {
     const list = $('[data-list="moments"]');
@@ -786,8 +964,10 @@ import Base from '../layouts/Base.astro';
     list.innerHTML = '';
     if (!issues.length) {
       list.innerHTML = '<li class="meta">还没有动态</li>';
+      setCount('moments', 0);
       return;
     }
+    setCount('moments', issues.length);
     for (const it of issues) {
       const li = document.createElement('li');
       li.innerHTML = `<span class="name"></span><span class="meta">${it.created_at.slice(0, 10)}</span>`;
@@ -820,8 +1000,10 @@ import Base from '../layouts/Base.astro';
     list.innerHTML = '';
     if (!files.length) {
       list.innerHTML = '<li class="meta">还没有文章</li>';
+      setCount('posts', 0);
       return;
     }
+    setCount('posts', files.length);
     for (const f of files) {
       const li = document.createElement('li');
       const name = document.createElement('span');
@@ -901,6 +1083,7 @@ import Base from '../layouts/Base.astro';
     ]);
     const files: any[] = kbJson.list ?? [];
     list.innerHTML = '';
+    setCount('kb', notes.length + files.length);
     if (!notes.length && !files.length) {
       list.innerHTML = '<li class="meta">还没有条目——先写一条笔记或传一份文档</li>';
       return;
@@ -1259,6 +1442,13 @@ import Base from '../layouts/Base.astro';
       presetSel.value = AI_PRESETS[0].key;
       applyPreset();
     }
+    // 恢复上次的深度思考 / 联网搜索开关状态
+    const toggles = loadAiToggles();
+    (aiFields('think') as HTMLInputElement).checked = toggles.think;
+    (aiFields('web') as HTMLInputElement).checked = toggles.web;
+    for (const box of [aiFields('think'), aiFields('web')]) {
+      box.addEventListener('change', saveAiToggles);
+    }
   }
 
   const readAiForm = (): AiConfig | null => {
@@ -1269,8 +1459,38 @@ import Base from '../layouts/Base.astro';
       msg('Base URL、模型、API Key 都要填');
       return null;
     }
-    return { baseUrl, model, apiKey };
+    // 深度思考的实现方式跟着服务商走：从当前选中的预设取
+    const preset = AI_PRESETS.find(
+      (p) => p.key === (aiFields('preset') as unknown as HTMLSelectElement).value,
+    );
+    return {
+      baseUrl,
+      model,
+      apiKey,
+      thinkingModel: preset?.thinkingModel,
+      thinkingKwargs: preset?.thinkingKwargs,
+    };
   };
+
+  // 深度思考 / 联网搜索两个开关：记住上次的选择
+  const AI_TOGGLES_KEY = 'sr-ai-toggles';
+  function loadAiToggles(): { think: boolean; web: boolean } {
+    try {
+      const t = JSON.parse(localStorage.getItem(AI_TOGGLES_KEY) ?? '{}');
+      return { think: !!t.think, web: !!t.web };
+    } catch {
+      return { think: false, web: false };
+    }
+  }
+  function saveAiToggles() {
+    localStorage.setItem(
+      AI_TOGGLES_KEY,
+      JSON.stringify({
+        think: (aiFields('think') as HTMLInputElement).checked,
+        web: (aiFields('web') as HTMLInputElement).checked,
+      }),
+    );
+  }
 
   function appendAiMsg(kind: 'user' | 'bot', text: string): HTMLElement {
     const box = $('[data-ai-chat]') as HTMLElement;
@@ -1311,25 +1531,63 @@ import Base from '../layouts/Base.astro';
     if (!q) return;
     aiFields('input').value = '';
     appendAiMsg('user', q);
+    const thinkOn = (aiFields('think') as HTMLInputElement).checked;
+    const webOn = (aiFields('web') as HTMLInputElement).checked;
     const bubble = appendAiMsg('bot', '');
+    bubble.textContent = thinkOn ? '深度思考中…' : '思考中…';
     try {
       const index = await ensureAiIndex();
       const hits = searchIndex(index, q, 5);
+      // 联网搜索与站内资料检索并行：搜索慢/失败也不拖累知识库回答
+      const webTask = webOn
+        ? webSearch(q).then(
+            (rs) => ({ ok: true, rs }),
+            (e) => ({ ok: false, err: e as Error }),
+          )
+        : null;
+      const web = webTask ? await webTask : null;
       const system =
-        '你是个人网站「星野漫游」的站内助手。下面是站长站上内容的检索结果。' +
-        '请优先依据这些资料回答；资料里没有的就直说没有，不要编造。' +
-        '用简体中文回答，简洁自然。\n\n' +
-        (buildContextBlock(hits) || '（本次未检索到相关资料）');
-      const reply = await aiChat(cfg, [
-        { role: 'system', content: system },
-        ...aiHistory.slice(-6),
-        { role: 'user', content: q },
-      ]);
+        '你是个人网站「星野漫游」的站内助手。' +
+        (web?.ok
+          ? '回答时把【网】开头的网络搜索结果与站内资料结合分析，网络来源在句末注明（标题）。'
+          : '请优先依据站内资料回答；资料里没有的就直说没有，不要编造。') +
+        (thinkOn ? '这道问题开启了深度思考，请先想清楚再作答。' : '用简体中文回答，简洁自然。') +
+        '\n\n== 站内资料 ==\n' +
+        (buildContextBlock(hits) || '（本次未检索到相关站内资料）') +
+        (web?.ok ? '\n\n== 网络搜索结果 ==\n' + buildWebBlock(web.rs) : '') +
+        (web && !web.ok ? '\n\n== 网络搜索 ==\n（联网搜索失败：' + web.err.message + '，请仅依据站内资料回答）' : '');
+      const reply = await aiChat(
+        cfg,
+        [
+          { role: 'system', content: system },
+          ...aiHistory.slice(-6),
+          { role: 'user', content: q },
+        ],
+        { thinking: thinkOn },
+      );
       aiHistory.push({ role: 'user', content: q }, { role: 'assistant', content: reply });
       while (aiHistory.length > 8) aiHistory.shift();
       bubble.textContent = reply;
       bubble.classList.remove('thinking');
       appendAiSources(hits);
+      if (web) {
+        const note = document.createElement('div');
+        note.className = 'ai-src';
+        if (web.ok) {
+          note.append(`已联网搜索 ${web.rs.length} 条结果`);
+          web.rs.slice(0, 3).forEach((r) => {
+            const a = document.createElement('a');
+            a.href = r.url;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.textContent = ` ${r.title} ·`;
+            note.appendChild(a);
+          });
+        } else {
+          note.textContent = '联网搜索失败，本次仅基于站内资料回答';
+        }
+        ($('[data-ai-chat]') as HTMLElement).lastElementChild?.appendChild(note);
+      }
       const box = $('[data-ai-chat]') as HTMLElement;
       box.scrollTop = box.scrollHeight;
       msg('');
