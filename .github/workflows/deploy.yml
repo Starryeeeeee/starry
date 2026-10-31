@@ -1,5 +1,5 @@
 # 星野漫游 · GitHub Pages 部署工作流
-# 推送到 main（或手动触发）→ 自动构建并发布到 GitHub Pages
+# 触发：推送 main / 手动 / 废话条 Issue 变动（手机发动态自动上站的关键）
 # 首次使用前需要在仓库设置里打开一次：Settings → Pages → Source 选 "GitHub Actions"
 name: Deploy to GitHub Pages
 
@@ -7,6 +7,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
 
 permissions:
   contents: read
