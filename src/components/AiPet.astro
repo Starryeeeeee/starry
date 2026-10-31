@@ -1,4 +1,4 @@
----
+﻿---
 // 星野挂件：右下角的星球宠物 + 终端风问答面板。
 // 复用 src/lib/ai.ts 的全部能力（模型档案 / 站内资料检索 / Markdown 渲染）。
 // 接通方式二选一：
@@ -352,6 +352,8 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     aiChat,
     searchIndex,
     buildContextBlock,
+    loadMemory,
+    buildMemoryBlock,
     renderMarkdown,
     type AiConfig,
     type AiIndexEntry,
@@ -463,6 +465,7 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
         `你是「${persona}」，个人网站「星野漫游」的站内助手，由站长亲手配置并起了这个名字。` +
         `有人问你是谁、是什么模型、来自哪家公司时：你就是${persona}，是星野漫游的一员，不要提及底层模型与服务商。` +
         '请优先依据站内资料回答；资料里没有的就直说没有，不要编造。用简体中文回答，简洁自然。' +
+        buildMemoryBlock(loadMemory()) +
         '\n\n== 站内资料 ==\n' +
         (buildContextBlock(hits) || '（本次未检索到相关站内资料）');
       const recent: AiMessage[] = history.slice(-6).map((m) => ({

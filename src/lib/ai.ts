@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AI 能力接入层：OpenAI 兼容对话接口 + 站内资料检索。
  *
  * 设计要点：
@@ -623,4 +623,49 @@ export async function renderMarkdown(md: string): Promise<string> {
   flush();
 
   return out.join('\n').replace(/\u0000(\d+)\u0000/g, (_m, i: string) => store[Number(i)]);
+}
+
+
+// ---------------- 长期记忆（跨会话的站长偏好/事实，注入每次提问的 system prompt） ----------------
+
+const MEMORY_KEY = 'sr-ai-memory';
+
+export type AiMemory = { enabled: boolean; items: string[] };
+
+export function loadMemory(): AiMemory {
+  try {
+    const raw = localStorage.getItem(MEMORY_KEY);
+    if (raw) {
+      const m = JSON.parse(raw) as AiMemory;
+      if (Array.isArray(m.items)) {
+        return {
+          enabled: !!m.enabled,
+          items: m.items.filter((s) => typeof s === 'string' && s.trim()).slice(0, 50),
+        };
+      }
+    }
+  } catch {
+    /* 损坏则当作没有记忆 */
+  }
+  return { enabled: false, items: [] };
+}
+
+export function saveMemory(m: AiMemory) {
+  localStorage.setItem(
+    MEMORY_KEY,
+    JSON.stringify({
+      enabled: !!m.enabled,
+      items: m.items.map((s) => s.trim()).filter(Boolean).slice(0, 50),
+    }),
+  );
+}
+
+/** 拼进 system prompt 的记忆块；未启用或为空时返回空串 */
+export function buildMemoryBlock(m: AiMemory): string {
+  if (!m.enabled || !m.items.length) return '';
+  return (
+    '\n\n== 关于站主的长期记忆 ==\n' +
+    m.items.map((s, i) => `${i + 1}. ${s}`).join('\n') +
+    '\n（以上是站长长期记下的偏好与事实，回答时自然参考即可，不要逐条复述）'
+  );
 }
