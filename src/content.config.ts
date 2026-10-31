@@ -4,10 +4,13 @@ import { glob } from 'astro/loaders';
 const posts = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/posts' }),
   schema: z.object({
+    // 稳定内容 ID：创建时生成，改名/迁移都不变（giscus、点赞、AI 索引都关联到它）
+    id: z.string().optional(),
     title: z.string(),
     date: z.coerce.date(),
     description: z.string().optional(),
     tags: z.array(z.string()).default([]),
+    status: z.enum(['draft', 'public', 'archived']).default('public'),
   }),
 });
 
@@ -38,11 +41,14 @@ const skills = defineCollection({
 const kb = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/kb' }),
   schema: z.object({
+    // 稳定内容 ID：同 posts
+    id: z.string().optional(),
     title: z.string(),
     date: z.coerce.date(),
     description: z.string().default(''),
     subject: z.string().default('未分类'),
     tags: z.array(z.string()).default([]),
+    status: z.enum(['draft', 'public', 'archived']).default('public'),
   }),
 });
 

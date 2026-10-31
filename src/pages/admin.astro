@@ -70,6 +70,14 @@ import Base from '../layouts/Base.astro';
           </label>
         </div>
         <label class="field">
+          <span>状态</span>
+          <select data-post="status">
+            <option value="public">公开</option>
+            <option value="draft">草稿（不上站）</option>
+            <option value="archived">归档（列表隐藏，直链可见）</option>
+          </select>
+        </label>
+        <label class="field">
           <span>摘要</span>
           <input type="text" data-post="desc" placeholder="一句话摘要（可空）" />
         </label>
@@ -122,6 +130,14 @@ import Base from '../layouts/Base.astro';
               <input type="text" data-kb-note="tags" placeholder="解析几何, 小结论" />
             </label>
           </div>
+          <label class="field">
+            <span>状态</span>
+            <select data-kb-note="status">
+              <option value="public">公开</option>
+              <option value="draft">草稿（不上站）</option>
+              <option value="archived">归档（列表隐藏，直链可见）</option>
+            </select>
+          </label>
           <label class="field">
             <span>一句话说明</span>
             <input type="text" data-kb-note="desc" placeholder="列表页显示的摘要（可空）" />
@@ -250,7 +266,8 @@ import Base from '../layouts/Base.astro';
     border-bottom-color: var(--accent);
   }
   .admin-panel textarea,
-  .admin-panel input {
+  .admin-panel input,
+  .admin-panel select {
     width: 100%;
     margin-top: 6px;
     padding: 10px 14px;
@@ -263,7 +280,8 @@ import Base from '../layouts/Base.astro';
     border-radius: 8px;
   }
   .admin-panel textarea:focus,
-  .admin-panel input:focus {
+  .admin-panel input:focus,
+  .admin-panel select:focus {
     outline: 2px solid var(--accent);
     outline-offset: 0;
     border-color: transparent;
@@ -506,8 +524,25 @@ import Base from '../layouts/Base.astro';
   }
 
   // ---------- 编辑模式状态 ----------
-  let editingPost: { name: string; sha: string; date: string } | null = null;
-  let editingKbNote: { name: string; sha: string; date: string } | null = null;
+  // metaId = 内容已有的稳定 ID（没有则保存时生成）；status = 原状态
+  let editingPost: {
+    name: string;
+    sha: string;
+    date: string;
+    metaId?: string;
+    metaStatus?: string;
+  } | null = null;
+  let editingKbNote: {
+    name: string;
+    sha: string;
+    date: string;
+    metaId?: string;
+    metaStatus?: string;
+  } | null = null;
+
+  // 稳定内容 ID：c-日期-随机码，创建后永不变（改名/迁移靠它保住评论和点赞）
+  const newCid = (date: string) =>
+    `c-${date.replace(/-/g, '')}-${Math.random().toString(36).slice(2, 6)}`;
 
   // frontmatter 简易解析：够用即可（写入方是我们自己）
   function parseFrontmatter(raw: string): {
@@ -557,7 +592,13 @@ import Base from '../layouts/Base.astro';
       `/repos/${REPO}/contents/src/content/posts/${encodeURIComponent(f.name)}?ref=${BRANCH}`,
     );
     const { meta, body } = parseFrontmatter(b64ToText(r.content.replace(/\s/g, '')));
-    editingPost = { name: f.name, sha: r.sha, date: String(meta.date ?? todayStr()) };
+    editingPost = {
+      name: f.name,
+      sha: r.sha,
+      date: String(meta.date ?? todayStr()),
+      metaId: typeof meta.id === 'string' ? meta.id : undefined,
+      metaStatus: typeof meta.status === 'string' ? meta.status : 'public',
+    };
     ($('[data-post="title"]') as HTMLInputElement).value = String(meta.title ?? '');
     ($('[data-post="slug"]') as HTMLInputElement).value = f.name.replace(/\.md$/, '');
     ($('[data-post="slug"]') as HTMLInputElement).disabled = true; // 编辑模式不改文件名
@@ -565,6 +606,10 @@ import Base from '../layouts/Base.astro';
       ? meta.tags.join(', ')
       : '';
     ($('[data-post="desc"]') as HTMLInputElement).value = String(meta.description ?? '');
+    ($('[data-post="status"]') as HTMLSelectElement).value =
+      editingPost.metaStatus === 'draft' || editingPost.metaStatus === 'archived'
+        ? editingPost.metaStatus
+        : 'public';
     ($('[data-post="body"]') as HTMLTextAreaElement).value = body;
     ($('[data-act="publish-post"]') as HTMLElement).textContent = '保存修改';
     setBanner('post', f.name);
@@ -588,13 +633,23 @@ import Base from '../layouts/Base.astro';
       `/repos/${REPO}/contents/${KB_NOTE_DIR}/${encodeURIComponent(f.name)}?ref=${BRANCH}`,
     );
     const { meta, body } = parseFrontmatter(b64ToText(r.content.replace(/\s/g, '')));
-    editingKbNote = { name: f.name, sha: r.sha, date: String(meta.date ?? todayStr()) };
+    editingKbNote = {
+      name: f.name,
+      sha: r.sha,
+      date: String(meta.date ?? todayStr()),
+      metaId: typeof meta.id === 'string' ? meta.id : undefined,
+      metaStatus: typeof meta.status === 'string' ? meta.status : 'public',
+    };
     ($('[data-kb-note="title"]') as HTMLInputElement).value = String(meta.title ?? '');
     ($('[data-kb-note="subject"]') as HTMLInputElement).value = String(meta.subject ?? '');
     ($('[data-kb-note="tags"]') as HTMLInputElement).value = Array.isArray(meta.tags)
       ? meta.tags.join(', ')
       : '';
     ($('[data-kb-note="desc"]') as HTMLInputElement).value = String(meta.description ?? '');
+    ($('[data-kb-note="status"]') as HTMLSelectElement).value =
+      editingKbNote.metaStatus === 'draft' || editingKbNote.metaStatus === 'archived'
+        ? editingKbNote.metaStatus
+        : 'public';
     ($('[data-kb-note="body"]') as HTMLTextAreaElement).value = body;
     ($('[data-act="publish-kb-note"]') as HTMLElement).textContent = '保存修改';
     setBanner('kb', f.name);
@@ -854,8 +909,12 @@ import Base from '../layouts/Base.astro';
           }
           if (!/^[a-z0-9-]+$/.test(slug)) return msg('文件名只能用小写英文、数字和连字符');
         }
-        // 编辑时保留原发布日期；新建才用今天
+        // 编辑时保留原发布日期与内容 ID；新建才用今天/生成新 ID
         const date = isEdit ? editingPost!.date : new Date().toISOString().slice(0, 10);
+        const cid = isEdit
+          ? (editingPost!.metaId ?? newCid(date)) // 旧内容没有 ID：首次编辑时惰性补上
+          : newCid(date);
+        const status = g('status') || 'public';
         const tags = g('tags')
           ? g('tags')
               .split(/[,，]/)
@@ -864,10 +923,12 @@ import Base from '../layouts/Base.astro';
           : [];
         const fm = [
           '---',
+          `id: ${cid}`,
           `title: ${title}`,
           `date: ${date}`,
           g('desc') ? `description: ${g('desc')}` : null,
           tags.length ? `tags: [${tags.join(', ')}]` : null,
+          `status: ${status}`,
           '---',
           '',
           '',
@@ -902,18 +963,22 @@ import Base from '../layouts/Base.astro';
           .split(/[,，]/)
           .map((s) => s.trim())
           .filter(Boolean);
-        // 编辑时保留原日期和原文件名；新建才用今天/按标题生成
+        // 编辑时保留原日期、原文件名与内容 ID（没有则惰性补上）；新建才用今天/生成新 ID
         const date = isEdit ? editingKbNote!.date : todayStr();
-        const name = isEdit
-          ? editingKbNote!.name
-          : `${titleToFileName(title)}.md`;
+        const cid = isEdit
+          ? (editingKbNote!.metaId ?? newCid(date))
+          : newCid(date);
+        const status = g('status') || 'public';
+        const name = isEdit ? editingKbNote!.name : `${titleToFileName(title)}.md`;
         const fm = [
           '---',
+          `id: ${cid}`,
           `title: ${title}`,
           `date: ${date}`,
           g('desc') ? `description: ${g('desc')}` : null,
           `subject: ${g('subject') || '未分类'}`,
           tags.length ? `tags: [${tags.join(', ')}]` : null,
+          `status: ${status}`,
           '---',
           '',
           '',

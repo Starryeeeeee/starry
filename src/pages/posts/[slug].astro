@@ -6,7 +6,9 @@ import { fmtDate } from '../../lib/format';
 import { u } from '../../lib/base';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('posts');
+  const posts = (await getCollection('posts')).filter(
+    (post) => post.data.status !== 'draft', // 草稿不构建；归档仍可直链访问
+  );
   return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
 }
 

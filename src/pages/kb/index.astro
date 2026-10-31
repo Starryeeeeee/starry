@@ -4,7 +4,10 @@ import { getKbEntries, kbSubjects, fileKindLabel } from '../../lib/kb';
 import { fmtDate } from '../../lib/format';
 import { u } from '../../lib/base';
 
-const entries = await getKbEntries();
+// 归档条目仍可直接访问详情页，但不在列表里出现
+const entries = (await getKbEntries()).filter(
+  (e) => e.status !== 'draft' && e.status !== 'archived',
+);
 const subjects = kbSubjects(entries);
 ---
 

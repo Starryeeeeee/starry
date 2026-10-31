@@ -4,9 +4,10 @@ import Base from '../../layouts/Base.astro';
 import { fmtDate } from '../../lib/format';
 import { u } from '../../lib/base';
 
-const posts = (await getCollection('posts')).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-);
+// 归档文章仍可直接访问，但不在列表里出现
+const posts = (await getCollection('posts'))
+  .filter((p) => p.data.status !== 'draft' && p.data.status !== 'archived')
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 
 <Base title="文章 · 星野漫游" description="Starry 写的随感、记录和看法。">

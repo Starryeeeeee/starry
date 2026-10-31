@@ -14,7 +14,8 @@
 - [x] 管理面板 /admin/（2026-10-25 深夜上线）：PAT 登录后网页里发废话条/写文章/删除/触发构建
 - [x] 知识库（2026-10-30 上线）：/admin「知识库」tab 写笔记/传文档（PDF/Word/PPT → public/kb/），浏览页 /kb/ 支持科目筛选+搜索；手写条目在 `src/content/kb/`，文档清单在 `src/data/kb-files.json`
 - [ ] giscus 评论：**等用户两件一次性操作**——仓库 Settings 勾选 Discussions、安装 giscus App（github.com/apps/giscus），然后在 /admin「站点」页点"一键配置评论"即完成
-- [ ] 匿名点赞（Supabase，废话条卡片上的按钮目前是禁用占位）
+- [x] 匿名点赞（2026-10-30 代码上线）：Supabase REST 直连，RLS 设计（anon 只读+只能调 increment_like 原子自增函数）；**等站主跑一次 `scripts/supabase-setup.sql`**（Dashboard → SQL Editor 粘贴 Run），跑完点赞按钮自动激活
+- [x] Supabase 保活：.github/workflows/supabase-keepalive.yml，每周一自动 ping，防免费档 7 天无活动被暂停
 - [ ] 不蒜子访客统计
 - [ ] 画廊在 /admin 的上传功能（现在加图仍需本地放文件 push）
 - [ ] 管理令牌安全提醒：PAT 存在浏览器 localStorage，仅自己电脑用；泄露可在 github.com/settings/tokens 撤销

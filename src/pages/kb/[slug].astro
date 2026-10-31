@@ -7,15 +7,17 @@ import { u } from '../../lib/base';
 import { kbFileRecords, fileKindLabel, isPreviewable, type KbFileRecord } from '../../lib/kb';
 
 export async function getStaticPaths() {
-  const notes = await getCollection('kb');
+  const notes = (await getCollection('kb')).filter((n) => n.data.status !== 'draft');
   const notePages = notes.map((note) => ({
     params: { slug: note.id },
     props: { kind: 'note' as const, note },
   }));
-  const filePages = kbFileRecords.map((file) => ({
-    params: { slug: file.slug },
-    props: { kind: 'file' as const, file },
-  }));
+  const filePages = kbFileRecords
+    .filter((f) => f.status !== 'draft')
+    .map((file) => ({
+      params: { slug: file.slug },
+      props: { kind: 'file' as const, file },
+    }));
   return [...notePages, ...filePages];
 }
 

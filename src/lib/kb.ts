@@ -14,6 +14,8 @@ import rawFiles from '../data/kb-files.json';
 export type KbFileRecord = {
   /** 详情页路由 id，同时是唯一标识 */
   slug: string;
+  /** 稳定内容 ID（后加的文档可能没有，读取端按 slug 兜底） */
+  id?: string;
   title: string;
   subject: string;
   tags: string[];
@@ -24,6 +26,7 @@ export type KbFileRecord = {
   /** 字节数 */
   size: number;
   date: string; // YYYY-MM-DD
+  status?: 'draft' | 'public' | 'archived';
 };
 
 export type KbEntry = {
@@ -34,6 +37,7 @@ export type KbEntry = {
   tags: string[];
   description: string;
   date: Date;
+  status?: 'draft' | 'public' | 'archived';
   /** 仅 kind === 'file' 时有值 */
   file?: string;
   ext?: string;
@@ -52,6 +56,7 @@ export async function getKbEntries(): Promise<KbEntry[]> {
     tags: n.data.tags,
     description: n.data.description,
     date: n.data.date,
+    status: n.data.status,
   }));
 
   const fileEntries: KbEntry[] = kbFileRecords.map((f) => ({
@@ -62,6 +67,7 @@ export async function getKbEntries(): Promise<KbEntry[]> {
     tags: f.tags,
     description: f.description,
     date: new Date(f.date),
+    status: f.status,
     file: f.file,
     ext: f.ext,
     sizeKB: Math.max(1, Math.round(f.size / 1024)),
