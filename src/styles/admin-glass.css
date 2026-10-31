@@ -128,3 +128,60 @@
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.14);
 }
+
+/* —— 图标按钮：音乐条 music-control 同款圆形玻璃键 —— */
+.macos-admin .admin .ai-icon-btn.ai-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  backdrop-filter: blur(8px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--mac-label);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.18s var(--mac-ease), transform 0.18s var(--mac-ease),
+    border-color 0.18s var(--mac-ease), color 0.18s var(--mac-ease);
+}
+
+.macos-admin .admin .ai-icon-btn.ai-icon-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.18s var(--mac-ease);
+}
+
+.macos-admin .admin .ai-icon-btn.ai-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.26);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.macos-admin .admin .ai-icon-btn.ai-icon-btn:hover svg {
+  transform: translateY(-1px);
+}
+
+.macos-admin .admin .ai-icon-btn.ai-icon-btn:active {
+  transform: scale(0.9);
+}
+
+.macos-admin .admin .ai-icon-btn.ai-icon-btn.danger {
+  background: color-mix(in srgb, var(--mac-red) 30%, transparent);
+  border-color: color-mix(in srgb, var(--mac-red) 55%, transparent);
+  color: var(--mac-red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .macos-admin .admin .ai-icon-btn.ai-icon-btn,
+  .macos-admin .admin .ai-icon-btn.ai-icon-btn svg {
+    transition: none;
+  }
+  .macos-admin .admin .ai-icon-btn.ai-icon-btn:hover,
+  .macos-admin .admin .ai-icon-btn.ai-icon-btn:hover svg {
+    transform: none;
+  }
+}
