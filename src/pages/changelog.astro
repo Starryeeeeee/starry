@@ -6,6 +6,7 @@ import { fmtDate, fmtDateShort } from '../lib/format';
 // 时间轴版式，模式借鉴两个现成实现：
 //  - antfu.me 的 ListPosts（github.com/antfu/antfu.me）：倒序 + 按年分组幽灵大字 + 60ms 级错峰入场
 //  - 中文博客圈通行的左轴节点样式（hexo-theme-redefine / Volantis 一脉）：竖轴线 + 圆点 + 日期列
+// 分组粒度：年（幽灵大字）→ 月（小标题）。改动频繁，只按年分段不够用。
 const entries = (await getCollection('changelog')).sort((a, b) => {
   const diff = b.data.date.valueOf() - a.data.date.valueOf();
   // 日期相同（建站初期经常同一天多篇）时按编号倒序，保证 009 在 001 上面
@@ -16,13 +17,23 @@ const rendered = await Promise.all(
   entries.map(async (entry) => ({ entry, Content: (await render(entry)).Content })),
 );
 
-// 按年份分组，年份变化时插入 antfu 式的描边幽灵年份数字
-const groups: Array<{ year: number; items: typeof rendered }> = [];
+type Item = { entry: (typeof rendered)[number]['entry']; Content: (typeof rendered)[number]['Content'] };
+const groups: Array<{
+  year: number;
+  months: Array<{ month: number; items: Item[] }>;
+}> = [];
 for (const item of rendered) {
-  const year = item.entry.data.date.getFullYear();
-  const last = groups[groups.length - 1];
-  if (last && last.year === year) last.items.push(item);
-  else groups.push({ year, items: [item] });
+  const d = item.entry.data.date;
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const g = groups[groups.length - 1];
+  if (g && g.year === year) {
+    const m = g.months[g.months.length - 1];
+    if (m && m.month === month) m.items.push(item);
+    else g.months.push({ month, items: [item] });
+  } else {
+    groups.push({ year, months: [{ month, items: [item] }] });
+  }
 }
 ---
 
@@ -32,22 +43,27 @@ for (const item of rendered) {
     <p class="page-desc">这个网站是怎么一点点长出来的。最新的在最上面。</p>
 
     <section class="timeline">
-      {groups.map((group) => (
+      {groups.map(({ year, months }) => (
         <>
-          <div class="tl-year reveal" aria-hidden="true">{group.year}</div>
-          {group.items.map(({ entry, Content }, i) => (
-            <article class="tl-item reveal" style={`--i:${i}`}>
-              <time class="tl-date" datetime={entry.data.date.toISOString()} title={fmtDate(entry.data.date)}>
-                {fmtDateShort(entry.data.date)}
-              </time>
-              <span class="tl-dot" aria-hidden="true"></span>
-              <div class="tl-body">
-                <h3>{entry.data.title}</h3>
-                <div class="body">
-                  <Content />
-                </div>
-              </div>
-            </article>
+          <div class="tl-year reveal" aria-hidden="true">{year}</div>
+          {months.map(({ month, items }) => (
+            <>
+              <div class="tl-month reveal" aria-hidden="true">{month}月</div>
+              {items.map(({ entry, Content }, i) => (
+                <article class="tl-item reveal" style={`--i:${i}`}>
+                  <time class="tl-date" datetime={entry.data.date.toISOString()} title={fmtDate(entry.data.date)}>
+                    {fmtDateShort(entry.data.date)}
+                  </time>
+                  <span class="tl-dot" aria-hidden="true"></span>
+                  <div class="tl-body">
+                    <h3>{entry.data.title}</h3>
+                    <div class="body">
+                      <Content />
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </>
           ))}
         </>
       ))}
@@ -106,6 +122,18 @@ for (const item of rendered) {
     }
   }
 
+  /* 月份小标题：年份内再分段 */
+  .tl-month {
+    position: relative;
+    z-index: 1;
+    margin: 26px 0 0 118px;
+    font-family: var(--font-display-cn);
+    font-weight: 400;
+    font-size: 1.15rem;
+    color: var(--accent-ink);
+    letter-spacing: 0.04em;
+  }
+
   .tl-item {
     position: relative;
     z-index: 1;
@@ -138,7 +166,7 @@ for (const item of rendered) {
 
   /* 最新一条（页面第一条）：实心 + 一圈雾蓝呼吸光环 */
   .tl-item:first-of-type .tl-dot,
-  .tl-year + .tl-item .tl-dot {
+  .tl-month + .tl-item .tl-dot {
     background: var(--accent);
   }
 
@@ -211,6 +239,10 @@ for (const item of rendered) {
       margin-left: 30px;
       font-size: 3rem;
       height: 56px;
+    }
+
+    .tl-month {
+      margin-left: 30px;
     }
   }
 </style>
