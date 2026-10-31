@@ -154,22 +154,75 @@ main {
 
 /* ---------- 顶部导航 ---------- */
 
+/* 悬浮玻璃胶囊导航（流光描边技法移植自 rdev/liquid-glass-react，MIT） */
 .site-header {
   position: sticky;
-  top: 0;
+  top: 16px;
   z-index: 50;
-  background: color-mix(in srgb, var(--bg) 80%, transparent);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+  padding-inline: 24px;
+  background: none;
+  border-bottom: none;
 }
 
 .header-inner {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  height: 62px;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 54px;
+  padding: 8px 10px 8px 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(165%);
+  backdrop-filter: blur(14px) saturate(165%);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  isolation: isolate;
+}
+
+/* 流光描边：mask-xor 边环 + screen/overlay 双层高光渐变，缓慢流动 */
+.nav-sheen,
+.nav-sheen2 {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 1.5px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.5) inset, 0 1px 3px rgba(255, 255, 255, 0.25) inset;
+}
+
+.nav-sheen {
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.12) 33%, rgba(255, 255, 255, 0.4) 66%, rgba(255, 255, 255, 0) 100%);
+  background-size: 300% 300%;
+  animation: nav-sheen-flow 7s var(--ease) infinite;
+}
+
+.nav-sheen2 {
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.32) 33%, rgba(255, 255, 255, 0.6) 66%, rgba(255, 255, 255, 0) 100%);
+  background-size: 300% 300%;
+  animation: nav-sheen-flow 7s var(--ease) infinite;
+}
+
+@keyframes nav-sheen-flow {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+.site-nav {
+  position: relative;
 }
 
 .brand {
@@ -262,9 +315,10 @@ main {
 
 @media (max-width: 700px) {
   .header-inner {
-    height: auto;
+    width: 100%;
     flex-wrap: wrap;
-    padding-block: 12px 0;
+    padding: 10px 14px;
+    border-radius: 24px;
   }
   .site-nav {
     width: 100%;

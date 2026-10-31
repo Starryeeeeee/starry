@@ -16,6 +16,10 @@ export type AiConfig = {
   baseUrl: string;
   model: string;
   apiKey: string;
+  /** 深度思考的实现方式因服务商而异：换用专门的思考模型（如 DeepSeek 的 deepseek-reasoner） */
+  thinkingModel?: string;
+  /** 或者在同一模型上开思考开关（Agnes/Qwen 系的 chat_template_kwargs.enable_thinking） */
+  thinkingKwargs?: boolean;
 };
 
 export type AiMessage = { role: 'system' | 'user' | 'assistant'; content: string };
@@ -27,6 +31,8 @@ export const AI_PRESETS: Array<{
   baseUrl: string;
   model: string;
   note: string;
+  thinkingModel?: string;
+  thinkingKwargs?: boolean;
 }> = [
   {
     key: 'agnes',
@@ -34,6 +40,7 @@ export const AI_PRESETS: Array<{
     baseUrl: 'https://api.agnes-ai.cn/v1',
     model: 'agnes-2.5-flash',
     note: '免费档，适合先把功能跑起来；正式使用建议换下面的服务商。',
+    thinkingKwargs: true,
   },
   {
     key: 'deepseek',
@@ -41,13 +48,14 @@ export const AI_PRESETS: Array<{
     baseUrl: 'https://api.deepseek.com/v1',
     model: 'deepseek-chat',
     note: '国内直连、价格低，适合正式使用；在 platform.deepseek.com 申请 key。',
+    thinkingModel: 'deepseek-reasoner',
   },
   {
     key: 'custom',
     label: '自定义（任意 OpenAI 兼容接口）',
     baseUrl: '',
     model: '',
-    note: '任何兼容 OpenAI /chat/completions 的服务都行，填 baseUrl + 模型名 + key。',
+    note: '任何兼容 OpenAI /chat/completions 的服务都行，填 baseUrl + 模型名 + key。深度思考开关对自定义服务商不一定生效。',
   },
 ];
 
@@ -68,7 +76,13 @@ export function loadAiConfig(): AiConfig | null {
 export function saveAiConfig(cfg: AiConfig) {
   localStorage.setItem(
     STORAGE_KEY,
-    JSON.stringify({ baseUrl: cfg.baseUrl.replace(/\/+$/, ''), model: cfg.model.trim(), apiKey: cfg.apiKey.trim() }),
+    JSON.stringify({
+      baseUrl: cfg.baseUrl.replace(/\/+$/, ''),
+      model: cfg.model.trim(),
+      apiKey: cfg.apiKey.trim(),
+      thinkingModel: cfg.thinkingModel?.trim() || undefined,
+      thinkingKwargs: cfg.thinkingKwargs || undefined,
+    }),
   );
 }
 
@@ -83,8 +97,11 @@ export function clearAiConfig() {
 export async function aiChat(
   cfg: AiConfig,
   messages: AiMessage[],
-  opts: { temperature?: number; maxTokens?: number; signal?: AbortSignal } = {},
+  opts: { temperature?: number; maxTokens?: number; thinking?: boolean; signal?: AbortSignal } = {},
 ): Promise<string> {
+  // 深度思考：优先换思考模型（DeepSeek 系），其次开请求开关（Agnes/Qwen 系）
+  const useThinking = !!opts.thinking;
+  const model = useThinking && cfg.thinkingModel ? cfg.thinkingModel : cfg.model;
   const res = await fetch(`${cfg.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
     method: 'POST',
     signal: opts.signal,
@@ -93,8 +110,9 @@ export async function aiChat(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: cfg.model,
+      model,
       messages,
+      ...(useThinking && cfg.thinkingKwargs ? { chat_template_kwargs: { enable_thinking: true } } : {}),
       ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
       ...(opts.maxTokens !== undefined ? { max_tokens: opts.maxTokens } : {}),
     }),
@@ -225,4 +243,115 @@ export function buildContextBlock(hits: Array<{ entry: AiIndexEntry }>): string 
       return entry.content ? `${head}\n${entry.content}` : head;
     })
     .join('\n\n---\n\n');
+}
+
+// ---------------- 联网搜索 ----------------
+// 两家测试/正式服务商都不内置搜索，这里用「CORS 开放的公共中转 + 必应搜索页」实现，
+// 浏览器直连、无需任何搜索 API key。中转按可用性逐个回退，全挂了就抛错，
+// 调用方（admin）会降级为"仅基于站内资料回答"，不会阻塞对话。
+
+export type WebResult = { title: string; url: string; snippet: string };
+
+const decodeEntities = (s: string) =>
+  s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+
+const stripTags = (s: string) => decodeEntities(s.replace(/<[^>]*>/g, '')).trim();
+
+/** 解析必应 RSS 输出（<item><title><link><description>），首选通道 */
+function parseBingRss(xml: string): WebResult[] {
+  const out: WebResult[] = [];
+  const items = xml.match(/<item>[\s\S]*?<\/item>/g) ?? [];
+  for (const item of items) {
+    const t = item.match(/<title>([\s\S]*?)<\/title>/);
+    const l = item.match(/<link>([\s\S]*?)<\/link>/);
+    const d = item.match(/<description>([\s\S]*?)<\/description>/);
+    const url = l ? decodeEntities(l[1].trim()) : '';
+    const title = t ? stripTags(t[1]) : '';
+    if (!/^https?:\/\//.test(url) || !title) continue;
+    if (/bing\.com\b/.test(url)) continue; // 跳过必应自己的聚合页
+    out.push({ title, url, snippet: d ? stripTags(d[1]).slice(0, 300) : '' });
+  }
+  return out;
+}
+
+/** 解析必应网页版 HTML（li.b_algo 结构），RSS 不可用时的兜底 */
+function parseBingHtml(html: string): WebResult[] {
+  const out: WebResult[] = [];
+  const items = html.match(/<li class="b_algo[\s\S]*?<\/li>/g) ?? [];
+  for (const item of items) {
+    const a = item.match(/<h2[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i);
+    if (!a) continue;
+    const url = decodeEntities(a[1]);
+    const title = stripTags(a[2]);
+    if (!/^https?:\/\//.test(url) || !title) continue;
+    const snip = item.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+    out.push({ title, url, snippet: snip ? stripTags(snip[1]).slice(0, 300) : '' });
+  }
+  return out;
+}
+
+const BING_TIMEOUT = 15000;
+
+/**
+ * 必应搜索结果的取回通道：用 CORS 开放的公共中转带走 cn.bing.com 的 RSS 输出
+ * （浏览器直连必应会被 CORS 拦，中转免费但质量参差，逐个回退 + 二轮重试）。
+ * r.jina.ai 在站主电脑开着系统代理时可用，平时可能超时。
+ */
+const BING_RELAYS = [
+  (url: string) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  (url: string) => `https://r.jina.ai/${url}`,
+];
+
+async function fetchBingViaRelays(bingUrl: string, signal?: AbortSignal): Promise<string> {
+  const errors: string[] = [];
+  for (let round = 0; round < 2; round++) {
+    for (const wrap of BING_RELAYS) {
+      try {
+        const r = await fetch(wrap(bingUrl), { signal });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const text = await r.text();
+        if (/<item>/.test(text) || /b_algo/.test(text)) return text;
+        throw new Error('返回内容不是搜索结果');
+      } catch (e) {
+        errors.push((e as Error).message);
+      }
+    }
+    if (round === 0) await new Promise((res) => setTimeout(res, 3000)); // 稍等再试一轮
+  }
+  throw new Error(errors.slice(-4).join('；'));
+}
+
+/** 联网搜索：返回前 n 条网页结果；所有通道都失败时抛错 */
+export async function webSearch(query: string, n = 6, signal?: AbortSignal): Promise<WebResult[]> {
+  const bingUrl = `https://cn.bing.com/search?q=${encodeURIComponent(query)}&format=rss&mkt=zh-CN&count=10`;
+  const body = await fetchBingViaRelays(bingUrl, signal);
+  const seen = new Set<string>();
+  const results: WebResult[] = [];
+  for (const r of [...parseBingRss(body), ...parseBingHtml(body)]) {
+    if (seen.has(r.url)) continue;
+    seen.add(r.url);
+    results.push(r);
+    if (results.length >= n) break;
+  }
+  if (!results.length) throw new Error('搜索结果解析为空（搜索引擎可能改版了）');
+  return results;
+}
+
+/** 把联网搜索结果拼成注入 system prompt 的资料块 */
+export function buildWebBlock(results: WebResult[]): string {
+  if (!results.length) return '';
+  return results
+    .map(
+      (r, i) =>
+        `【网${i + 1}】${r.title}\n链接：${r.url}${r.snippet ? `\n摘要：${r.snippet}` : ''}`,
+    )
+    .join('\n\n');
 }

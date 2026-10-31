@@ -7,10 +7,9 @@ import { fmtDate, fmtDateShort } from '../lib/format';
 import { u } from '../lib/base';
 import avatar from '../assets/avatar.jpg';
 
-// 图标从 src/icons 图标库内联进来（?raw 保留 currentColor，可换任何一个文件）
+// 图标从 src/icons 图标库内联进来（?raw 保留 currentColor）
 import handIcon from '../icons/hand/wave-fluent-emoji-hc.svg?raw';
 import githubIcon from '../icons/social/github.svg?raw';
-import rssIcon from '../icons/ui/rss.svg?raw';
 import bilibiliIcon from '../icons/social/bilibili.svg?raw';
 import neteaseIcon from '../icons/social/netease-cloud-music.svg?raw';
 import outlookIcon from '../icons/social/outlook.svg?raw';
@@ -32,186 +31,421 @@ const kbEntries = (await getKbEntries()).slice(0, 3);
 const founded = new Date('2026-10-25T00:00:00Z');
 const days = Math.max(1, Math.ceil((Date.now() - founded.valueOf()) / 86400000));
 const chars = allPosts.reduce((sum, p) => sum + (p.body?.length ?? 0), 0);
+const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Date());
 ---
 
 <Base title="星野漫游 · Starry Roam">
   <section class="hero container wide">
-    <div class="hero-avatar in" style="--d:0s" aria-hidden="true">
-      <img src={avatar.src} alt="" width="112" height="112" />
+    <span class="hero-ghost" aria-hidden="true">Roam</span>
+
+    <div class="hero-id" data-entrance>
+      <div class="hero-id-left">
+        <img src={avatar.src} alt="Starry 的头像" width="44" height="44" />
+        <span class="caption-1"><b>Starry</b><span>学生开发者 · 在星野里漫游</span></span>
+      </div>
     </div>
-    <h1 class="hero-title in" style="--d:.15s" lang="en">
-      <span class="ht-lead">Hi, I'm</span> <span class="hero-name">Starry</span> <span class="hero-wave"><Fragment set:html={handIcon} /></span>
+
+    <h1 class="heading-1" lang="en">
+      <span class="hl-mask"><span class="hl-line"><span class="ht-lead">Hi, I'm</span> <span class="hero-name">Starry</span><span class="hero-wave" aria-hidden="true"><Fragment set:html={handIcon} /></span></span></span>
     </h1>
-    <p class="hero-tagline in" style="--d:.35s">
-      把<span class="kw">好奇心</span>，做成看得见的<span class="kw2">小东西</span><span class="caret" aria-hidden="true"></span>
-    </p>
-    <p class="hero-sub-caps in" style="--d:.55s">一个学生开发者的作品、AI Skills 与日常废话条</p>
-    <p class="hero-quote in" style="--d:.7s" lang="en">"Do not follow the majority, follow the truth."</p>
-    <p class="hero-stats in" style="--d:.8s">
+    <p class="hero-motto" lang="en" data-entrance>"Do not follow the majority, follow the truth."</p>
+
+    <div class="hero-cta" data-entrance>
+      <a class="btn-primary" href={u('/projects/')}>看看作品<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg></a>
+      <a class="btn-ghost" href={u('/posts/')}>读读文章 →</a>
+    </div>
+    <p class="hero-proof caption-2" data-entrance>
       <span>建站 <b class="stat-num" data-value={String(days)}>{days}</b> 天</span>
       <span>文章 <b class="stat-num" data-value={String(allPosts.length)}>{allPosts.length}</b> 篇</span>
       <span>约 <b class="stat-num" data-value={String(chars)}>{chars.toLocaleString('en-US')}</b> 字</span>
+      <span>最近更新 <b>{lastUpdate}</b></span>
     </p>
-    <div class="hero-social in" style="--d:.95s">
-      <a
-        href="https://github.com/Starryeeeeee"
-        data-tip="我的 GitHub 主页"
-        target="_blank"
-        rel="noopener"
-        aria-label="GitHub"
-        style="--i:0"
-      >
-        <Fragment set:html={githubIcon} />
-      </a>
-      <a href="https://www.bilibili.com" data-tip="哔哩哔哩" target="_blank" rel="noopener" aria-label="哔哩哔哩" style="--i:1">
-        <Fragment set:html={bilibiliIcon} />
-      </a>
-      <a href="https://music.163.com" data-tip="网易云音乐" target="_blank" rel="noopener" aria-label="网易云音乐" style="--i:2">
-        <Fragment set:html={neteaseIcon} />
-      </a>
-      <!-- TODO: 把 href 换成你的邮箱，如 mailto:starry@outlook.com -->
-      <a href="mailto:Jia100906985211@outlook.com" data-tip="Outlook 邮箱 · 给我写邮件" aria-label="发邮件给我" style="--i:3">
-        <Fragment set:html={outlookIcon} />
-      </a>
-      <a href={u('/rss.xml')} data-tip="RSS · 用阅读器订阅更新" aria-label="RSS 订阅" style="--i:4">
-        <Fragment set:html={rssIcon} />
-      </a>
-    </div>
   </section>
 
-  <div class="container home-sections">
-    <section class="reveal" style="--i:0" aria-labelledby="latest-posts">
-      <div class="section-head">
-        <h2 id="latest-posts">最近的文章</h2>
-        <a class="more" href={u('/posts/')}>全部文章</a>
-      </div>
-      {posts.map((post) => (
-        <a class="post-item" href={u(`/posts/${post.id}/`)}>
-          <time datetime={post.data.date.toISOString()}>{fmtDate(post.data.date)}</time>
-          <h3>{post.data.title}</h3>
-          {post.data.description && <p>{post.data.description}</p>}
-        </a>
-      ))}
-    </section>
+  <section class="tagline container" aria-label="站点标语">
+    <p id="tagline">
+      <span class="w k1">在</span><span class="w k1">星</span><span class="w k1">野</span><span class="w k1">里</span><span class="w">漫</span><span class="w">游</span><span class="w">的</span><span class="w">人</span><span class="w">，</span><br /><span class="w">不</span><span class="w">急</span><span class="w">着</span><span class="w k3">抵</span><span class="w k3">达</span><span class="w">。</span>
+    </p>
+    <div class="tagline-more">
+      <p>这里放着我在学编程路上做出来的小东西、整理的 AI Skills，还有随手写下的废话条。更新不定时，想到什么放什么，欢迎随便逛逛。</p>
+    </div>
+    <p class="tagline-src caption-2">— 站语，也送给每个慢慢做东西的人</p>
+  </section>
 
-    <section class="reveal" style="--i:1" aria-labelledby="latest-moments">
-      <div class="section-head">
-        <h2 id="latest-moments">废话条</h2>
-        <a class="more" href={u('/moments/')}>更多动态</a>
-      </div>
-      {moments.length === 0 ? (
-        <p class="list-empty">还没有动态——去仓库发一条带 <code>moment</code> 标签的 Issue 试试。</p>
-      ) : (
-        moments.map((m) => (
-          <article class="moment-card">
-            <div class="moment-head">
-              <span class="moment-avatar" aria-hidden="true"><img src={avatar.src} alt="" /></span>
-              <span class="moment-name">Starry</span>
-              <time datetime={m.date.toISOString()}>{fmtDateShort(m.date)}</time>
-            </div>
-            <p class="moment-body">{m.text}</p>
-          </article>
-        ))
-      )}
-    </section>
+  <main class="container wide">
+    <div class="grid">
+      <section class="sec sec-blue" aria-labelledby="latest-posts">
+        <div class="sec-head">
+          <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-posts" class="heading-5">最近的文章</h2></div>
+          <a class="more" href={u('/posts/')}>全部文章 →</a>
+        </div>
+        {posts.map((post) => (
+          <a class="post-item" href={u(`/posts/${post.id}/`)}>
+            <time datetime={post.data.date.toISOString()}>{fmtDate(post.data.date)}</time>
+            <h3 class="title-2">{post.data.title}<span class="arr" aria-hidden="true">→</span></h3>
+            {post.data.description && <p>{post.data.description}</p>}
+          </a>
+        ))}
+        <div class="findme">
+          <span class="fm-label caption-2">在别处找我</span>
+          <div class="hero-social">
+            <a href="https://github.com/Starryeeeeee" aria-label="GitHub" target="_blank" rel="noopener"><Fragment set:html={githubIcon} /></a>
+            <a href="https://www.bilibili.com" aria-label="哔哩哔哩" target="_blank" rel="noopener"><Fragment set:html={bilibiliIcon} /></a>
+            <a href="https://music.163.com" aria-label="网易云音乐" target="_blank" rel="noopener"><Fragment set:html={neteaseIcon} /></a>
+            <a href="mailto:Jia100906985211@outlook.com" aria-label="发邮件给我"><Fragment set:html={outlookIcon} /></a>
+          </div>
+        </div>
+      </section>
 
-    <section class="reveal" style="--i:2" aria-labelledby="latest-projects">
-      <div class="section-head">
-        <h2 id="latest-projects">作品</h2>
-        <a class="more" href={u('/projects/')}>全部作品</a>
+      <div class="stack">
+        <section class="sec sec-rose" aria-labelledby="latest-moments">
+          <div class="sec-head">
+            <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-moments" class="heading-5">废话条</h2></div>
+            <a class="more" href={u('/moments/')}>更多 →</a>
+          </div>
+          {moments.length === 0 ? (
+            <p class="list-empty">还没有动态——去仓库发一条带 <code>moment</code> 标签的 Issue 试试。</p>
+          ) : (
+            moments.map((m) => (
+              <article class="card moment">
+                <div class="moment-head">
+                  <img src={avatar.src} alt="" width="28" height="28" />
+                  <span class="caption-1"><b>Starry</b></span>
+                  <time datetime={m.date.toISOString()}>{fmtDateShort(m.date)}</time>
+                </div>
+                <p class="moment-body">{m.text}</p>
+                <button class="moment-like" type="button" disabled title="部署后启用匿名点赞">♡ <span>0</span></button>
+              </article>
+            ))
+          )}
+        </section>
+
+        <section class="sec sec-green" aria-labelledby="latest-skills">
+          <div class="sec-head">
+            <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-skills" class="heading-5">AI Skills</h2></div>
+            <a class="more" href={u('/skills/')}>全部 →</a>
+          </div>
+          {skills.map((s) => (
+            <a class="mini-item" href={u(`/skills/${s.id}/`)}>
+              <span class="t title-2">{s.data.title}</span>
+              <time datetime={s.data.date.toISOString()}>{fmtDateShort(s.data.date)}</time>
+            </a>
+          ))}
+        </section>
       </div>
-      <div class="project-grid">
+
+      <section class="sec sec-sand" aria-labelledby="latest-projects">
+        <div class="sec-head">
+          <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-projects" class="heading-5">作品</h2></div>
+          <a class="more" href={u('/projects/')}>全部作品 →</a>
+        </div>
         {projects.map((p) => (
           <a
-            class="project-card"
+            class="card card-c-sand"
             href={p.data.demo ?? p.data.repo ?? u('/projects/')}
             target={(p.data.demo ?? p.data.repo) ? '_blank' : undefined}
             rel="noopener"
           >
-            <h3>{p.data.title}</h3>
+            <h3 class="title-2">{p.data.title}</h3>
             <p>{p.data.description}</p>
-            {p.data.tags.length > 0 && (
-              <div class="tags">{p.data.tags.map((t) => <span>{t}</span>)}</div>
-            )}
+            {p.data.tags.length > 0 && <div class="card-tag">{p.data.tags.map((t) => <span>{t}</span>)}</div>}
           </a>
         ))}
-      </div>
-    </section>
+      </section>
 
-    <section class="reveal" style="--i:3" aria-labelledby="latest-skills">
-      <div class="section-head">
-        <h2 id="latest-skills">AI Skills</h2>
-        <a class="more" href={u('/skills/')}>全部 Skills</a>
-      </div>
-      {skills.map((s) => (
-        <a class="skill-item" href={u(`/skills/${s.id}/`)}>
-          <div>
-            <h3>{s.data.title}</h3>
-            <p class="desc">{s.data.description}</p>
-          </div>
-          <time datetime={s.data.date.toISOString()}>{fmtDate(s.data.date)}</time>
-        </a>
-      ))}
-    </section>
-
-    <section class="reveal" style="--i:4" aria-labelledby="latest-kb">
-      <div class="section-head">
-        <h2 id="latest-kb">知识库</h2>
-        <a class="more" href={u('/kb/')}>全部条目</a>
-      </div>
-      {kbEntries.length === 0 ? (
-        <p class="list-empty">知识库还空着。</p>
-      ) : (
-        kbEntries.map((e) => (
-          <a class="skill-item" href={u(`/kb/${e.slug}/`)}>
-            <div>
-              <h3>{e.title}</h3>
-              <p class="desc">
-                {e.kind === 'note' ? '笔记' : fileKindLabel(e.ext)} · {e.subject}
-                {e.description ? ` · ${e.description}` : ''}
-              </p>
-            </div>
-            <time datetime={e.date.toISOString()}>{fmtDate(e.date)}</time>
-          </a>
-        ))
-      )}
-    </section>
-  </div>
+      <section class="sec sec-green" aria-labelledby="latest-kb">
+        <div class="sec-head">
+          <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-kb" class="heading-5">知识库</h2></div>
+          <a class="more" href={u('/kb/')}>全部条目 →</a>
+        </div>
+        {kbEntries.length === 0 ? (
+          <p class="list-empty">知识库还空着。</p>
+        ) : (
+          kbEntries.map((e) => (
+            <a class="card kb-item" href={u(`/kb/${e.slug}/`)}>
+              <span class="kb-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg></span>
+              <span class="kb-text">
+                <span class="title-3 kb-title">{e.title}</span>
+                <span class="caption-2 kb-desc">{e.kind === 'note' ? '笔记' : fileKindLabel(e.ext)} · {e.subject}{e.description ? ` · ${e.description}` : ''}</span>
+                <span class="caption-3 kb-date">{fmtDate(e.date)}</span>
+              </span>
+            </a>
+          ))
+        )}
+      </section>
+    </div>
+  </main>
 </Base>
 
-<script>
-  // 封面出场：把「Starry」拆成逐字错峰入场（GSAP SplitText 的思路，纯手写版）
-  const name = document.querySelector<HTMLElement>('.hero-name');
-  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+<style>
+  /* ============ 首页 · 编辑部式封面 ============
+     设计定稿见预览稿：左对齐大字 + 标语逐字点亮 + 7:5 非对称内容栅格 + 莫奈多色板块 */
+  .heading-1 {
+    font-family: var(--font-display-cn);
+    font-size: 72px;
+    line-height: 1.14;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .heading-5 { font-size: 24px; line-height: 32px; font-weight: 600; }
+  .title-2 { font-size: 18px; line-height: 28px; font-weight: 500; }
+  .title-3 { font-size: 16px; line-height: 24px; font-weight: 500; }
+  .caption-1 { font-size: 14px; line-height: 20px; font-weight: 500; }
+  .caption-2 { font-size: 14px; line-height: 20px; font-weight: 400; }
+  .caption-3 { font-size: 12px; line-height: 16px; font-weight: 600; }
+  h1, h2, h3 { text-wrap: balance; }
 
-  if (name && !reduceMotion) {
-    const text = name.textContent ?? '';
-    name.textContent = '';
-    [...text].forEach((ch, i) => {
-      const s = document.createElement('span');
-      s.className = 'ht-char';
-      s.textContent = ch;
-      s.style.animationDelay = `${0.3 + i * 0.045}s`;
-      name.appendChild(s);
-    });
+  /* 板块专属色（莫奈多色系）：蓝=文章 玫瑰=废话条 绿=Skills/知识库 沙=作品 */
+  .sec-blue { --sec-c: var(--accent); --sec-c-ink: var(--accent-ink); }
+  .sec-rose { --sec-c: #b4766b; --sec-c-ink: #9c5f55; }
+  .sec-green { --sec-c: var(--accent-2); --sec-c-ink: #5f7f6d; }
+  .sec-sand { --sec-c: #a98e67; --sec-c-ink: #8f744f; }
+  :global([data-theme='dark']) .sec-rose { --sec-c: #cf8d81; --sec-c-ink: #e0a89d; }
+  :global([data-theme='dark']) .sec-green { --sec-c: #9db8a6; --sec-c-ink: #b3cabb; }
+  :global([data-theme='dark']) .sec-sand { --sec-c: #c4ab84; --sec-c-ink: #d6c19e; }
+
+  /* ---- Hero ---- */
+  .hero { position: relative; padding-block: 128px 96px; overflow: hidden; text-align: left; }
+  .hero-ghost {
+    position: absolute; right: -24px; top: 32px;
+    font-family: var(--font-display-cn); font-size: 220px; line-height: 1;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2) 45%, #b4766b 80%, #a98e67);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    opacity: 0.16; user-select: none; pointer-events: none;
+  }
+  :global([data-theme='dark']) .hero-ghost { opacity: 0.22; }
+  .hero-id { display: flex; align-items: center; gap: 16px; margin-bottom: 64px; }
+  .hero-id-left { display: flex; align-items: center; gap: 12px; }
+  .hero-id-left img { width: 44px; height: 44px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--line); }
+  .hero-id-left .caption-1 b { font-weight: 600; }
+  .hero-id-left .caption-1 span { color: var(--ink-3); margin-left: 6px; }
+
+  /* 标题：按行遮罩升字（GSAP）；纯色墨字（background-clip 渐变与中文字体合成有接缝，弃用） */
+  .hero h1 { max-width: 760px; margin: 0 0 40px; }
+  .hl-mask { display: block; overflow: hidden; line-height: 1.3; }
+  .hl-line { display: inline-block; line-height: 1.3; color: var(--ink); }
+  .ht-lead { color: var(--ink); }
+  .hero-name { color: var(--accent); }
+  .hero-wave { display: inline-block; transform-origin: 72% 72%; }
+  .hero-wave :global(svg) { width: 0.78em; height: 0.78em; vertical-align: -0.04em; }
+  .hero:hover .hero-wave { animation: wave-hello 1.6s ease-in-out 0.2s; }
+  @keyframes wave-hello {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(16deg); }
+    40% { transform: rotate(-8deg); }
+    60% { transform: rotate(12deg); }
+    80% { transform: rotate(-4deg); }
   }
 
-  // 数据行数字滚动：easeOutCubic，reduced-motion 时保持静态
-  if (!reduceMotion) {
-    for (const el of document.querySelectorAll<HTMLElement>('.stat-num')) {
-      const target = Number(el.dataset.value ?? '0');
-      if (!target) continue;
-      const dur = 900;
-      const ease = (t: number) => 1 - Math.pow(1 - t, 3);
-      setTimeout(() => {
-        const t0 = performance.now();
-        const step = (now: number) => {
-          const p = Math.min(1, (now - t0) / dur);
-          el.textContent = Math.round(ease(p) * target).toLocaleString('en-US');
-          if (p < 1) requestAnimationFrame(step);
-        };
-        requestAnimationFrame(step);
-      }, 900);
-    }
+  .hero-motto {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 20px; line-height: 28px;
+    color: var(--ink-3);
+    margin-bottom: 40px;
+  }
+  .hero-cta { display: flex; align-items: center; gap: 24px; margin-bottom: 32px; }
+
+  .btn-primary {
+    position: relative; display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 28px; border: none; border-radius: 999px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 92%, #ffffff 8%), var(--ink));
+    color: var(--bg);
+    font-size: 16px; line-height: 24px; font-weight: 600;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.28) inset, 0 8px 24px rgba(0, 0, 0, 0.18);
+    transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
+    isolation: isolate; overflow: hidden;
+  }
+  .btn-primary::after {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(115deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.32) 46%, rgba(255, 255, 255, 0.05) 58%, rgba(255, 255, 255, 0) 100%);
+    transform: translateX(-120%);
+    transition: transform 0.8s var(--ease);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.28) inset, 0 12px 32px rgba(0, 0, 0, 0.22); }
+  .btn-primary:hover::after { transform: translateX(120%); }
+  .btn-primary:active { transform: translateY(0) scale(0.98); }
+  .btn-ghost { font-size: 16px; line-height: 24px; font-weight: 600; color: var(--ink-2); transition: color 0.3s var(--ease); }
+  .btn-ghost:hover { color: var(--accent-ink); }
+  .hero-proof { display: flex; flex-wrap: wrap; gap: 4px 24px; color: var(--ink-3); }
+  .hero-proof b { color: var(--ink-2); font-weight: 500; }
+
+  /* ---- 标语（GSAP scrub 逐字点亮） ---- */
+  .tagline { padding-block: 96px; text-align: left; }
+  #tagline {
+    max-width: 720px;
+    font-family: var(--font-display-cn);
+    font-size: 48px; line-height: 1.2; font-weight: 600;
+  }
+  #tagline .w { opacity: 0.22; }
+  #tagline .w.k1 { color: var(--accent-ink); }
+  #tagline .w.k3 { color: var(--sec-rose-ink, #9c5f55); }
+  :global([data-theme='dark']) #tagline .w.k3 { color: #e0a89d; }
+  .tagline-more { max-width: 560px; margin-top: 40px; color: var(--ink-2); }
+  .tagline-more p { font-size: 18px; line-height: 28px; }
+  .tagline-src { margin-top: 24px; color: var(--ink-3); }
+
+  /* ---- 内容栅格 ---- */
+  .grid { display: grid; grid-template-columns: 7fr 5fr; gap: 40px; padding-bottom: 64px; }
+  .sec { min-width: 0; }
+  .sec + .sec { margin-top: 64px; }
+  .stack { display: flex; flex-direction: column; gap: 32px; }
+  .stack .sec { margin-top: 0; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+  .sec-head .hd { display: flex; align-items: center; gap: 10px; }
+  .sec-head .dash { width: 20px; height: 3px; border-radius: 2px; background: var(--sec-c); }
+  .sec-head .more { font-size: 14px; color: var(--ink-3); transition: color 0.3s var(--ease); }
+  .sec-head .more:hover { color: var(--sec-c-ink); }
+
+  .post-item { display: block; padding: 24px 0; border-bottom: 1px solid var(--line); }
+  .post-item time { font-size: 12px; line-height: 16px; color: var(--ink-3); }
+  .post-item h3 { margin-top: 4px; display: flex; align-items: center; gap: 8px; transition: color 0.3s var(--ease); }
+  .post-item:hover h3 { color: var(--sec-c-ink); }
+  .post-item h3 .arr { opacity: 0; transform: translateX(-4px); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease); color: var(--sec-c-ink); }
+  .post-item:hover h3 .arr { opacity: 1; transform: none; }
+  .post-item p { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--ink-2); }
+
+  .findme { display: flex; align-items: center; gap: 16px; margin-top: 8px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .findme .fm-label { color: var(--ink-3); }
+  .hero-social { display: flex; gap: 8px; }
+  /* 抵消旧版 hero-social 的悬停气泡（findme 行不用 data-tip） */
+  .hero-social a::after,
+  .hero-social a::before { content: none; }
+  .hero-social a {
+    display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px;
+    color: var(--ink-2); transition: color 0.3s var(--ease), background 0.3s var(--ease), transform 0.3s var(--ease);
+  }
+  .hero-social a:hover { color: var(--accent-ink); background: var(--wash); transform: translateY(-2px); }
+  .hero-social a:active { transform: scale(0.96); }
+  .hero-social a :global(svg) { width: 16px; height: 16px; }
+
+  .card {
+    position: relative; display: block; overflow: hidden;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: 24px; transition: transform 0.5s var(--ease), border-color 0.5s var(--ease), box-shadow 0.5s var(--ease);
+  }
+  .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--sec-c); opacity: 0; transition: opacity 0.5s var(--ease); }
+  .card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--sec-c) 45%, var(--line)); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1); }
+  .card:hover::before { opacity: 1; }
+  .card h3 { margin-bottom: 4px; }
+  .card p { font-size: 14px; line-height: 20px; color: var(--ink-2); }
+  .card-c-sand { --card-c: var(--sec-sand-c, #a98e67); }
+  .card-tag { margin-top: 12px; display: flex; gap: 8px; }
+  .card-tag span { font-size: 12px; line-height: 16px; padding: 2px 12px; border-radius: 999px; background: color-mix(in srgb, var(--sec-c) 14%, var(--surface-2)); color: var(--sec-c-ink); }
+
+  .moment { display: flex; flex-direction: column; gap: 12px; }
+  .moment-head { display: flex; align-items: center; gap: 8px; }
+  .moment-head img { width: 28px; height: 28px; border-radius: 50%; }
+  .moment-head .caption-1 b { font-weight: 600; }
+  .moment-head time { margin-left: auto; font-size: 12px; color: var(--ink-3); }
+  .moment-body { font-size: 16px; line-height: 24px; }
+  .moment-like {
+    align-self: flex-start; padding: 2px 12px; border: none; border-radius: 999px;
+    background: color-mix(in srgb, var(--sec-c) 12%, var(--surface-2)); color: var(--sec-c-ink); font-size: 12px; line-height: 16px;
+    transition: transform 0.3s var(--ease), background 0.3s var(--ease);
+  }
+  .moment-like:hover:not(:disabled) { background: color-mix(in srgb, var(--sec-c) 22%, var(--surface-2)); }
+  .moment-like:active:not(:disabled) { transform: scale(0.95); }
+  .moment-like:disabled { cursor: default; }
+
+  .mini-item { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .mini-item:last-of-type { border-bottom: none; }
+  .mini-item .t { transition: color 0.3s var(--ease); }
+  .mini-item:hover .t { color: var(--sec-c-ink); }
+  .mini-item time { flex-shrink: 0; font-size: 12px; color: var(--ink-3); }
+
+  .kb-item { display: flex; gap: 12px; align-items: flex-start; }
+  .kb-ico { flex-shrink: 0; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: color-mix(in srgb, var(--sec-c) 14%, var(--surface-2)); color: var(--sec-c-ink); }
+  .kb-ico :global(svg) { width: 18px; height: 18px; }
+  .kb-text { min-width: 0; }
+  .kb-title { display: block; }
+  .kb-desc { display: block; margin-top: 4px; color: var(--ink-2); }
+  .kb-date { display: block; margin-top: 8px; color: var(--ink-3); }
+
+  .list-empty {
+    padding: 22px 24px; font-size: 0.9rem; color: var(--ink-3);
+    background: var(--wash); border-radius: var(--radius);
+  }
+  .list-empty code { font-family: var(--font-mono); background: var(--surface-2); padding: 0.1em 0.4em; border-radius: 6px; font-size: 0.9em; }
+
+  /* ---- GSAP 初始态：仅在 JS 可用且未开启减少动态时隐藏（Base 已打 js 标记） ---- */
+  :global(html.js.anim) [data-entrance] { opacity: 0; }
+  :global(html.js.anim) .hl-line { transform: translateY(110%); }
+
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+    .heading-1 { font-size: 40px; line-height: 1.16; }
+    #tagline { font-size: 28px; }
+    .hero-ghost { font-size: 130px; }
+    .hero { padding-top: 72px; }
+    .hl-mask { display: inline; overflow: visible; }
+    :global(html.js.anim) .hl-line { transform: none; }
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !document.documentElement.classList.contains('anim')) {
+    // 减少动态：所有内容直接呈现（CSS 初始隐藏只存在于 anim 标记下，这里兜底数字）
+    document.querySelectorAll<HTMLElement>('.stat-num').forEach((el) => {
+      el.textContent = el.dataset.value ?? '0';
+    });
+  } else {
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 入场时间线：行遮罩升字，元素错峰浮现
+    const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+    tl.to('.hero-id', { opacity: 1, y: 0, duration: 0.7 }, 0.15)
+      .to('.hl-line', { y: 0, duration: 1.1, stagger: 0.14 }, 0.3)
+      .to('.hero-motto', { opacity: 1, y: 0, duration: 0.7 }, 0.8)
+      .to('.hero-cta', { opacity: 1, y: 0, duration: 0.7 }, 0.95)
+      .to('.hero-proof', { opacity: 1, y: 0, duration: 0.7 }, 1.1);
+    gsap.set(['.hero-id', '.hero-motto', '.hero-cta', '.hero-proof'], { y: 28 });
+
+    // 数据行数字滚动（沿用原 easeOutCubic 手感）
+    tl.add(() => {
+      document.querySelectorAll<HTMLElement>('.stat-num').forEach((el) => {
+        const target = Number(el.dataset.value ?? '0');
+        const obj = { v: 0 };
+        gsap.to(obj, {
+          v: target, duration: 0.9, ease: 'power2.out',
+          onUpdate: () => { el.textContent = Math.round(obj.v).toLocaleString('en-US'); },
+        });
+      });
+    }, 1.25);
+
+    // 标语：逐字随滚动匀速点亮（scrub 跟手）
+    gsap.to('#tagline .w', {
+      opacity: 1,
+      ease: 'none',
+      stagger: 0.6,
+      scrollTrigger: { trigger: '.tagline', start: 'top 78%', end: 'top 25%', scrub: 0.6 },
+    });
+    gsap.from('.tagline-more', {
+      opacity: 0, y: 24, duration: 0.7, ease: 'power3.out',
+      scrollTrigger: { trigger: '.tagline-more', start: 'top 88%', once: true },
+    });
+    gsap.from('.tagline-src', {
+      opacity: 0, y: 16, duration: 0.7, ease: 'power3.out',
+      scrollTrigger: { trigger: '.tagline-src', start: 'top 92%', once: true },
+    });
+
+    // 内容板块：随滚动匀速上移浮现（整板块一个单元，项与项不碰撞）
+    gsap.utils.toArray<HTMLElement>('.sec').forEach((sec) => {
+      gsap.from(sec, {
+        opacity: 0,
+        y: 48,
+        ease: 'none',
+        scrollTrigger: { trigger: sec, start: 'top 90%', end: 'top 55%', scrub: 0.6 },
+      });
+    });
+    gsap.from('.findme', {
+      opacity: 0, y: 24, duration: 0.7, ease: 'power3.out',
+      scrollTrigger: { trigger: '.findme', start: 'top 92%', once: true },
+    });
+    ScrollTrigger.refresh();
   }
 </script>
