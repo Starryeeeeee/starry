@@ -1,8 +1,7 @@
----
+﻿---
 // 站长管理面板：纯客户端，通过 GitHub API 直接读写仓库（等于把 GitHub 当后端）
 // 登录方式：GitHub 个人访问令牌（PAT），只存在站长自己浏览器的 localStorage 里
 import Base from '../layouts/Base.astro';
-import '../styles/admin-mac.css'; // 后台 macOS 视觉层（只改样式，不改结构与行为）
 ---
 
 <Base title="管理 · 星野漫游" description="站长管理面板。">
@@ -15,7 +14,7 @@ import '../styles/admin-mac.css'; // 后台 macOS 视觉层（只改样式，不
       <div class="admin-user" hidden>
         <img alt="" width="30" height="30" />
         <b></b>
-        <button class="admin-btn ghost" type="button" data-act="logout">退出</button>
+        <button class="ai-icon-btn" type="button" data-act="logout" title="退出登录" aria-label="退出登录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></svg></button>
       </div>
     </header>
 
@@ -255,9 +254,10 @@ import '../styles/admin-mac.css'; // 后台 macOS 视觉层（只改样式，不
       <div class="admin-panel" data-panel="ai" hidden>
         <p class="hint">AI 会先从全站索引（构建时生成的 <code>/api-index.json</code>）里检索最相关的几条内容，再据此回答；新发布的内容要等构建完成后才能被检索到。对话记录保存在本浏览器；模型在「模型配置」页管理。</p>
         <div class="ai-session-bar">
-          <button class="admin-btn ghost" type="button" data-act="ai-new-chat">＋ 新对话</button>
+          <button class="ai-icon-btn" type="button" data-act="ai-new-chat" title="新建对话" aria-label="新建对话"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14" /></svg></button>
           <select class="ai-session-select" data-ai="session"></select>
-          <button class="admin-btn ghost" type="button" data-act="ai-del-chat">删除此对话</button>
+          <button class="ai-icon-btn" type="button" data-act="ai-rename-chat" title="重命名对话" aria-label="重命名对话"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg></button>
+          <button class="ai-icon-btn" type="button" data-act="ai-del-chat" title="删除此对话" aria-label="删除此对话"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4" /></svg></button>
         </div>
         <div class="ai-chat" data-ai-chat hidden aria-live="polite"></div>
         <div class="ai-quick">
@@ -958,6 +958,27 @@ import '../styles/admin-mac.css'; // 后台 macOS 视觉层（只改样式，不
       opacity: 0.5;
     }
   }
+  /* 打字机进行中：气泡尾部方块光标，结束自动移除 .typing */
+  .ai-msg.bot.md.typing::after {
+    content: '';
+    display: inline-block;
+    width: 0.5em;
+    height: 1.05em;
+    margin-left: 2px;
+    vertical-align: -0.15em;
+    background: var(--accent);
+    animation: ai-caret 0.9s steps(1) infinite;
+  }
+  @keyframes ai-caret {
+    50% {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ai-msg.bot.md.typing::after {
+      display: none;
+    }
+  }
   .ai-msg.bot.err {
     color: #b4766b;
     border-color: color-mix(in srgb, #b4766b 40%, var(--line));
@@ -1107,6 +1128,14 @@ import '../styles/admin-mac.css'; // 后台 macOS 视觉层（只改样式，不
     color: var(--ink-3);
     padding: 8px 10px;
   }
+  .ai-memory { margin: 12px 0 4px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px 14px; background: var(--surface-2); }
+  .ai-memory summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; color: var(--ink-2); }
+  .ai-memory .hint { margin: 10px 0 4px; }
+  .ai-memory-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+  .ai-memory-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 0.9rem; color: var(--ink-2); }
+  .ai-memory-row span { flex: 1; overflow-wrap: anywhere; }
+  .ai-memory-add { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+  .ai-memory-add input { flex: 1; min-width: 220px; }
 </style>
 
 <script>
@@ -1133,6 +1162,7 @@ import '../styles/admin-mac.css'; // 后台 macOS 视觉层（只改样式，不
     type AiMessage,
     type AiProfile,
   } from '../lib/ai';
+  import { typeInto } from '../lib/typewriter';
 
   const REPO = 'Starryeeeeee/starry';
   const BRANCH = 'main';
@@ -2332,10 +2362,13 @@ import '../styles/admin-mac.css'; // 后台 macOS 视觉层（只改样式，不
         ],
         { thinking: thinkOn, webSearch: webOn && nativeSearch },
       );
-      // 回复一到就先停掉点点动画，再慢慢渲染 Markdown
+      // 回复一到就先停掉点点动画；Markdown 渲染完成后逐字打出
+      //（reduced-motion 用户直接整段显示，来源链接在打字结束后出现）
       bubble.classList.remove('thinking');
       bubble.classList.add('md');
-      bubble.innerHTML = await renderMarkdown(reply);
+      await typeInto(bubble, await renderMarkdown(reply), {
+        scrollContainer: $('[data-ai-chat]') as HTMLElement,
+      });
       const sources: AiStoredSource[] = hits
         .filter((h) => h.entry.path)
         .map((h) => ({ title: h.entry.title, path: h.entry.path }));
@@ -2516,6 +2549,7 @@ import '../styles/admin-mac.css'; // 后台 macOS 视觉层（只改样式，不
         'ai-profile-new',
         'ai-new-chat',
         'ai-del-chat',
+        'ai-rename-chat',
       ].includes(act)
     )
       return;
@@ -2576,6 +2610,21 @@ import '../styles/admin-mac.css'; // 后台 macOS 视觉层（只改样式，不
         box.hidden = true;
         refreshSessionSelect();
         aiFields('input').focus();
+      }
+      if (act === 'ai-rename-chat') {
+        const s = curSession();
+        if (!s) {
+          msg('先新建或选择一个对话再重命名');
+          return;
+        }
+        const name = window.prompt('给这个对话起个名字（留空 = 恢复自动命名）：', s.title === '新对话' ? '' : s.title);
+        if (name === null) return;
+        s.title = name.trim() || '新对话';
+        saveSessions();
+        refreshSessionSelect();
+        msg(s.title === '新对话' ? '已恢复自动命名' : `已改名为「${s.title}」`);
+        aiFields('input').focus();
+        return;
       }
       if (act === 'ai-del-chat') {
         const btn = t.closest('button') as HTMLButtonElement;

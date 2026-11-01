@@ -340,6 +340,27 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
       opacity: 0.5;
     }
   }
+  /* 打字机进行中：行尾方块光标（Game1 蓝），结束自动移除 .typing */
+  .starp-line.typing::after {
+    content: '';
+    display: inline-block;
+    width: 0.5em;
+    height: 1.05em;
+    margin-left: 2px;
+    vertical-align: -0.15em;
+    background: #79a8dc;
+    animation: starp-caret 0.9s steps(1) infinite;
+  }
+  @keyframes starp-caret {
+    50% {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .starp-line.typing::after {
+      display: none;
+    }
+  }
 </style>
 
 <script>
@@ -355,6 +376,7 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     type AiIndexEntry,
     type AiMessage,
   } from '../lib/ai';
+  import { typeInto } from '../lib/typewriter';
 
   const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
   const root = $('.starp-root');
@@ -447,11 +469,6 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     return div;
   }
 
-  function answerLine(el: HTMLElement, content: string) {
-    el.className = 'starp-line answer starp-msg bot md';
-    el.innerHTML = content;
-  }
-
   async function ask(q: string) {
     line('cmd', q, 'guest@starry:~$');
     const bubble = thinkingLine('星渚 接入观测终端');
@@ -490,7 +507,10 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
       );
       history.push({ role: 'user', content: q }, { role: 'bot', content: reply });
       saveHistory();
-      answerLine(bubble, await renderMarkdown(reply));
+      bubble.classList.remove('starp-dots');
+      bubble.classList.add('answer', 'starp-msg', 'bot');
+      // 打字机：逐字揭示已渲染好的 Markdown（reduced-motion 用户直接整段显示）
+      await typeInto(bubble, await renderMarkdown(reply), { scrollContainer: chat });
       if (hits.length) {
         const src = document.createElement('div');
         src.className = 'starp-src';
@@ -521,11 +541,24 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     booted = true;
   }
 
-  function setOpen(open: boolean) {
+  async function setOpen(open: boolean) {
     panel.hidden = !open;
     fab.setAttribute('aria-expanded', String(open));
     if (open) {
-      if (!booted) boot();
+      if (!booted) {
+        boot();
+        // 回放本地保存的对话（整段渲染，不打字机——历史是批量回看）
+        for (const m of history) {
+          if (m.role === 'user') {
+            line('cmd', m.content, 'guest@starry:~$');
+          } else {
+            const el = line('answer', '');
+            el.className = 'starp-line answer starp-msg bot md';
+            el.innerHTML = await renderMarkdown(m.content);
+          }
+        }
+        booted = true;
+      }
       input.focus();
     }
   }
