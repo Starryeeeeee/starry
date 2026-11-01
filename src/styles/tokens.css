@@ -1,0 +1,184 @@
+/* ============================================================
+   星野漫游 · 设计 token（三层：原始值 → 语义 → 使用处）
+   规则：
+   1. 原始值（--p-*）只允许出现在本文件，页面与组件里出现 hex 即违规。
+   2. 页面只用语义层（--bg / --ink / --accent…），不直接用原始值。
+   3. 暗色只重绑语义层，原始值不动；新增颜色先在这里登记再使用。
+   ============================================================ */
+
+:root {
+  /* ---------- 第一层：原始值 ---------- */
+  --p-paper-0: #ffffff;
+  --p-paper-1: #faf9f5; /* 纸白 */
+  --p-paper-2: #f8f6f1;
+  --p-paper-3: #f1eee7; /* 暖沙灰 */
+  --p-paper-4: #e7e3da; /* 边线 */
+  --p-paper-5: #e6d8c3;
+  --p-paper-6: #edf1ec; /* 水彩浅底 */
+
+  --p-ink-900: #30353a;
+  --p-ink-700: #5d646b;
+  --p-ink-500: #6b6b7a;
+  --p-ink-300: #767684; /* 已废弃：对比度不足，仅历史引用兜底 */
+
+  --p-blue-700: #32567a;
+  --p-blue-600: #466f9a; /* 霁蓝 */
+  --p-blue-400: #8fa9c2;
+  --p-blue-300: #a9c0d6;
+
+  --p-green-600: #6b8f7d;
+  --p-green-500: #5f7f6d;
+  --p-green-400: #97b8a4;
+  --p-green-300: #b3cabb;
+
+  --p-rose-600: #b4766b; /* 陶土玫瑰 */
+  --p-rose-700: #9c5f55;
+  --p-rose-400: #cf8d81;
+  --p-rose-300: #e0a89d;
+
+  --p-sand-600: #a98e67;
+  --p-sand-700: #8f744f;
+  --p-sand-400: #c4ab84;
+  --p-sand-300: #d6c19e;
+
+  --p-dark-900: #1d1c1a; /* 暖炭灰 */
+  --p-dark-800: #262522;
+  --p-dark-700: #302e2a;
+  --p-dark-600: #38352f;
+  --p-dark-950: #14141a;
+
+  --p-cream-200: #eae7e1;
+  --p-cream-400: #b3afa6;
+  --p-cream-500: #8f8b82;
+
+  /* ---------- 第二层：语义（亮色） ---------- */
+  color-scheme: light;
+
+  --bg: var(--p-paper-1);
+  --surface: var(--p-paper-0);
+  --surface-2: var(--p-paper-3);
+  --wash: var(--p-paper-6);
+  --line: var(--p-paper-4);
+
+  --ink: var(--p-ink-900);
+  --ink-2: var(--p-ink-700);
+  --ink-3: var(--p-ink-500);
+
+  --accent: var(--p-blue-600);
+  --accent-ink: var(--p-blue-700);
+  --accent-2: var(--p-green-600);
+  --accent-2-ink: var(--p-green-500);
+
+  --rose: var(--p-rose-600);
+  --rose-ink: var(--p-rose-700);
+  --sand: var(--p-sand-600);
+  --sand-ink: var(--p-sand-700);
+
+  /* 状态色：只表达状态，不做装饰 */
+  --danger: var(--p-rose-600);
+  --danger-ink: var(--p-rose-700);
+  --success: var(--p-green-600);
+  --success-ink: var(--p-green-500);
+
+  --shadow: 0 1px 2px rgba(48, 53, 58, 0.05), 0 10px 30px rgba(48, 53, 58, 0.06);
+
+  /* ---------- 第三层：尺度（明暗无关） ---------- */
+  /* 间距：4 的倍数，页面里不再写散值 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* 圆角：只有四档 */
+  --radius-sm: 6px; /* 极小控件、代码片段 */
+  --radius-md: 10px; /* 按钮、输入框、标签容器 */
+  --radius-lg: 14px; /* 容器、面板、卡片 */
+  --radius-pill: 999px; /* 胶囊 */
+  --radius: var(--radius-lg); /* 兼容旧引用 */
+
+  /* 层级：新增浮层先在这里取号，禁止写裸数字 */
+  --z-nav: 50;
+  --z-fab: 90;
+  --z-capture: 91;
+  --z-lightbox: 100;
+  --z-modal: 120;
+  --z-toast: 200;
+
+  /* 动效 */
+  --ease: ease;
+  --dur-fast: 0.15s;
+  --dur: 0.25s;
+  --dur-slow: 0.4s;
+
+  /* 布局 */
+  --w-text: 680px;
+  --w-wide: 1080px;
+  --gutter: 24px;
+
+  /* 字体 */
+  --font-sans: "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Source Han Sans SC",
+    "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: Georgia, "Times New Roman", "Songti SC", serif;
+  --font-display: "STIX Two Text", "Times New Roman", Times, Georgia, serif;
+  --font-display-cn: "AliHYAiHei-Beta", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-kai: "LXGW WenKai Screen", "LXGW WenKai", "Kaiti SC", STKaiti, KaiTi, serif;
+  --font-song: "SimSun", "NSimSun", "Songti SC", "Noto Serif SC", serif;
+  --font-round: "寒蝉全圆体", "LXGW WenKai Screen", "Kaiti SC", STKaiti, KaiTi, serif;
+  --font-body: var(--font-kai);
+  --font-mono: "Cascadia Code", "SF Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+
+  /* 字阶：页面标题与组件层统一取用 */
+  --text-2xs: 0.76rem;
+  --text-xs: 0.84rem;
+  --text-sm: 0.92rem;
+  --text-md: 1rem;
+  --text-lg: 1.13rem;
+  --text-xl: 1.3rem;
+  --text-2xl: 2rem;
+}
+
+/* ---------- 暗色：只重绑语义层 ---------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: var(--p-dark-900);
+  --surface: var(--p-dark-800);
+  --surface-2: var(--p-dark-700);
+  --wash: #262b28;
+  --line: var(--p-dark-600);
+
+  --ink: var(--p-cream-200);
+  --ink-2: var(--p-cream-400);
+  --ink-3: var(--p-cream-500);
+
+  --accent: var(--p-blue-400);
+  --accent-ink: var(--p-blue-300);
+  --accent-2: var(--p-green-400);
+  --accent-2-ink: var(--p-green-300);
+
+  --rose: var(--p-rose-400);
+  --rose-ink: var(--p-rose-300);
+  --sand: var(--p-sand-400);
+  --sand-ink: var(--p-sand-300);
+
+  --danger: var(--p-rose-400);
+  --danger-ink: var(--p-rose-300);
+  --success: var(--p-green-400);
+  --success-ink: var(--p-green-300);
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+/* 正文字体偏好（页脚切换） */
+html[data-body-font="song"] {
+  --font-body: var(--font-song);
+}
+
+html[data-body-font="round"] {
+  --font-body: var(--font-round);
+}

@@ -201,23 +201,19 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
 
   /* 板块专属色（莫奈多色系）：蓝=文章 玫瑰=废话条 绿=Skills/知识库 沙=作品 */
   .sec-blue { --sec-c: var(--accent); --sec-c-ink: var(--accent-ink); }
-  .sec-rose { --sec-c: #b4766b; --sec-c-ink: #9c5f55; }
-  .sec-green { --sec-c: var(--accent-2); --sec-c-ink: #5f7f6d; }
-  .sec-sand { --sec-c: #a98e67; --sec-c-ink: #8f744f; }
-  :global([data-theme='dark']) .sec-rose { --sec-c: #cf8d81; --sec-c-ink: #e0a89d; }
-  :global([data-theme='dark']) .sec-green { --sec-c: #9db8a6; --sec-c-ink: #b3cabb; }
-  :global([data-theme='dark']) .sec-sand { --sec-c: #c4ab84; --sec-c-ink: #d6c19e; }
+  .sec-rose { --sec-c: var(--rose); --sec-c-ink: var(--rose-ink); }
+  .sec-green { --sec-c: var(--accent-2); --sec-c-ink: var(--accent-2-ink); }
+  .sec-sand { --sec-c: var(--sand); --sec-c-ink: var(--sand-ink); }
 
   /* ---- Hero ---- */
   .hero { position: relative; padding-block: 128px 96px; overflow: hidden; text-align: left; }
   .hero-ghost {
     position: absolute; right: -24px; top: 32px;
     font-family: var(--font-display-cn); font-size: 220px; line-height: 1;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2) 45%, #b4766b 80%, #a98e67);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    opacity: 0.16; user-select: none; pointer-events: none;
+    /* 背景字：极淡墨色压印，不用四色渐变（视觉宪法：无渐变） */
+    color: color-mix(in srgb, var(--ink) 9%, transparent);
+    user-select: none; pointer-events: none;
   }
-  :global([data-theme='dark']) .hero-ghost { opacity: 0.22; }
   .hero-id { margin-bottom: 56px; }
   
   .hero-avatar-lg { width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--line); }
@@ -252,8 +248,8 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
 
   .btn-primary {
     position: relative; display: inline-flex; align-items: center; gap: 8px;
-    padding: 12px 28px; border: none; border-radius: 999px;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 92%, #ffffff 8%), var(--ink));
+    padding: 12px 28px; border: none; border-radius: var(--radius-pill);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 92%, var(--surface) 8%), var(--ink));
     color: var(--bg);
     font-size: 16px; line-height: 24px; font-weight: 600;
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.28) inset, 0 8px 24px rgba(0, 0, 0, 0.18);
@@ -283,8 +279,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   }
   #tagline .w { opacity: 0.22; }
   #tagline .w.k1 { color: var(--accent-ink); }
-  #tagline .w.k3 { color: var(--sec-rose-ink, #9c5f55); }
-  :global([data-theme='dark']) #tagline .w.k3 { color: #e0a89d; }
+  #tagline .w.k3 { color: var(--rose-ink); }
   .tagline-more { max-width: 560px; margin-top: 40px; color: var(--ink-2); }
   .tagline-more p { font-size: 18px; line-height: 28px; }
   .tagline-src { margin-top: 24px; color: var(--ink-3); }
@@ -316,7 +311,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .hero-social a::after,
   .hero-social a::before { content: none; }
   .hero-social a {
-    display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px;
+    display: grid; place-items: center; width: 34px; height: 34px; border-radius: var(--radius-md);
     color: var(--ink-2); transition: color 0.3s var(--ease), background 0.3s var(--ease), transform 0.3s var(--ease);
   }
   .hero-social a:hover { color: var(--accent-ink); background: var(--wash); transform: translateY(-2px); }
@@ -333,7 +328,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .project-item:hover h3 .arr { opacity: 1; transform: none; }
   .project-item p { margin-top: 6px; font-size: 14px; line-height: 20px; color: var(--ink-2); }
   .card-tag { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-  .card-tag span { font-size: 12px; line-height: 16px; padding: 2px 12px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); }
+  .card-tag span { font-size: 12px; line-height: 16px; padding: 2px 12px; border-radius: var(--radius-pill); background: var(--surface-2); color: var(--ink-2); }
 
   .moment {
     display: flex; flex-direction: column; gap: 12px;
@@ -348,7 +343,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .moment-head time { margin-left: auto; font-size: 12px; color: var(--ink-3); }
   .moment-body { font-size: 16px; line-height: 24px; }
   .moment-like {
-    align-self: flex-start; padding: 2px 12px; border: none; border-radius: 999px;
+    align-self: flex-start; padding: 2px 12px; border: none; border-radius: var(--radius-pill);
     background: color-mix(in srgb, var(--sec-c) 12%, var(--surface-2)); color: var(--sec-c-ink); font-size: 12px; line-height: 16px;
     transition: transform 0.3s var(--ease), background 0.3s var(--ease);
   }

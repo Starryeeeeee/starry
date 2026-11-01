@@ -17,17 +17,17 @@ const subjects = kbSubjects(entries);
     <p class="page-desc">学习笔记、资料文档，还有值得反复看的定理、公式和解题技巧。</p>
 
     <div class="kb-toolbar reveal">
-      <div class="kb-chips" role="tablist" aria-label="按科目筛选">
-        <button class="kb-chip active" type="button" data-subject="">全部</button>
+      <div class="kb-chips" role="group" aria-label="按科目筛选">
+        <button class="chip" type="button" data-subject="" aria-pressed="true">全部</button>
         {subjects.map((s) => (
-          <button class="kb-chip" type="button" data-subject={s.name}>{s.name}<i>{s.count}</i></button>
+          <button class="chip" type="button" data-subject={s.name} aria-pressed="false">{s.name}<i>{s.count}</i></button>
         ))}
       </div>
-      <input class="kb-search" type="search" placeholder="搜标题、说明、标签…" aria-label="搜索知识库" />
+      <input class="field" type="search" placeholder="搜标题、说明、标签…" aria-label="搜索知识库" />
     </div>
 
     {entries.length === 0 ? (
-      <div class="kb-empty">知识库还空着——第一批内容整理好后会出现在这里。</div>
+      <div class="empty">知识库还空着——第一批内容整理好后会出现在这里。</div>
     ) : (
       <div class="kb-list" id="kb-list">
         {entries.map((e) => (
@@ -55,7 +55,7 @@ const subjects = kbSubjects(entries);
           </a>
         ))}
       </div>
-      <div class="kb-list-empty" id="kb-list-empty" hidden>没有匹配的内容，换个关键词试试。</div>
+      <div class="empty" id="kb-list-empty" hidden>没有匹配的内容，换个关键词试试。</div>
     )}
   </div>
 </Base>
@@ -63,8 +63,8 @@ const subjects = kbSubjects(entries);
 <script>
   // 前端筛选：科目 chip + 关键词，两条件取交集；无 JS 时全量展示，不影响阅读
   // 匹配数据在 .kb-item 的 data-search 属性里（标题/科目/标签/说明，构建时写死）
-  const chips = document.querySelectorAll('.kb-chip');
-  const search = document.querySelector('.kb-search');
+  const chips = document.querySelectorAll('.chip[aria-pressed]');
+  const search = document.querySelector('.field');
   const items = document.querySelectorAll('.kb-item');
   const emptyTip = document.getElementById('kb-list-empty');
   let subject = '';
@@ -84,8 +84,8 @@ const subjects = kbSubjects(entries);
 
   for (const chip of chips) {
     chip.addEventListener('click', () => {
-      chips.forEach((c) => c.classList.remove('active'));
-      chip.classList.add('active');
+      chips.forEach((c) => c.setAttribute('aria-pressed', 'false'));
+      chip.setAttribute('aria-pressed', 'true');
       subject = chip.dataset.subject ?? '';
       apply();
     });
@@ -94,15 +94,6 @@ const subjects = kbSubjects(entries);
 </script>
 
 <style>
-  .page-title {
-    margin-top: 56px;
-    font-size: 2rem;
-    font-weight: 800;
-  }
-  .page-desc {
-    margin: 10px 0 22px;
-    color: var(--ink-2);
-  }
   .kb-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -117,73 +108,20 @@ const subjects = kbSubjects(entries);
     flex: 1;
     min-width: 200px;
   }
-  .kb-chip {
-    padding: 6px 14px;
-    font-family: inherit;
-    font-size: 0.88rem;
-    color: var(--ink-2);
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    cursor: pointer;
-    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
-  }
-  .kb-chip i {
-    font-style: normal;
-    font-size: 0.78em;
-    margin-left: 4px;
-    opacity: 0.6;
-  }
-  .kb-chip:hover {
-    border-color: var(--accent);
-    color: var(--ink);
-  }
-  .kb-chip.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-  }
-  .kb-search {
-    flex: 0 1 240px;
-    padding: 8px 14px;
-    font-family: inherit;
-    font-size: 0.92rem;
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-  }
-  .kb-search:focus {
-    outline: 2px solid var(--accent);
-    outline-offset: 0;
-    border-color: transparent;
-  }
-  .kb-empty,
-  .kb-list-empty {
-    padding: 40px 24px;
-    text-align: center;
-    color: var(--ink-3);
-    background: var(--wash);
-    border-radius: var(--radius);
-    font-size: 0.92rem;
-  }
   .kb-list {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 2px;
   }
   .kb-item {
     display: block;
-    padding: 18px 22px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+    padding: 16px 18px;
+    border-radius: var(--radius-lg);
     text-decoration: none;
-    transition: border-color 0.2s ease, transform 0.15s ease;
+    transition: background var(--dur) var(--ease-out);
   }
   .kb-item:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
+    background: var(--wash);
   }
   .kb-item[hidden] {
     display: none;
@@ -208,8 +146,8 @@ const subjects = kbSubjects(entries);
   .kb-kind {
     flex-shrink: 0;
     padding: 2px 9px;
-    font-size: 0.75rem;
-    border-radius: 999px;
+    font-size: var(--text-2xs);
+    border-radius: var(--radius-pill);
     background: var(--wash);
     color: var(--accent-ink);
     white-space: nowrap;
@@ -231,11 +169,11 @@ const subjects = kbSubjects(entries);
     margin-top: 12px;
   }
   .kb-subject {
-    font-size: 0.78rem;
+    font-size: var(--text-2xs);
     color: var(--accent-ink);
     background: var(--wash);
     padding: 2px 10px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
   }
   .kb-size {
     margin-left: auto;
@@ -244,7 +182,7 @@ const subjects = kbSubjects(entries);
   }
   @media (max-width: 560px) {
     .kb-item {
-      padding: 15px 16px;
+      padding: 14px 12px;
     }
     .kb-item-head {
       flex-wrap: wrap;

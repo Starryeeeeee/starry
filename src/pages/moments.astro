@@ -37,34 +37,9 @@ const moments = await getMoments();
 </Base>
 
 <style>
-  .page-title {
-    margin-top: 56px;
-    font-size: 2rem;
-    font-weight: 800;
-  }
-  .page-desc {
-    margin: 10px 0 26px;
-    color: var(--ink-2);
-  }
-  .moments-empty {
-    padding: 36px 24px;
-    text-align: center;
-    color: var(--ink-3);
-    background: var(--wash);
-    border-radius: var(--radius);
-    font-size: 0.92rem;
-    line-height: 2;
-  }
-  .moments-empty code {
-    font-family: var(--font-mono);
-    background: var(--surface-2);
-    padding: 0.1em 0.4em;
-    border-radius: 6px;
-    font-size: 0.9em;
-  }
   .moment-like.is-liked {
-    color: #b4766b; /* 陶土玫瑰：点过的心是有温度的 */
-    background: color-mix(in srgb, #b4766b 12%, var(--surface-2));
+    color: var(--rose); /* 陶土玫瑰：点过的心是有温度的 */
+    background: color-mix(in srgb, var(--rose) 12%, var(--surface-2));
   }
   .moment-like.is-liked .moment-like-icon svg {
     fill: currentColor;

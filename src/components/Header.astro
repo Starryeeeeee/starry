@@ -4,18 +4,23 @@ import { u } from '../lib/base';
 
 const { pathname } = Astro.url;
 
-const nav = [
+// 主导航收敛为 6 项：高频内容在前，身份页收尾，细分栏目进「更多」。
+// 以后加栏目先问一句：它值得挤掉主位吗？不值得就进 secondary。
+const primary = [
   { href: '/', label: '首页' },
   { href: '/posts/', label: '文章' },
+  { href: '/moments/', label: '废话条' },
   { href: '/kb/', label: '知识库' },
   { href: '/projects/', label: '作品' },
-  { href: '/gallery/', label: '画廊' },
+  { href: '/about/', label: '关于' },
+];
+
+const secondary = [
   { href: '/skills/', label: 'Skills' },
-  { href: '/moments/', label: '废话条' },
+  { href: '/gallery/', label: '画廊' },
   { href: '/quotes/', label: '箴言' },
   { href: '/views/', label: '看法' },
-  { href: '/changelog/', label: '建站日志', optional: true },
-  { href: '/about/', label: '关于' },
+  { href: '/changelog/', label: '建站日志' },
 ];
 
 // 传入未加前缀的路径，比较时统一补上 base（构建时 Astro.url.pathname 含 base）
@@ -25,10 +30,8 @@ const isActive = (href: string) => {
 };
 ---
 
-<header class="site-header">
+<header class="site-header" data-nav>
   <div class="container wide header-inner">
-    <span class="nav-sheen" aria-hidden="true"></span>
-    <span class="nav-sheen2" aria-hidden="true"></span>
     <a href={u('/')} class="brand" aria-label="回到首页">
       <span class="brand-avatar" aria-hidden="true">
         <img src={avatar.src} alt="" width="30" height="30" />
@@ -36,36 +39,131 @@ const isActive = (href: string) => {
       <span class="brand-cn">星野漫游</span>
       <span class="brand-en">Starry Roam</span>
     </a>
+
     <nav class="site-nav" aria-label="主导航">
-      {nav.map((item) => (
-        <a
-          href={u(item.href)}
-          class:list={[item.optional && 'nav-optional']}
-          aria-current={isActive(item.href) ? 'true' : undefined}
-        >
-          {item.label}
+      <div class="nav-links" id="nav-links">
+        {primary.map((item) => (
+          <a href={u(item.href)} aria-current={isActive(item.href) ? 'true' : undefined}>
+            {item.label}
+          </a>
+        ))}
+
+        <div class="nav-more">
+          <button
+            class="nav-more-btn"
+            type="button"
+            aria-expanded="false"
+            aria-controls="nav-more-menu"
+            data-nav-more
+          >
+            更多
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          <div class="nav-more-menu" id="nav-more-menu" hidden>
+            {secondary.map((item) => (
+              <a href={u(item.href)} aria-current={isActive(item.href) ? 'true' : undefined}>
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-tools">
+        <a class="icon-btn admin-entry" href={u('/admin/')} aria-label="站长管理入口" title="站长入口：登录后可发布内容">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
         </a>
-      ))}
-      <a class="admin-entry" href={u('/admin/')} aria-label="站长管理入口" title="站长入口：登录后可发布内容">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        <button class="icon-btn theme-toggle" type="button" aria-label="切换深浅色主题">
+          <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+        </button>
+      </div>
+
+    </nav>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="展开导航" data-nav-toggle>
+        <svg class="nav-toggle-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16" />
         </svg>
-      </a>
-      <button class="theme-toggle" type="button" aria-label="切换深浅色主题">
-        <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-        </svg>
-        <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+        <svg class="nav-toggle-close" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
         </svg>
       </button>
-    </nav>
   </div>
 </header>
 
 <script>
+  const header = document.querySelector<HTMLElement>('[data-nav]');
+  const toggle = document.querySelector<HTMLElement>('[data-nav-toggle]');
+  const moreBtn = document.querySelector<HTMLElement>('[data-nav-more]');
+  const moreMenu = document.getElementById('nav-more-menu');
+
+  // ---- 移动端抽屉：就地展开，不开浮层，避免 sticky 与层级的连锁问题 ----
+  const setDrawer = (open: boolean) => {
+    header?.classList.toggle('nav-open', open);
+    toggle?.setAttribute('aria-expanded', String(open));
+    toggle?.setAttribute('aria-label', open ? '收起导航' : '展开导航');
+  };
+
+  toggle?.addEventListener('click', () => {
+    setDrawer(!header?.classList.contains('nav-open'));
+  });
+
+  // ---- 桌面「更多」下拉 ----
+  const setMore = (open: boolean) => {
+    if (!moreMenu) return;
+    moreMenu.hidden = !open;
+    moreBtn?.setAttribute('aria-expanded', String(open));
+  };
+
+  moreBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setMore(moreMenu?.hidden ?? true);
+  });
+
+  // 点外面 / 按 Esc 关闭；Esc 时把焦点还给触发按钮
+  document.addEventListener('click', (e) => {
+    if (!moreMenu || moreMenu.hidden) return;
+    const target = e.target as Node;
+    if (!moreMenu.contains(target) && !moreBtn?.contains(target)) setMore(false);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (moreMenu && !moreMenu.hidden) {
+      setMore(false);
+      moreBtn?.focus();
+    }
+    if (header?.classList.contains('nav-open')) {
+      setDrawer(false);
+      toggle?.focus();
+    }
+  });
+
+  // 点导航里的链接后收起，避免返回上一页时抽屉还开着
+  document.querySelectorAll('#nav-links a, #nav-more-menu a').forEach((a) => {
+    a.addEventListener('click', () => {
+      setDrawer(false);
+      setMore(false);
+    });
+  });
+
+  // 视口变宽后清掉移动端状态，防止桌面出现悬空展开
+  matchMedia('(min-width: 901px)').addEventListener('change', (e) => {
+    if (e.matches) setDrawer(false);
+  });
+
+  // 主题切换
   document.querySelector('.theme-toggle')?.addEventListener('click', () => {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;

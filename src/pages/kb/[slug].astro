@@ -113,7 +113,7 @@ const sizeLabel = file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : '';
   .kb-kind {
     padding: 2px 10px;
     font-size: 0.78rem;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--wash);
     color: var(--accent-ink);
   }
@@ -154,7 +154,7 @@ const sizeLabel = file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : '';
     padding: 9px 22px;
     font-size: 0.92rem;
     font-weight: 550;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     text-decoration: none;
     transition: transform 0.15s ease;
   }
