@@ -1,5 +1,5 @@
 ---
-// 控制台式页脚：四角裁切线 + 编号分栏 + 偏好开关
+// 页脚：四栏链接 + 偏好开关。不用裁切角与编号，保持与正文同一套安静排法
 import { u } from '../lib/base';
 import githubIcon from '../icons/social/github.svg?raw';
 import bilibiliIcon from '../icons/social/bilibili.svg?raw';
@@ -14,100 +14,95 @@ const year = new Date().getFullYear();
 
 <footer class="site-footer">
   <div class="container wide">
-    <div class="foot-wrap">
-      <div class="foot-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-      <div class="foot-panel">
-        <div class="foot-top">
-          <p class="foot-brandline">
-            <span class="foot-name">星野漫游</span>
-            <span class="foot-slogan">Roam the starry field.</span>
-          </p>
-          <p class="foot-status">上次构建 {buildDate} · 正在 OTA 中</p>
-        </div>
+    <div class="foot-top">
+      <p class="foot-brandline">
+        <span class="foot-name">星野漫游</span>
+        <span class="foot-slogan">Roam the starry field.</span>
+      </p>
+      <p class="foot-status">最后更新 {buildDate}</p>
+    </div>
 
-        <div class="foot-cols">
-          <div class="foot-col">
-            <h3>01 探索</h3>
-            <ul>
-              <li><a href={u('/')}>首页</a></li>
-              <li><a href={u('/posts/')}>文章</a></li>
-              <li><a href={u('/gallery/')}>画廊</a></li>
-              <li><a href={u('/moments/')}>废话条</a></li>
-            </ul>
-          </div>
-          <div class="foot-col">
-            <h3>02 关于</h3>
-            <ul>
-              <li><a href={u('/about/')}>关于我</a></li>
-              <li><a href={u('/projects/')}>作品集</a></li>
-              <li><a href={u('/changelog/')}>建站日志</a></li>
-            </ul>
-          </div>
-          <div class="foot-col">
-            <h3>03 联系</h3>
-            <ul>
-              <li>
-                <a class="foot-link" href="https://github.com/Starryeeeeee" target="_blank" rel="noopener">
-                  <Fragment set:html={githubIcon} /><span>GitHub</span>
-                  <i class="foot-ext" aria-hidden="true"><Fragment set:html={arrowUpRight} /></i>
-                </a>
-              </li>
-              <!-- TODO: 换成你的哔哩哔哩空间链接 -->
-              <li>
-                <a class="foot-link" href="#" target="_blank" rel="noopener">
-                  <Fragment set:html={bilibiliIcon} /><span>哔哩哔哩</span>
-                  <i class="foot-ext" aria-hidden="true"><Fragment set:html={arrowUpRight} /></i>
-                </a>
-              </li>
-              <!-- TODO: 换成你的网易云音乐主页链接 -->
-              <li>
-                <a class="foot-link" href="#" target="_blank" rel="noopener">
-                  <Fragment set:html={neteaseIcon} /><span>网易云音乐</span>
-                  <i class="foot-ext" aria-hidden="true"><Fragment set:html={arrowUpRight} /></i>
-                </a>
-              </li>
-              <!-- TODO: 换成你的邮箱，如 mailto:starry@outlook.com -->
-              <li>
-                <a class="foot-link" href="mailto:Jia100906985211@outlook.com">
-                  <Fragment set:html={outlookIcon} /><span>Outlook 邮箱</span>
-                </a>
-              </li>
-              <li>
-                <a class="foot-link" href={u('/rss.xml')}>
-                  <Fragment set:html={rssIcon} /><span>RSS 订阅</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div class="foot-col">
-            <h3>04 偏好</h3>
-            <ul>
-              <li class="foot-opt-row">
-                <span class="foot-opt-label">主题</span>
-                <button type="button" data-theme-choice="system">系统</button>
-                <button type="button" data-theme-choice="light">淡色</button>
-                <button type="button" data-theme-choice="dark">深色</button>
-              </li>
-              <li class="foot-opt-row">
-                <span class="foot-opt-label">正文</span>
-                <button type="button" data-body-font="kai">楷体</button>
-                <button type="button" data-body-font="song">宋体</button>
-                <button type="button" data-body-font="round">圆体</button>
-              </li>
-              <li class="foot-opt-row">
-                <span class="foot-opt-label">背景</span>
-                <button type="button" data-decor="on">开</button>
-                <button type="button" data-decor="off">关</button>
-              </li>
-            </ul>
-          </div>
-        </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h3>探索</h3>
+        <ul>
+          <li><a href={u('/')}>首页</a></li>
+          <li><a href={u('/posts/')}>文章</a></li>
+          <li><a href={u('/gallery/')}>画廊</a></li>
+          <li><a href={u('/moments/')}>废话条</a></li>
+        </ul>
+      </div>
+
+      <div class="foot-col">
+        <h3>关于</h3>
+        <ul>
+          <li><a href={u('/about/')}>关于我</a></li>
+          <li><a href={u('/projects/')}>作品集</a></li>
+          <li><a href={u('/changelog/')}>建站日志</a></li>
+        </ul>
+      </div>
+
+      <div class="foot-col">
+        <h3>联系</h3>
+        <ul>
+          <li>
+            <a class="foot-link" href="https://github.com/Starryeeeeee" target="_blank" rel="noopener">
+              <Fragment set:html={githubIcon} /><span>GitHub</span>
+              <i class="foot-ext" aria-hidden="true"><Fragment set:html={arrowUpRight} /></i>
+            </a>
+          </li>
+          <!-- TODO: 换成你的哔哩哔哩空间链接 -->
+          <li>
+            <a class="foot-link" href="#" target="_blank" rel="noopener">
+              <Fragment set:html={bilibiliIcon} /><span>哔哩哔哩</span>
+              <i class="foot-ext" aria-hidden="true"><Fragment set:html={arrowUpRight} /></i>
+            </a>
+          </li>
+          <!-- TODO: 换成你的网易云音乐主页链接 -->
+          <li>
+            <a class="foot-link" href="#" target="_blank" rel="noopener">
+              <Fragment set:html={neteaseIcon} /><span>网易云音乐</span>
+              <i class="foot-ext" aria-hidden="true"><Fragment set:html={arrowUpRight} /></i>
+            </a>
+          </li>
+          <li>
+            <a class="foot-link" href="mailto:Jia100906985211@outlook.com">
+              <Fragment set:html={outlookIcon} /><span>Outlook 邮箱</span>
+            </a>
+          </li>
+          <li>
+            <a class="foot-link" href={u('/rss.xml')}>
+              <Fragment set:html={rssIcon} /><span>RSS 订阅</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="foot-col">
+        <h3>偏好</h3>
+        <ul>
+          <li class="foot-opt-row">
+            <span class="foot-opt-label">主题</span>
+            <button type="button" data-theme-choice="system">系统</button>
+            <button type="button" data-theme-choice="light">淡色</button>
+            <button type="button" data-theme-choice="dark">深色</button>
+          </li>
+          <li class="foot-opt-row">
+            <span class="foot-opt-label">正文</span>
+            <button type="button" data-body-font="kai">楷体</button>
+            <button type="button" data-body-font="song">宋体</button>
+            <button type="button" data-body-font="round">圆体</button>
+          </li>
+          <li class="foot-opt-row">
+            <span class="foot-opt-label">背景</span>
+            <button type="button" data-decor="on">开</button>
+            <button type="button" data-decor="off">关</button>
+          </li>
+        </ul>
       </div>
     </div>
 
     <p class="foot-bottom">
-      <span>莫奈水色 / MONET WATER</span>
-      <span>{buildDate}</span>
       <span>© {year} Starryeeeeee</span>
       <span>Powered by Astro</span>
     </p>
