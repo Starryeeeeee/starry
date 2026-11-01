@@ -210,10 +210,12 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .hero-ghost {
     position: absolute; right: -24px; top: 32px;
     font-family: var(--font-display-cn); font-size: 220px; line-height: 1;
-    /* 背景字：极淡墨色压印，不用四色渐变（视觉宪法：无渐变） */
-    color: color-mix(in srgb, var(--ink) 9%, transparent);
-    user-select: none; pointer-events: none;
+    /* 背景字：四色渐变（站主指定保留），用 token 取值，暗色自动跟随 */
+    background: linear-gradient(135deg, var(--accent), var(--accent-2) 45%, var(--rose) 80%, var(--sand));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    opacity: 0.16; user-select: none; pointer-events: none;
   }
+  :global([data-theme='dark']) .hero-ghost { opacity: 0.22; }
   .hero-id { margin-bottom: 56px; }
   
   .hero-avatar-lg { width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--line); }
