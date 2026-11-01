@@ -10,6 +10,8 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
 ---
 
 <div class="starp-root">
+  <div class="starp-scrim" data-starp-scrim aria-hidden="true"></div>
+
   <section class="starp-panel" data-starp-panel hidden role="dialog" aria-label="星渚 · 站内资料问答">
     <header class="starp-head">
       <span class="starp-title">星渚<em>站内资料问答</em></span>
@@ -38,6 +40,13 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     right: calc(var(--fab-right) + env(safe-area-inset-right, 0px));
     bottom: calc(var(--fab-bottom) + env(safe-area-inset-bottom, 0px));
     z-index: 90;
+  }
+  /* 手机端抽屉的遮罩；桌面形态不用 */
+  .starp-scrim {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 34%);
   }
   /* hidden 会被下面的 display:flex 覆盖（全站第三次踩这个坑），统一压回来 */
   .starp-root [hidden] {
@@ -222,21 +231,89 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     outline-offset: 0;
     border-color: transparent;
   }
-  @media (max-width: 640px) {
-    /* 手机端：dock 竖排（星球在下、快速记录在上 42px），
-       面板整体叠在 dock 之上，两个入口仍然可见 */
+  /* 横屏或矮窗口：面板高度跟着视口收，不探出屏幕顶部 */
+  @media (min-width: 641px) and (max-height: 560px) {
     .starp-panel {
-      right: var(--fab-right);
-      left: var(--fab-right);
-      bottom: calc(var(--fab-bottom) + env(safe-area-inset-bottom, 0px) + var(--fab-size) + var(--fab-gap) + 42px + 12px);
+      height: min(420px, calc(100dvh - 24px));
+    }
+    .starp-panel.tall {
+      height: min(560px, calc(100dvh - 24px));
+    }
+  }
+
+  /* ---- 手机：面板改成贴底的抽屉 ----
+     旧写法把 left/right 都算在 58px 的挂件盒子上，宽度只剩 34px，
+     正文被挤成「一行一个字」。改为相对视口定位，整条贴底展开。 */
+  @media (max-width: 640px) {
+    .starp-root.open .starp-scrim {
+      display: block;
+    }
+
+    /* 抽屉铺到屏幕底部，右下角的星球会压在输入框上，打开时先收起来 */
+    .starp-root.open .starp-fab {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .starp-root.open .starp-fab,
+    .starp-root.open .starp-pet {
+      animation: none;
+    }
+
+    .starp-panel {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
       width: auto;
-      height: min(420px, calc(100dvh - 190px));
+      height: min(74dvh, 560px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      border-bottom: 0;
+      box-shadow: 0 -12px 40px rgba(48, 53, 58, 0.18);
+    }
+    .starp-panel.tall {
+      height: min(90dvh, 760px);
+    }
+    .starp-panel.min {
+      height: auto;
+    }
+
+    /* 抽屉形态不需要「收起 / 加高」，只留关闭 */
+    .starp-act[data-starp-min],
+    .starp-act[data-starp-grow] {
+      display: none;
+    }
+    .starp-head {
+      padding: 12px 10px 12px 18px;
+    }
+    .starp-act {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+    .starp-body {
+      padding: 14px 16px;
+    }
+    .starp-inputline {
+      padding: 10px 14px;
+    }
+    /* iOS 上输入框小于 16px，聚焦时会把整页自动放大 */
+    .starp-inputline input {
+      padding: 11px 14px;
+      font-size: 16px;
     }
   }
 </style>
 
 <!-- 终端行是 JS 运行时创建的：scoped 样式匹配不到，必须走全局块（.starp- 前缀防污染） -->
 <style is:global>
+  /* 手机抽屉展开时，右下角快速记录入口让位（两个 fixed 按钮会叠在抽屉上） */
+  @media (max-width: 640px) {
+    body.starp-sheet-open .quick-capture {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
   .starp-line {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
@@ -557,7 +634,6 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
   let booted = false;
   function boot() {
     // 欢迎横幅：终端作品集的惯例开局
-    line('ok', '星渚 · 站内资料问答');
     line('plain', '连接星球资料库成功，我是星渚——这颗星球的管理员。');
     line('plain', '问我关于站上的一切：文章、知识库、废话条、项目。');
     line('plain', '直接输入问题开始，↑↓ 可翻历史记录。');
@@ -565,16 +641,23 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     booted = true;
   }
 
+  /** 手机上换成贴底抽屉：不自动聚焦输入框（会立刻弹出键盘把抽屉顶掉一半） */
+  const isNarrow = () => window.matchMedia('(max-width: 640px)').matches;
+
   async function setOpen(open: boolean) {
     panel.hidden = !open;
+    root.classList.toggle('open', open);
     fab.setAttribute('aria-expanded', String(open));
+    // 抽屉展开时锁住背后的页面，避免滑动手势穿透
+    document.body.style.overflow = open && isNarrow() ? 'hidden' : '';
+    document.body.classList.toggle('starp-sheet-open', open && isNarrow());
     if (open) {
       if (!booted) {
         boot();
         // 回放本地保存的对话（整段渲染，不打字机——历史是批量回看）
         for (const m of history) {
           if (m.role === 'user') {
-            line('cmd', m.content, 'guest@starry:~$');
+            line('cmd', m.content, '你');
           } else {
             const el = line('answer', '');
             el.className = 'starp-line answer starp-msg bot md';
@@ -583,11 +666,19 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
         }
         booted = true;
       }
-      input.focus();
+      if (!isNarrow()) input.focus();
     }
   }
 
   fab.addEventListener('click', () => setOpen(panel.hidden));
+
+  // 点遮罩关闭（手机抽屉专用）
+  ($('[data-starp-scrim]') as HTMLElement).addEventListener('click', () => setOpen(false));
+
+  // 转屏 / 窗口变化后重新对齐滚动锁，避免桌面尺寸下页面被锁死
+  window.addEventListener('resize', () => {
+    if (!panel.hidden) document.body.style.overflow = isNarrow() ? 'hidden' : '';
+  });
   const dotClose = $('[data-starp-close]') as HTMLElement;
   const dotMin = $('[data-starp-min]') as HTMLElement;
   const dotGrow = $('[data-starp-grow]') as HTMLElement;
