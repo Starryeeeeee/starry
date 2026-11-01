@@ -1,9 +1,8 @@
 ---
-// 星野挂件：右下角的星球宠物 + 深空观测终端。
-// 终端视觉 = Game1（Starryeeeeee/Game1）的深空玻璃窗语言
-//   （rgba 深空底 + 霁蓝辉光边框 + mac 红黄绿圆点 + 方块光标）
-//   × GitHub 终端作品集的成熟范式（欢迎横幅/行内 prompt/↑↓ 历史）。
-// 复用 src/lib/ai.ts 的全部能力（模型档案 / 站内资料检索 / Markdown 渲染）。
+// 星野挂件：右下角的星球宠物 + 站内资料问答面板。
+// 视觉跟全站一致（纸白 + 细线 + 小圆角），不再用深空玻璃/终端语言；
+// 形象与全部能力保留：模型档案 / 站内资料检索 / Markdown / 历史 / 逐字打出。
+// 复用 src/lib/ai.ts 的全部能力。
 // 接通方式：站长浏览器有模型档案 → 直连；否则 site-config.json 的 ai.proxyUrl
 //   （Cloudflare Worker 代理）→ 访客可用；都没有 → 温和提示未接通。
 // 宠物形象：Microsoft Fluent Emoji "ringed-planet"（MIT），见 src/icons/friendly/planet.svg。
@@ -11,18 +10,19 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
 ---
 
 <div class="starp-root">
-  <section class="starp-panel" data-starp-panel hidden role="dialog" aria-label="星野助手 · 观测终端">
+  <section class="starp-panel" data-starp-panel hidden role="dialog" aria-label="星渚 · 站内资料问答">
     <header class="starp-head">
-      <span class="starp-dot red" data-starp-close role="button" tabindex="0" aria-label="关闭终端" title="关闭"></span>
-      <span class="starp-dot yellow" data-starp-min role="button" tabindex="0" aria-label="收起到标题栏" title="收起"></span>
-      <span class="starp-dot green" data-starp-grow role="button" tabindex="0" aria-label="加高终端" title="加高"></span>
-      <span class="starp-title">STARRY // OBSERVATORY TERMINAL</span>
+      <span class="starp-title">星渚<em>站内资料问答</em></span>
+      <div class="starp-actions">
+        <span class="starp-act" data-starp-min role="button" tabindex="0" aria-label="收起面板" title="收起">—</span>
+        <span class="starp-act" data-starp-grow role="button" tabindex="0" aria-label="加高面板" title="加高">＋</span>
+        <span class="starp-act close" data-starp-close role="button" tabindex="0" aria-label="关闭面板" title="关闭">✕</span>
+      </div>
     </header>
     <div class="starp-body" data-starp-chat aria-live="polite"></div>
     <form class="starp-inputline" data-starp-form>
-      <span class="starp-host" aria-hidden="true">guest@starry:~$</span>
-      <input type="text" data-starp-input aria-label="向星野助手提问" autocomplete="off"
-             spellcheck="false" enterkeyhint="send" />
+      <input type="text" data-starp-input aria-label="向星渚提问" autocomplete="off"
+             spellcheck="false" enterkeyhint="send" placeholder="问点关于这个站的…" />
     </form>
   </section>
 
@@ -66,7 +66,7 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     width: 46px;
     height: 46px;
     margin: 0 auto;
-    filter: drop-shadow(0 4px 10px rgba(48, 53, 58, 0.18));
+    filter: drop-shadow(0 3px 8px rgba(48, 53, 58, 0.14));
   }
   .starp-pet :global(svg) {
     width: 100%;
@@ -100,8 +100,8 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
       animation: none;
     }
   }
-  /* 深空观测终端：Game1 的玻璃窗语言
-     面板开在 dock 左侧（而不是上方），快速记录入口保持可见可点 */
+
+  /* 面板：和正文同一套纸白语言（surface + 细线 + 小圆角），不再用深空玻璃 */
   .starp-panel {
     position: absolute;
     right: calc(var(--fab-size) + 12px);
@@ -110,16 +110,11 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     height: 420px;
     display: flex;
     flex-direction: column;
-    background: rgba(6, 12, 24, 0.92);
-    border: 1px solid rgba(90, 142, 200, 0.4);
-    border-radius: 10px;
-    box-shadow:
-      0 0 60px rgba(40, 90, 150, 0.28),
-      0 0 0 1px rgba(90, 142, 200, 0.08),
-      inset 0 0 50px rgba(30, 70, 120, 0.08);
-    backdrop-filter: blur(8px);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
     overflow: hidden;
-    font-family: var(--font-mono);
     transition: height 0.35s var(--ease-out, ease);
   }
   .starp-panel.min {
@@ -131,51 +126,68 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
   .starp-head {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
-    padding: 10px 14px;
-    background: rgba(10, 20, 36, 0.75);
-    border-bottom: 1px solid rgba(90, 142, 200, 0.22);
+    padding: 10px 10px 10px 16px;
+    border-bottom: 1px solid var(--line);
     flex-shrink: 0;
-  }
-  .starp-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    cursor: pointer;
-    transition: filter 0.15s ease, transform 0.15s ease;
-  }
-  .starp-dot:hover {
-    filter: brightness(1.25);
-    transform: scale(1.12);
-  }
-  .starp-dot.red {
-    background: #ff5f56;
-  }
-  .starp-dot.yellow {
-    background: #ffbd2e;
-  }
-  .starp-dot.green {
-    background: #27c93f;
   }
   .starp-title {
-    margin-left: 8px;
-    font-size: 0.7rem;
-    letter-spacing: 0.18em;
-    color: rgba(140, 180, 220, 0.72);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+    font-family: var(--font-body);
+    font-size: 0.98rem;
+    color: var(--ink);
+  }
+  .starp-title em {
+    font-style: normal;
+    font-size: 0.74rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-3);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .starp-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .starp-act {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--ink-3);
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .starp-act:hover {
+    background: var(--wash);
+    color: var(--ink);
+  }
+  .starp-act.close:hover {
+    color: var(--danger);
+  }
   .starp-body {
     flex: 1;
     overflow-y: auto;
-    padding: 14px 16px;
-    color: #c8ddf4;
-    font-size: 0.84rem;
-    line-height: 1.8;
+    padding: 16px;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    line-height: 1.85;
+    color: var(--ink-2);
     scrollbar-width: thin;
-    scrollbar-color: rgba(90, 142, 200, 0.3) transparent;
   }
   .starp-panel.min .starp-body,
   .starp-panel.min .starp-inputline {
@@ -186,31 +198,33 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
-    padding: 10px 16px;
-    border-top: 1px solid rgba(90, 142, 200, 0.22);
-  }
-  .starp-host {
-    font-size: 0.8rem;
-    color: rgba(133, 240, 184, 0.85);
-    flex-shrink: 0;
+    padding: 10px 12px 12px;
+    border-top: 1px solid var(--line);
   }
   .starp-inputline input {
     flex: 1;
     min-width: 0;
-    border: none;
-    background: none;
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-    color: #f2fbff;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    font-family: var(--font-body);
+    font-size: 0.92rem;
+    color: var(--ink);
     outline: none;
-    caret-color: #79a8dc;
+    transition: border-color 0.2s ease;
   }
   .starp-inputline input::placeholder {
-    color: rgba(140, 180, 220, 0.4);
+    color: var(--ink-3);
+  }
+  .starp-inputline input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+    border-color: transparent;
   }
   @media (max-width: 640px) {
     /* 手机端：dock 竖排（星球在下、快速记录在上 42px），
-       终端面板整体叠在 dock 之上，两个入口仍然可见 */
+       面板整体叠在 dock 之上，两个入口仍然可见 */
     .starp-panel {
       right: var(--fab-right);
       left: var(--fab-right);
@@ -226,22 +240,32 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
   .starp-line {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-    margin: 0 0 8px;
+    margin: 0 0 12px;
   }
+  /* 提问行：小标签 + 正文，不用终端提示符 */
   .starp-line.cmd {
-    color: rgba(180, 215, 245, 0.92);
+    color: var(--ink);
+    font-weight: 500;
   }
   .starp-line.cmd .starp-ps1 {
-    color: rgba(133, 240, 184, 0.85);
+    display: inline-block;
+    margin-right: 8px;
+    padding: 1px 7px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--ink-3);
+    font-family: var(--font-sans);
+    font-size: 0.74rem;
+    font-weight: 400;
   }
   .starp-line.err {
-    color: #ff9fae;
+    color: var(--danger-ink);
   }
   .starp-line.ok {
-    color: #85f0b8;
+    color: var(--accent-2-ink);
   }
   .starp-line.answer {
-    color: #e8f4ff;
+    color: var(--ink-2);
   }
   .starp-msg.bot.md {
     white-space: normal;
@@ -253,28 +277,27 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     margin-bottom: 0;
   }
   .starp-msg.bot.md p {
-    margin: 5px 0;
+    margin: 6px 0;
   }
   .starp-msg.bot.md ul,
   .starp-msg.bot.md ol {
-    margin: 5px 0;
-    padding-left: 1.3em;
+    margin: 6px 0;
+    padding-left: 1.4em;
   }
   .starp-msg.bot.md code {
     font-family: var(--font-mono);
-    font-size: 0.9em;
-    background: rgba(10, 20, 36, 0.85);
-    border: 1px solid rgba(90, 142, 200, 0.2);
+    font-size: 0.88em;
+    background: var(--surface-2);
     padding: 0.1em 0.4em;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
   }
   .starp-msg.bot.md pre {
-    background: rgba(10, 20, 36, 0.85);
-    border: 1px solid rgba(90, 142, 200, 0.2);
-    border-radius: 8px;
-    padding: 8px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
     overflow-x: auto;
-    margin: 6px 0;
+    margin: 8px 0;
   }
   .starp-msg.bot.md pre code {
     background: none;
@@ -282,26 +305,29 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     padding: 0;
   }
   .starp-msg.bot.md a {
-    color: #79a8dc;
+    color: var(--accent-ink);
+    text-decoration: underline;
     text-underline-offset: 3px;
   }
   .starp-msg.bot.md h3,
   .starp-msg.bot.md h4,
   .starp-msg.bot.md h5 {
-    margin: 8px 0 3px;
-    font-size: 0.9em;
-    font-weight: 650;
+    margin: 10px 0 4px;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--ink);
   }
   .starp-src {
-    margin-top: 6px;
-    padding-top: 5px;
-    border-top: 1px dashed rgba(90, 142, 200, 0.25);
-    font-size: 0.7rem;
-    color: rgba(150, 195, 235, 0.72);
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--line);
+    font-family: var(--font-sans);
+    font-size: 0.74rem;
+    color: var(--ink-3);
     overflow-wrap: anywhere;
   }
   .starp-src a {
-    color: #79a8dc;
+    color: var(--accent-ink);
   }
   /* 思考中：三个小点透明度呼吸，不改布局 */
   .starp-dots {
@@ -315,7 +341,7 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: #79a8dc;
+    background: var(--accent);
     opacity: 0.25;
     animation: starp-dot 1.2s ease-in-out infinite;
   }
@@ -334,21 +360,15 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
       opacity: 1;
     }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .starp-dots i {
-      animation: none;
-      opacity: 0.5;
-    }
-  }
-  /* 打字机进行中：行尾方块光标（Game1 蓝），结束自动移除 .typing */
+  /* 打字机进行中：行尾小方块光标 */
   .starp-line.typing::after {
     content: '';
     display: inline-block;
-    width: 0.5em;
-    height: 1.05em;
+    width: 0.45em;
+    height: 1em;
     margin-left: 2px;
-    vertical-align: -0.15em;
-    background: #79a8dc;
+    vertical-align: -0.12em;
+    background: var(--accent);
     animation: starp-caret 0.9s steps(1) infinite;
   }
   @keyframes starp-caret {
@@ -357,6 +377,10 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
     }
   }
   @media (prefers-reduced-motion: reduce) {
+    .starp-dots i {
+      animation: none;
+      opacity: 0.5;
+    }
     .starp-line.typing::after {
       display: none;
     }
@@ -470,8 +494,8 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
   }
 
   async function ask(q: string) {
-    line('cmd', q, 'guest@starry:~$');
-    const bubble = thinkingLine('星渚 接入观测终端');
+    line('cmd', q, '你');
+    const bubble = thinkingLine('星渚 正在翻站内的资料');
     const ep = await currentEndpoint();
     if (!ep) {
       bubble.classList.remove('starp-dots');
@@ -533,10 +557,10 @@ import planetSvg from '../icons/friendly/planet.svg?raw';
   let booted = false;
   function boot() {
     // 欢迎横幅：终端作品集的惯例开局
-    line('ok', '┌─ 星野漫游 · 观测终端 v1.0');
-    line('plain', '│ 连接星球资料库成功，我是星渚——这颗星球的管理员。');
-    line('plain', '│ 问我关于站上的一切：文章、知识库、废话条、项目。');
-    line('plain', '└─ 输入问题开始，↑↓ 可翻历史记录。');
+    line('ok', '星渚 · 站内资料问答');
+    line('plain', '连接星球资料库成功，我是星渚——这颗星球的管理员。');
+    line('plain', '问我关于站上的一切：文章、知识库、废话条、项目。');
+    line('plain', '直接输入问题开始，↑↓ 可翻历史记录。');
     chat.scrollTop = chat.scrollHeight;
     booted = true;
   }
