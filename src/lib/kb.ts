@@ -11,6 +11,8 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import rawFiles from '../data/kb-files.json';
 
+export type KbAccess = 'public' | 'personal' | 'private';
+
 export type KbFileRecord = {
   /** 详情页路由 id，同时是唯一标识 */
   slug: string;
@@ -27,6 +29,7 @@ export type KbFileRecord = {
   size: number;
   date: string; // YYYY-MM-DD
   status?: 'draft' | 'public' | 'archived';
+  access?: KbAccess;
 };
 
 export type KbEntry = {
@@ -38,6 +41,7 @@ export type KbEntry = {
   description: string;
   date: Date;
   status?: 'draft' | 'public' | 'archived';
+  access: KbAccess;
   /** 仅 kind === 'file' 时有值 */
   file?: string;
   ext?: string;
@@ -57,6 +61,7 @@ export async function getKbEntries(): Promise<KbEntry[]> {
     description: n.data.description,
     date: n.data.date,
     status: n.data.status,
+    access: n.data.access,
   }));
 
   const fileEntries: KbEntry[] = kbFileRecords.map((f) => ({
@@ -68,6 +73,7 @@ export async function getKbEntries(): Promise<KbEntry[]> {
     description: f.description,
     date: new Date(f.date),
     status: f.status,
+    access: f.access ?? 'public',
     file: f.file,
     ext: f.ext,
     sizeKB: Math.max(1, Math.round(f.size / 1024)),

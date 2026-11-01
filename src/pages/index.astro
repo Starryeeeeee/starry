@@ -26,7 +26,9 @@ const projects = (await getCollection('projects'))
 const skills = (await getCollection('skills'))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 4);
-const kbEntries = (await getKbEntries()).slice(0, 3);
+const kbEntries = (await getKbEntries())
+  .filter((e) => e.access === 'public' && e.status !== 'draft' && e.status !== 'archived')
+  .slice(0, 3);
 
 // 建站数据：与 innei 一样，把「这个站活了多久、写了多少」摆出来
 const founded = new Date('2026-10-25T00:00:00Z');

@@ -43,7 +43,8 @@ export async function GET() {
   }
 
   for (const n of kbNotes) {
-    if (n.data.status === 'draft') continue;
+    // personal / private 不进 AI 索引：模型看不到，就不会说出去
+    if (n.data.status === 'draft' || n.data.access !== 'public') continue;
     entries.push({
       id: n.data.id ?? n.id,
       type: 'kb-note',
@@ -59,7 +60,7 @@ export async function GET() {
   }
 
   for (const f of kbFileRecords) {
-    if (f.status === 'draft') continue;
+    if (f.status === 'draft' || (f.access ?? 'public') !== 'public') continue;
     entries.push({
       id: f.id ?? f.slug,
       type: 'kb-file',

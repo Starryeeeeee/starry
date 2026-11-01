@@ -43,7 +43,7 @@ export const GET: APIRoute = async ({ site }) => {
     entries.push({ loc: abs(`/skills/${s.id}/`), lastmod: iso(s.data.date), priority: 0.6 });
   }
   for (const k of kb) {
-    if (k.data.status !== 'public') continue;
+    if (k.data.status !== 'public' || k.data.access !== 'public') continue;
     entries.push({ loc: abs(`/kb/${k.id}/`), lastmod: iso(k.data.date), priority: 0.6 });
   }
 

@@ -7,13 +7,16 @@ import { u } from '../../lib/base';
 import { kbFileRecords, fileKindLabel, isPreviewable, type KbFileRecord } from '../../lib/kb';
 
 export async function getStaticPaths() {
-  const notes = (await getCollection('kb')).filter((n) => n.data.status !== 'draft');
+  // private 完全不构建；personal 构建但不进列表与索引，只能靠直链访问
+  const notes = (await getCollection('kb')).filter(
+    (n) => n.data.status !== 'draft' && n.data.access !== 'private',
+  );
   const notePages = notes.map((note) => ({
     params: { slug: note.id },
     props: { kind: 'note' as const, note },
   }));
   const filePages = kbFileRecords
-    .filter((f) => f.status !== 'draft')
+    .filter((f) => f.status !== 'draft' && (f.access ?? 'public') !== 'private')
     .map((file) => ({
       params: { slug: file.slug },
       props: { kind: 'file' as const, file },

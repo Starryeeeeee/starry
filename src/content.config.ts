@@ -49,6 +49,14 @@ const kb = defineCollection({
     subject: z.string().default('未分类'),
     tags: z.array(z.string()).default([]),
     status: z.enum(['draft', 'public', 'archived']).default('public'),
+    /**
+     * 访问级别：
+     * - public：列表、搜索、AI 索引都可见
+     * - personal：不进列表、不进 AI 索引，靠直链访问（给自己留的）
+     * - private：完全不构建，只在本地源文件里存在
+     * 过滤一律发生在数据层，不靠提示词嘱咐模型「别说出去」。
+     */
+    access: z.enum(['public', 'personal', 'private']).default('public'),
   }),
 });
 
