@@ -16,7 +16,12 @@ const { post } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<Base title={`${post.data.title} · 星野漫游`} description={post.data.description}>
+<Base
+  title={`${post.data.title} · 星野漫游`}
+  description={post.data.description}
+  type="article"
+  publishedTime={post.data.date}
+>
   <article class="container prose">
     <h1>{post.data.title}</h1>
     <p class="prose-meta">

@@ -3,7 +3,8 @@ import '@fontsource/stix-two-text/400.css';
 import '@fontsource/stix-two-text/600.css';
 import '@fontsource/stix-two-text/700.css';
 import '@fontsource/stix-two-text/400-italic.css';
-import 'lxgw-wenkai-screen-webfont/style.css';
+// 只引「霞鹜文楷 · 屏幕版」一个变体：style.css 会连 gb/gbR/screenR 一起串进来（388 条 font-face）
+import 'lxgw-wenkai-screen-webfont/lxgwwenkaiscreen.css';
 import 'katex/dist/katex.min.css'; // 数学公式（知识库的定理/公式条目）
 import '../styles/global.css';
 // 后台专用的 macOS 视觉层：只在 /admin 页面挂载，不进其他页面的样式包
@@ -15,14 +16,37 @@ import Footer from '../components/Footer.astro';
 import PageLoader from '../components/PageLoader.astro';
 import QuickCapture from '../components/QuickCapture.astro';
 import { u } from '../lib/base';
+import { getImage } from 'astro:assets';
+import ogSource from '../assets/og-cover.jpg'; // ASCII 文件名：部分平台不认 URL 里的中文
 
 interface Props {
   title: string;
   description?: string;
+  /** article 用于文章详情页，分享卡片会带发布时间 */
+  type?: 'website' | 'article';
+  publishedTime?: Date;
 }
 
-const { title, description = 'Starry 的个人星球：作品集、AI Skills 分享、文章随感和日常废话条。' } = Astro.props;
+const {
+  title,
+  description = 'Starry 的个人星球：作品集、AI Skills 分享、文章随感和日常废话条。',
+  type = 'website',
+  publishedTime,
+} = Astro.props;
+
 const isAdmin = Astro.url.pathname.replace(/\/+$/, '').endsWith('/admin');
+
+// 分享卡片图：构建时裁一张 1200×630，不额外引依赖
+const ogImage = await getImage({
+  src: ogSource,
+  width: 1200,
+  height: 630,
+  fit: 'cover',
+  format: 'jpg',
+});
+const siteUrl = Astro.site ?? new URL('https://starryeeeeee.github.io');
+const canonical = new URL(Astro.url.pathname, siteUrl).href;
+const ogImageUrl = new URL(ogImage.src, siteUrl).href;
 ---
 
 <!doctype html>
@@ -32,11 +56,30 @@ const isAdmin = Astro.url.pathname.replace(/\/+$/, '').endsWith('/admin');
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
     <link rel="alternate" type="application/rss+xml" title="星野漫游 RSS" href={u('/rss.xml')} />
+
+    <!-- 分享卡片：微信/QQ 之外，Twitter、Discord、Telegram 也吃这一套 -->
+    <meta property="og:site_name" content="星野漫游" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
     <link rel="icon" type="image/svg+xml" href={u('/favicon.svg')} />
     <!-- cn-font-split 子集字体（来自站长仓库）：阿里汉仪AI黑体（大标题）/ 寒蝉全圆体（正文圆体选项） -->
     <link rel="stylesheet" href={u('/fonts/alihei/result.css')} />
-    <link rel="stylesheet" href={u('/fonts/hanchan/result.css')} />
+    <!-- 寒蝉只在正文切「圆体」时用得到，异步加载，不挡首屏 -->
+    <link rel="preload" as="style" href={u('/fonts/hanchan/result.css')} onload="this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href={u('/fonts/hanchan/result.css')} /></noscript>
     {isAdmin && <link rel="stylesheet" href={adminMacCss} />}
     {isAdmin && <link rel="stylesheet" href={adminGlassCss} />}
     <script is:inline>

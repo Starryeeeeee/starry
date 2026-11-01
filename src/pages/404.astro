@@ -1,0 +1,62 @@
+---
+import Base from '../layouts/Base.astro';
+import { u } from '../lib/base';
+---
+
+<Base title="页面不在这里 · 星野漫游" description="这个地址上没有内容，可能已经改过名字了。">
+  <div class="container notfound">
+    <p class="nf-code" aria-hidden="true">404</p>
+    <h1>这个地址上没有东西</h1>
+    <p class="nf-desc">
+      可能是我改过链接，也可能是地址打错了一个字。下面这几个地方能回去。
+    </p>
+    <div class="nf-links">
+      <a href={u('/')}>回首页</a>
+      <a href={u('/posts/')}>读文章</a>
+      <a href={u('/kb/')}>翻知识库</a>
+      <a href={u('/changelog/')}>看建站日志</a>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .notfound {
+    padding-block: 96px 120px;
+  }
+  .nf-code {
+    font-family: var(--font-display-cn);
+    font-size: clamp(72px, 14vw, 160px);
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.3px color-mix(in srgb, var(--ink) 40%, transparent);
+    user-select: none;
+  }
+  .notfound h1 {
+    margin-top: 20px;
+    font-family: var(--font-body);
+    font-size: 1.4rem;
+    font-weight: 500;
+  }
+  .nf-desc {
+    max-width: 30em;
+    margin-top: 12px;
+    color: var(--ink-2);
+  }
+  .nf-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 32px;
+  }
+  .nf-links a {
+    font-size: 0.95rem;
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    transition: color 0.2s ease;
+  }
+  .nf-links a:hover {
+    color: var(--accent-ink);
+  }
+</style>
