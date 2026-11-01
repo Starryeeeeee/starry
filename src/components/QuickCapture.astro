@@ -301,7 +301,7 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
       const loggedIn = !!token();
       text.hidden = !loggedIn;
       sendBtn.hidden = !loggedIn;
-      root.querySelector('.qc-types')!.hidden = !loggedIn;
+      (root.querySelector('.qc-types') as HTMLElement).hidden = !loggedIn;
       if (!loggedIn) {
         hint.classList.add('err');
         hint.innerHTML =

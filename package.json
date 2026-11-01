@@ -7,7 +7,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "build:local": "astro build && node scripts/fix-file-paths.mjs",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "check": "astro check",
+    "verify": "npm run check && npm run build"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
@@ -18,5 +20,10 @@
     "lxgw-wenkai-screen-webfont": "^1.7.0",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@types/node": "^26.6.6",
+    "typescript": "^5.9.3"
   }
 }

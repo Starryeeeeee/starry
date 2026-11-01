@@ -1161,6 +1161,7 @@ import Base from '../layouts/Base.astro';
     type AiIndexEntry,
     type AiMessage,
     type AiProfile,
+    type WebResult,
   } from '../lib/ai';
   import { typeInto } from '../lib/typewriter';
 
@@ -1295,7 +1296,7 @@ import Base from '../layouts/Base.astro';
     $('.admin-body').hidden = !loggedIn;
     $('.admin-user').hidden = !loggedIn;
     if (loggedIn) {
-      const img = $('.admin-user img');
+      const img = $<HTMLImageElement>('.admin-user img');
       img.src = loggedIn.avatar_url;
       $('.admin-user b').textContent = loggedIn.login;
     }
@@ -1843,7 +1844,7 @@ import Base from '../layouts/Base.astro';
           body: JSON.stringify({
             message: isEdit ? `修改文章：${title}` : `发文：${title}`,
             branch: BRANCH,
-            content: b64(fm + $('[data-post="body"]').value),
+            content: b64(fm + $<HTMLTextAreaElement>('[data-post="body"]').value),
             ...(isEdit ? { sha: editingPost!.sha } : {}),
           }),
         });
@@ -2321,11 +2322,13 @@ import Base from '../layouts/Base.astro';
       // 联网搜索两种走法：智谱等原生工具 = 服务端搜，最稳；
       // 其余服务商 = 浏览器经公共中转搜必应 RSS，尽力而为。两者都不拖累站内资料回答。
       const nativeSearch = !!profile.webSearchTool;
-      const webTask =
+      // 判别联合：ok 为字面量，后面 web.ok 才能收窄
+      type WebOutcome = { ok: true; rs: WebResult[] } | { ok: false; err: Error };
+      const webTask: Promise<WebOutcome> | null =
         webOn && !nativeSearch
           ? webSearch(q).then(
-              (rs) => ({ ok: true, rs }),
-              (e) => ({ ok: false, err: e as Error }),
+              (rs): WebOutcome => ({ ok: true, rs }),
+              (e): WebOutcome => ({ ok: false, err: e as Error }),
             )
           : null;
       const web = webTask ? await webTask : null;

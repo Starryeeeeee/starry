@@ -7,12 +7,16 @@
  * - 站点小，整包 JSON 体积有限；若以后条目多了，再考虑分片或改成按需检索。
  */
 import { getCollection } from 'astro:content';
-import kbFileRecords from '../data/kb-files.json';
+import kbFileRecordsJson from '../data/kb-files.json';
+import type { KbFileRecord } from '../lib/kb';
 import { getMoments } from '../lib/moments';
 import { fileKindLabel } from '../lib/kb';
 
 /** 每条正文最多保留多少字符（AI 上下文有限，太多反而稀释检索命中） */
 const MAX_BODY = 1600;
+
+// JSON 导入会被推断成空数组，显式断言成文档记录类型
+const kbFileRecords = kbFileRecordsJson as KbFileRecord[];
 
 export async function GET() {
   const [posts, kbNotes, moments] = await Promise.all([

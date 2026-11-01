@@ -23,7 +23,7 @@ export async function getStaticPaths() {
 
 const { kind, note, file } = Astro.props as {
   kind: 'note' | 'file';
-  note?: import('astro').CollectionEntry<'kb'>;
+  note?: import('astro:content').CollectionEntry<'kb'>;
   file?: KbFileRecord;
 };
 
