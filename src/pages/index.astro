@@ -71,111 +71,110 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   </section>
 
   <main class="container wide">
-    <div class="grid">
-      <section class="sec sec-blue" aria-labelledby="latest-posts">
+    <div class="feed">
+      <section class="sec" aria-labelledby="latest-posts">
         <div class="sec-head">
-          <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-posts" class="heading-5">最近的文章</h2></div>
+          <h2 id="latest-posts">最近的文章</h2>
           <a class="more" href={u('/posts/')}>全部文章</a>
         </div>
-        {posts.map((post) => (
-          <a class="post-item" href={u(`/posts/${post.id}/`)}>
-            <time datetime={post.data.date.toISOString()}>{fmtDate(post.data.date)}</time>
-            <h3 class="title-2">{post.data.title}<span class="arr" aria-hidden="true">→</span></h3>
-            {post.data.description && <p>{post.data.description}</p>}
-          </a>
-        ))}
-        <div class="findme">
-          <span class="fm-label caption-2">在别处找我</span>
-          <div class="hero-social">
-            <a href="https://github.com/Starryeeeeee" aria-label="GitHub" target="_blank" rel="noopener"><Fragment set:html={githubIcon} /></a>
-            <a href="https://www.bilibili.com" aria-label="哔哩哔哩" target="_blank" rel="noopener"><Fragment set:html={bilibiliIcon} /></a>
-            <a href="https://music.163.com" aria-label="网易云音乐" target="_blank" rel="noopener"><Fragment set:html={neteaseIcon} /></a>
-            <a href="mailto:Jia100906985211@outlook.com" aria-label="发邮件给我"><Fragment set:html={outlookIcon} /></a>
-          </div>
-        </div>
+        <ul class="rows">
+          {posts.map((post) => (
+            <li>
+              <a class="row" href={u(`/posts/${post.id}/`)}>
+                <span class="row-title">{post.data.title}</span>
+                <time datetime={post.data.date.toISOString()}>{fmtDate(post.data.date)}</time>
+              </a>
+            </li>
+          ))}
+        </ul>
       </section>
 
-      <div class="stack">
-        <section class="sec sec-rose" aria-labelledby="latest-moments">
-          <div class="sec-head">
-            <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-moments" class="heading-5">废话条</h2></div>
-            <a class="more" href={u('/moments/')}>更多</a>
-          </div>
-          {moments.length === 0 ? (
-            <p class="list-empty">还没有动态——去仓库发一条带 <code>moment</code> 标签的 Issue 试试。</p>
-          ) : (
-            moments.map((m) => (
-              <article class="moment">
-                <div class="moment-head">
-                  <img src={avatar.src} alt="" width="28" height="28" />
-                  <span class="caption-1"><b>Starry</b></span>
-                  <time datetime={m.date.toISOString()}>{fmtDateShort(m.date)}</time>
-                </div>
-                <p class="moment-body">{m.text}</p>
-                <button class="moment-like" type="button" disabled title="部署后启用匿名点赞">♡ <span>0</span></button>
-              </article>
-            ))
-          )}
-        </section>
-
-        <section class="sec sec-green" aria-labelledby="latest-skills">
-          <div class="sec-head">
-            <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-skills" class="heading-5">AI Skills</h2></div>
-            <a class="more" href={u('/skills/')}>全部</a>
-          </div>
-          {skills.map((s) => (
-            <a class="mini-item" href={u(`/skills/${s.id}/`)}>
-              <span class="t-wrap">
-                <span class="t title-2">{s.data.title}</span>
-                <span class="d caption-2">{s.data.description}</span>
-              </span>
-              <time datetime={s.data.date.toISOString()}>{fmtDateShort(s.data.date)}</time>
-            </a>
-          ))}
-        </section>
-      </div>
-
-      <section class="sec sec-sand" aria-labelledby="latest-projects">
+      <section class="sec" aria-labelledby="latest-moments">
         <div class="sec-head">
-          <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-projects" class="heading-5">作品</h2></div>
+          <h2 id="latest-moments">废话条</h2>
+          <a class="more" href={u('/moments/')}>更多</a>
+        </div>
+        {moments.length === 0 ? (
+          <p class="list-empty">还没有动态——去仓库发一条带 <code>moment</code> 标签的 Issue 试试。</p>
+        ) : (
+          moments.map((m) => (
+            <a class="quote" href={u('/moments/')}>
+              <span class="quote-text">{m.text}</span>
+              <time datetime={m.date.toISOString()}>{fmtDateShort(m.date)}</time>
+            </a>
+          ))
+        )}
+      </section>
+
+      <section class="sec" aria-labelledby="latest-skills">
+        <div class="sec-head">
+          <h2 id="latest-skills">AI Skills</h2>
+          <a class="more" href={u('/skills/')}>全部</a>
+        </div>
+        <ul class="rows">
+          {skills.map((s) => (
+            <li>
+              <a class="row" href={u(`/skills/${s.id}/`)}>
+                <span class="row-title">{s.data.title}</span>
+                <time datetime={s.data.date.toISOString()}>{fmtDate(s.data.date)}</time>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="sec" aria-labelledby="latest-projects">
+        <div class="sec-head">
+          <h2 id="latest-projects">作品</h2>
           <a class="more" href={u('/projects/')}>全部作品</a>
         </div>
-        <div class="project-list">
+        <ul class="rows">
           {projects.map((p) => (
-            <a
-              class="project-item"
-              href={p.data.demo ?? p.data.repo ?? u('/projects/')}
-              target={(p.data.demo ?? p.data.repo) ? '_blank' : undefined}
-              rel="noopener"
-            >
-              <h3 class="title-2">{p.data.title}<span class="arr" aria-hidden="true">→</span></h3>
-              <p>{p.data.description}</p>
-              {p.data.tags.length > 0 && <div class="card-tag">{p.data.tags.map((t) => <span>{t}</span>)}</div>}
-            </a>
+            <li>
+              <a
+                class="row"
+                href={p.data.demo ?? p.data.repo ?? u('/projects/')}
+                target={(p.data.demo ?? p.data.repo) ? '_blank' : undefined}
+                rel="noopener"
+              >
+                <span class="row-title">{p.data.title}</span>
+                <time datetime={p.data.date.toISOString()}>{fmtDate(p.data.date)}</time>
+              </a>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
-      <section class="sec sec-green" aria-labelledby="latest-kb">
+      <section class="sec" aria-labelledby="latest-kb">
         <div class="sec-head">
-          <div class="hd"><span class="dash" aria-hidden="true"></span><h2 id="latest-kb" class="heading-5">知识库</h2></div>
+          <h2 id="latest-kb">知识库</h2>
           <a class="more" href={u('/kb/')}>全部条目</a>
         </div>
         {kbEntries.length === 0 ? (
           <p class="list-empty">知识库还空着。</p>
         ) : (
-          kbEntries.map((e) => (
-            <a class="kb-row" href={u(`/kb/${e.slug}/`)}>
-              <span class="kb-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg></span>
-              <span class="kb-text">
-                <span class="title-3 kb-title">{e.title}</span>
-                <span class="caption-2 kb-desc">{e.kind === 'note' ? '笔记' : fileKindLabel(e.ext)} · {e.subject}{e.description ? ` · ${e.description}` : ''}</span>
-                <span class="caption-3 kb-date">{fmtDate(e.date)}</span>
-              </span>
-            </a>
-          ))
+          <ul class="rows">
+            {kbEntries.map((e) => (
+              <li>
+                <a class="row" href={u(`/kb/${e.slug}/`)}>
+                  <span class="row-title">{e.title}</span>
+                  <time datetime={e.date.toISOString()}>{fmtDate(e.date)}</time>
+                </a>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
+
+      <div class="findme">
+        <span class="fm-label caption-2">在别处找我</span>
+        <div class="hero-social">
+          <a href="https://github.com/Starryeeeeee" aria-label="GitHub" target="_blank" rel="noopener"><Fragment set:html={githubIcon} /></a>
+          <a href="https://www.bilibili.com" aria-label="哔哩哔哩" target="_blank" rel="noopener"><Fragment set:html={bilibiliIcon} /></a>
+          <a href="https://music.163.com" aria-label="网易云音乐" target="_blank" rel="noopener"><Fragment set:html={neteaseIcon} /></a>
+          <a href="mailto:Jia100906985211@outlook.com" aria-label="发邮件给我"><Fragment set:html={outlookIcon} /></a>
+        </div>
+      </div>
     </div>
   </main>
   <AiPet />
@@ -191,19 +190,8 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
     font-weight: 600;
     letter-spacing: 0.01em;
   }
-  .heading-5 { font-size: 24px; line-height: 32px; font-weight: 600; }
-  .title-2 { font-size: 18px; line-height: 28px; font-weight: 500; }
-  .title-3 { font-size: 16px; line-height: 24px; font-weight: 500; }
-  .caption-1 { font-size: 14px; line-height: 20px; font-weight: 500; }
   .caption-2 { font-size: 14px; line-height: 20px; font-weight: 400; }
-  .caption-3 { font-size: 12px; line-height: 16px; font-weight: 600; }
   h1, h2, h3 { text-wrap: balance; }
-
-  /* 板块专属色（莫奈多色系）：蓝=文章 玫瑰=废话条 绿=Skills/知识库 沙=作品 */
-  .sec-blue { --sec-c: var(--accent); --sec-c-ink: var(--accent-ink); }
-  .sec-rose { --sec-c: var(--rose); --sec-c-ink: var(--rose-ink); }
-  .sec-green { --sec-c: var(--accent-2); --sec-c-ink: var(--accent-2-ink); }
-  .sec-sand { --sec-c: var(--sand); --sec-c-ink: var(--sand-ink); }
 
   /* ---- Hero ---- */
   .hero { position: relative; padding-block: 128px 96px; overflow: hidden; text-align: left; }
@@ -286,27 +274,65 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .tagline-more p { font-size: 18px; line-height: 28px; }
   .tagline-src { margin-top: 24px; color: var(--ink-3); }
 
-  /* ---- 内容栅格 ---- */
-  .grid { display: grid; grid-template-columns: 7fr 5fr; gap: 40px; padding-bottom: 64px; }
-  .sec { min-width: 0; }
-  .sec + .sec { margin-top: 64px; }
-  .stack { display: flex; flex-direction: column; gap: 32px; }
-  .stack .sec { margin-top: 0; }
-  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
-  .sec-head .hd { display: flex; align-items: center; gap: 10px; }
-  .sec-head .dash { width: 20px; height: 3px; border-radius: 2px; background: var(--sec-c); }
-  .sec-head .more { font-size: 14px; color: var(--ink-3); transition: color 0.3s var(--ease); }
-  .sec-head .more:hover { color: var(--sec-c-ink); }
+  /* ---- 内容：单列、统一行距、日期列对齐 ---- */
+  .feed { max-width: 720px; padding-bottom: 96px; }
+  .sec + .sec { margin-top: 72px; }
 
-  .post-item { display: block; padding: 24px 0; border-bottom: 1px solid var(--line); }
-  .post-item time { font-size: 12px; line-height: 16px; color: var(--ink-3); }
-  .post-item h3 { margin-top: 4px; display: flex; align-items: center; gap: 8px; transition: color 0.3s var(--ease); }
-  .post-item:hover h3 { color: var(--sec-c-ink); }
-  .post-item h3 .arr { opacity: 0; transform: translateX(-4px); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease); color: var(--sec-c-ink); }
-  .post-item:hover h3 .arr { opacity: 1; transform: none; }
-  .post-item p { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--ink-2); }
+  .sec-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    padding-bottom: 12px; margin-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .sec-head h2 {
+    font-family: var(--font-body);
+    font-size: 17px; line-height: 26px; font-weight: 500;
+    letter-spacing: 0.03em; color: var(--ink);
+  }
+  .sec-head .more { font-size: 13px; color: var(--ink-3); transition: color 0.3s var(--ease); }
+  .sec-head .more:hover { color: var(--accent-ink); }
 
-  .findme { display: flex; align-items: center; gap: 16px; margin-top: 8px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 92px;
+    align-items: baseline;
+    gap: 24px;
+    padding: 13px 0;
+  }
+  .row-title {
+    min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 17px; line-height: 26px; color: var(--ink);
+    transition: color 0.25s var(--ease);
+  }
+  .row time {
+    justify-self: end;
+    font-size: 12.5px; line-height: 26px;
+    color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .row:hover .row-title { color: var(--accent-ink); }
+  .row:active .row-title { color: var(--accent); }
+
+  /* 废话条：留一处呼吸口，正文用楷体，不加卡片 */
+  .quote { display: block; padding: 22px 0 6px; }
+  .quote + .quote { padding-top: 18px; }
+  .quote-text {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 20px; line-height: 1.85; color: var(--ink);
+    transition: color 0.25s var(--ease);
+  }
+  .quote time {
+    display: block; margin-top: 8px;
+    font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  }
+  .quote:hover .quote-text { color: var(--accent-ink); }
+
+  .findme {
+    display: flex; align-items: center; gap: 16px;
+    margin-top: 72px; padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
   .findme .fm-label { color: var(--ink-3); }
   .hero-social { display: flex; gap: 8px; }
   /* 抵消旧版 hero-social 的悬停气泡（findme 行不用 data-tip） */
@@ -320,69 +346,17 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .hero-social a:active { transform: scale(0.96); }
   .hero-social a :global(svg) { width: 16px; height: 16px; }
 
-  /* 作品：Shiro 式去壳裸排，悬停只有水彩底与标题变色 */
-  .project-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; margin-top: 4px; }
-  .project-item { display: block; padding: 16px 18px; border-radius: 14px; transition: background 0.3s var(--ease); }
-  .project-item:hover { background: color-mix(in srgb, var(--sec-c) 7%, transparent); }
-  .project-item h3 { display: flex; align-items: center; gap: 8px; transition: color 0.3s var(--ease); }
-  .project-item:hover h3 { color: var(--sec-c-ink); }
-  .project-item h3 .arr { opacity: 0; transform: translateX(-4px); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease); color: var(--sec-c-ink); }
-  .project-item:hover h3 .arr { opacity: 1; transform: none; }
-  .project-item p { margin-top: 6px; font-size: 14px; line-height: 20px; color: var(--ink-2); }
-  .card-tag { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-  .card-tag span { font-size: 12px; line-height: 16px; padding: 2px 12px; border-radius: var(--radius-pill); background: var(--surface-2); color: var(--ink-2); }
-
-  .moment {
-    display: flex; flex-direction: column; gap: 12px;
-    padding: 20px 22px; border-radius: 16px;
-    transition: background 0.3s var(--ease);
-  }
-  .moment:hover { background: color-mix(in srgb, var(--sec-c) 6%, transparent); }
-  .moment + .moment { margin-top: 4px; }
-  .moment-head { display: flex; align-items: center; gap: 8px; }
-  .moment-head img { width: 28px; height: 28px; border-radius: 50%; }
-  .moment-head .caption-1 b { font-weight: 600; }
-  .moment-head time { margin-left: auto; font-size: 12px; color: var(--ink-3); }
-  .moment-body { font-size: 16px; line-height: 24px; }
-  .moment-like {
-    align-self: flex-start; padding: 2px 12px; border: none; border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--sec-c) 12%, var(--surface-2)); color: var(--sec-c-ink); font-size: 12px; line-height: 16px;
-    transition: transform 0.3s var(--ease), background 0.3s var(--ease);
-  }
-  .moment-like:hover:not(:disabled) { background: color-mix(in srgb, var(--sec-c) 22%, var(--surface-2)); }
-  .moment-like:active:not(:disabled) { transform: scale(0.95); }
-  .moment-like:disabled { cursor: default; }
-
-  .mini-item { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
-  .mini-item:last-of-type { border-bottom: none; }
-  .t-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .mini-item .t { transition: color 0.3s var(--ease); }
-  .mini-item .d { color: var(--ink-3); }
-  .mini-item:hover .t { color: var(--sec-c-ink); }
-  .mini-item time { flex-shrink: 0; font-size: 12px; color: var(--ink-3); }
-
-  .kb-row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--line); }
-  .kb-row:last-of-type { border-bottom: none; }
-  .kb-row:hover .kb-title { color: var(--sec-c-ink); }
-  .kb-ico { flex-shrink: 0; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: color-mix(in srgb, var(--sec-c) 14%, var(--surface-2)); color: var(--sec-c-ink); }
-  .kb-ico :global(svg) { width: 18px; height: 18px; }
-  .kb-text { min-width: 0; }
-  .kb-title { display: block; transition: color 0.3s var(--ease); }
-  .kb-desc { display: block; margin-top: 4px; color: var(--ink-2); }
-  .kb-date { display: block; margin-top: 8px; color: var(--ink-3); }
-
-  .list-empty {
-    padding: 22px 24px; font-size: 0.9rem; color: var(--ink-3);
-    background: var(--wash); border-radius: var(--radius);
-  }
-  .list-empty code { font-family: var(--font-mono); background: var(--surface-2); padding: 0.1em 0.4em; border-radius: 6px; font-size: 0.9em; }
-
   /* ---- GSAP 初始态：仅在 JS 可用且未开启减少动态时隐藏（Base 已打 js 标记） ---- */
   :global(html.js.anim) [data-entrance] { opacity: 0; }
   :global(html.js.anim) .hl-line { transform: translateY(110%); }
 
   @media (max-width: 760px) {
-    .grid { grid-template-columns: 1fr; }
+    .feed { max-width: none; }
+    /* 窄屏改成「标题一行、日期在下面一行」，不截断长标题 */
+    .row { grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 14px 0; }
+    .row-title { font-size: 16px; white-space: normal; overflow: visible; }
+    .row time { justify-self: start; line-height: 20px; }
+    .sec + .sec { margin-top: 56px; }
     .heading-1 { font-size: 40px; line-height: 1.16; }
     #tagline { font-size: 28px; }
     .hero-ghost { font-size: 130px; }
