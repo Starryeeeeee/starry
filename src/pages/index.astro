@@ -278,18 +278,38 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .feed { max-width: 720px; padding-bottom: 96px; }
   .sec + .sec { margin-top: 72px; }
 
+  .sec { position: relative; }
+
+  /* 栏目名：大号镂空字（同建站日志的年份处理），压在列表上方当底子 */
   .sec-head {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
-    padding-bottom: 12px; margin-bottom: 4px;
-    border-bottom: 1px solid var(--line);
+    position: relative; z-index: 1;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+    margin-bottom: 14px;
   }
   .sec-head h2 {
-    font-family: var(--font-body);
-    font-size: 17px; line-height: 26px; font-weight: 500;
-    letter-spacing: 0.03em; color: var(--ink);
+    font-family: var(--font-display-cn);
+    font-size: clamp(38px, 3.6vw, 52px);
+    line-height: 1;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    color: transparent;
+    -webkit-text-stroke: 1.3px color-mix(in srgb, var(--ink) 48%, transparent);
+    user-select: none;
   }
-  .sec-head .more { font-size: 13px; color: var(--ink-3); transition: color 0.3s var(--ease); }
+  @supports not (-webkit-text-stroke: 1px black) {
+    .sec-head h2 { color: var(--ink-3); opacity: 0.5; }
+  }
+
+  .sec-head .more {
+    flex-shrink: 0;
+    padding-bottom: 6px;
+    font-size: 13px; color: var(--ink-3);
+    transition: color 0.3s var(--ease);
+  }
   .sec-head .more:hover { color: var(--accent-ink); }
+
+  /* 列表压在字的下缘，形成叠底关系 */
+  .rows, .quote { position: relative; z-index: 1; }
 
   .rows { list-style: none; margin: 0; padding: 0; }
   .row {
