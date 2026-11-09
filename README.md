@@ -1,3 +1,3 @@
 # starry
-我的第一个个人网站
+personal website
 https://starryeeeeee.github.io/starry/
