@@ -40,3 +40,16 @@ Astro 5 个人站，GitHub Pages 托管，GitHub Issues 当动态后台，零服
 ## 并行协作
 
 站主会同时开多个 AI 会话。改完必须：构建验证 → 精确提交 → 在汇报里写清 commit id，供下一个会话接手。
+
+## 站点打不开时先查这里（2026-11-13 踩过）
+
+线上返回 404、而代码与构建都正常时，**九成是 Pages 的发布来源被改了**，不是代码问题：
+
+1. 打开仓库 Actions，看最新 run 的名字：
+   - `Deploy to GitHub Pages` → 自己的流水线在跑，正常。
+   - `pages build and deployment` → **来源被切成「从分支发布」**，GitHub 正拿 Jekyll 解析 Astro 源码，必然失败。
+2. 修法：Settings → Pages → Build and deployment → Source 选回 **GitHub Actions**，然后 Run workflow 重跑。改代码没有任何用。
+3. `deploy.yml` 现在自带两道自检：发布前查 `build_type`，发布后访问首页并对账 `<meta name="sr-build">` 里的提交号。自检红了先看它打印的诊断，不要从头猜。
+
+判据：`build` 全绿但 `deploy` 那一步红，就是这个故障；404 页面标题写着 "Site not found" 也可确认。
+

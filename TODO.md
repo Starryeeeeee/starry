@@ -13,6 +13,8 @@
 - [ ] P4.1 /admin 知识库表单加「访问级别」选择器（现在要手改 frontmatter）
 - [x] P5 字体加载策略 + OG / sitemap / 404 + lint / typecheck（2026-11-01）
 - [ ] P5.1 内容备份导出（现在内容只活在 GitHub API 里）
+- [x] P5.2 部署自检（2026-11-13：发布前查 Pages 来源、发布后对账 `sr-build` 版本号）
+- [ ] P5.3 `Supabase keepalive` 定时任务连续失败（11-03、11-10），疑似 secret 过期
 
 ## 待补链接
 - [ ] 哔哩哔哩个人空间：`src/pages/index.astro` 里现在指向 bilibili.com 官网，换成你的空间地址
