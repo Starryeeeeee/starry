@@ -47,6 +47,9 @@ const ogImage = await getImage({
 const siteUrl = Astro.site ?? new URL('https://starryeeeeee.github.io');
 const canonical = new URL(Astro.url.pathname, siteUrl).href;
 const ogImageUrl = new URL(ogImage.src, siteUrl).href;
+
+// 本次构建的提交号：发布后自检靠它对账「线上真的是这一版」，本地构建为 local
+const buildSha = (import.meta.env.PUBLIC_BUILD_SHA ?? 'local').slice(0, 7);
 ---
 
 <!doctype html>
@@ -56,6 +59,7 @@ const ogImageUrl = new URL(ogImage.src, siteUrl).href;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="sr-build" content={buildSha} />
     <link rel="canonical" href={canonical} />
     <link rel="alternate" type="application/rss+xml" title="星野漫游 RSS" href={u('/rss.xml')} />
 
