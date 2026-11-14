@@ -40,6 +40,80 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
 <Base title="星野漫游 · Starry Roam">
   <section class="hero container wide">
     <span class="hero-ghost" aria-hidden="true">Roam</span>
+    <span class="hero-flowers" aria-hidden="true">
+      <svg viewBox="0 0 120 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 茎 -->
+        <path d="M58 104c-2-18 2-34 8-46M74 104c3-14 1-26-4-36M42 104c-1-10 1-18 4-24"
+              stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+        <!-- 叶 -->
+        <path d="M52 78c-8-2-13-8-14-15 8 0 14 5 14 15Z" fill="var(--accent)" opacity="0.3"/>
+        <path d="M78 84c7-3 11-9 11-16-7 1-12 7-11 16Z" fill="var(--accent)" opacity="0.3"/>
+        <!-- 花朵一：花粉 -->
+        <g transform="translate(66 56)">
+          <circle cx="0" cy="-6" r="4.6" fill="var(--rose)" opacity="0.62"/>
+          <circle cx="5.7" cy="-1.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
+          <circle cx="3.5" cy="4.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
+          <circle cx="-3.5" cy="4.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
+          <circle cx="-5.7" cy="-1.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
+          <circle cx="0" cy="0" r="3.2" fill="var(--sand)"/>
+        </g>
+        <!-- 花朵二：雏菊黄 -->
+        <g transform="translate(70 16) scale(0.86)">
+          <circle cx="0" cy="-6" r="4.6" fill="var(--sand)" opacity="0.75"/>
+          <circle cx="5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
+          <circle cx="3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
+          <circle cx="-3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
+          <circle cx="-5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
+          <circle cx="0" cy="0" r="3.2" fill="var(--accent-2)"/>
+        </g>
+        <!-- 花朵三：小叶芽 -->
+        <g transform="translate(45 74) scale(0.62)">
+          <circle cx="0" cy="-6" r="4.6" fill="var(--sand)" opacity="0.6"/>
+          <circle cx="5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
+          <circle cx="3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
+          <circle cx="-3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
+          <circle cx="-5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
+          <circle cx="0" cy="0" r="3.2" fill="var(--rose)"/>
+        </g>
+      </svg>
+    </span>
+    <span class="hero-flowers" aria-hidden="true">
+      <svg viewBox="0 0 120 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 茎 -->
+        <path d="M58 104c-2-18 2-34 8-46M74 104c3-14 1-26-4-36M42 104c-1-10 1-18 4-24"
+              stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+        <!-- 叶 -->
+        <path d="M52 78c-8-2-13-8-14-15 8 0 14 5 14 15Z" fill="var(--accent)" opacity="0.3"/>
+        <path d="M78 84c7-3 11-9 11-16-7 1-12 7-11 16Z" fill="var(--accent)" opacity="0.3"/>
+        <!-- 花朵一：花粉 -->
+        <g transform="translate(66 56)">
+          <circle cx="0" cy="-6" r="4.6" fill="var(--rose)" opacity="0.62"/>
+          <circle cx="5.7" cy="-1.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
+          <circle cx="3.5" cy="4.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
+          <circle cx="-3.5" cy="4.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
+          <circle cx="-5.7" cy="-1.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
+          <circle cx="0" cy="0" r="3.2" fill="var(--sand)"/>
+        </g>
+        <!-- 花朵二：雏菊黄 -->
+        <g transform="translate(70 16) scale(0.86)">
+          <circle cx="0" cy="-6" r="4.6" fill="var(--sand)" opacity="0.75"/>
+          <circle cx="5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
+          <circle cx="3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
+          <circle cx="-3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
+          <circle cx="-5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
+          <circle cx="0" cy="0" r="3.2" fill="var(--accent-2)"/>
+        </g>
+        <!-- 花朵三：小叶芽 -->
+        <g transform="translate(45 74) scale(0.62)">
+          <circle cx="0" cy="-6" r="4.6" fill="var(--sand)" opacity="0.6"/>
+          <circle cx="5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
+          <circle cx="3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
+          <circle cx="-3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
+          <circle cx="-5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
+          <circle cx="0" cy="0" r="3.2" fill="var(--rose)"/>
+        </g>
+      </svg>
+    </span>
 
     <div class="hero-id" data-entrance>
       <img class="hero-avatar-lg" src={avatar.src} alt="Starry 的头像" width="64" height="64" />
@@ -74,7 +148,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
 
   <main class="container wide">
     <div class="feed">
-      <section class="sec" aria-labelledby="latest-posts">
+      <section class="sec" style="--sec-c: var(--accent)" aria-labelledby="latest-posts">
         <div class="sec-head">
           <h2 id="latest-posts">最近的文章</h2>
           <a class="more" href={u('/posts/')}>全部文章</a>
@@ -91,7 +165,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
         </ul>
       </section>
 
-      <section class="sec" aria-labelledby="latest-moments">
+      <section class="sec" style="--sec-c: var(--rose)" aria-labelledby="latest-moments">
         <div class="sec-head">
           <h2 id="latest-moments">废话条</h2>
           <a class="more" href={u('/moments/')}>更多</a>
@@ -108,7 +182,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
         )}
       </section>
 
-      <section class="sec" aria-labelledby="latest-skills">
+      <section class="sec" style="--sec-c: var(--sand-ink)" aria-labelledby="latest-skills">
         <div class="sec-head">
           <h2 id="latest-skills">AI Skills</h2>
           <a class="more" href={u('/skills/')}>全部</a>
@@ -125,7 +199,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
         </ul>
       </section>
 
-      <section class="sec" aria-labelledby="latest-projects">
+      <section class="sec" style="--sec-c: var(--accent-2)" aria-labelledby="latest-projects">
         <div class="sec-head">
           <h2 id="latest-projects">作品</h2>
           <a class="more" href={u('/projects/')}>全部作品</a>
@@ -147,7 +221,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
         </ul>
       </section>
 
-      <section class="sec" aria-labelledby="latest-kb">
+      <section class="sec" style="--sec-c: var(--accent)" aria-labelledby="latest-kb">
         <div class="sec-head">
           <h2 id="latest-kb">知识库</h2>
           <a class="more" href={u('/kb/')}>全部条目</a>
@@ -185,25 +259,48 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
 <style>
   /* ============ 首页 · 编辑部式封面 ============
      设计定稿见预览稿：左对齐大字 + 标语逐字点亮 + 7:5 非对称内容栅格 + 莫奈多色板块 */
+  /* 首屏英文标题：衬线（站主选定），中文标题仍走宋体 */
   .heading-1 {
-    font-family: var(--font-display-cn);
+    font-family: var(--font-hero);
     font-size: 72px;
     line-height: 1.14;
-    font-weight: 600;
-    letter-spacing: 0.01em;
+    font-weight: 400;
+    letter-spacing: -0.008em;
   }
   .caption-2 { font-size: 14px; line-height: 20px; font-weight: 400; }
   h1, h2, h3 { text-wrap: balance; }
 
   /* ---- Hero ---- */
   .hero { position: relative; padding-block: 128px 96px; overflow: hidden; text-align: left; }
+
+  /* 右下角一簇手绘野花：廉价的不是花，是花太多。这里只放一簇 */
+  .hero-flowers {
+    position: absolute;
+    right: 9%;
+    bottom: 132px;
+    width: 152px;
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-flowers svg { display: block; width: 100%; height: auto; }
+
+  /* 右下角一簇手绘野花：廉价的不是花，是花太多。这里只放一簇 */
+  .hero-flowers {
+    position: absolute;
+    right: 9%;
+    bottom: 132px;
+    width: 152px;
+    pointer-events: none;
+    user-select: none;
+  }
+  .hero-flowers svg { display: block; width: 100%; height: auto; }
   .hero-ghost {
     position: absolute; right: -24px; top: 32px;
-    font-family: var(--font-display-cn); font-size: 220px; line-height: 1;
-    /* 背景字：四色渐变（站主指定保留），用 token 取值，暗色自动跟随 */
-    background: linear-gradient(135deg, var(--accent), var(--accent-2) 45%, var(--rose) 80%, var(--sand));
+    font-family: var(--font-display-en); font-size: 220px; line-height: 1;
+    /* 背景字：绿→浅绿→浅黄，同一色相家族，不掺粉与棕（掺了中间会发脏、显诡异） */
+    background: linear-gradient(135deg, var(--accent-light), var(--sand) 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
-    opacity: 0.16; user-select: none; pointer-events: none;
+    opacity: 0.13; user-select: none; pointer-events: none;
   }
   :global([data-theme='dark']) .hero-ghost { opacity: 0.22; }
   .hero-id { margin-bottom: 56px; }
@@ -213,7 +310,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .hero-id-left .caption-1 span { color: var(--ink-3); margin-left: 6px; }
 
   /* 标题：按行遮罩升字（GSAP）；纯色墨字（background-clip 渐变与中文字体合成有接缝，弃用） */
-  .hero h1 { max-width: 760px; margin: 0 0 40px; }
+  .hero h1 { max-width: 760px; margin: 0 0 40px; letter-spacing: -0.022em; }
   .hl-mask { display: block; overflow: hidden; line-height: 1.3; }
   .hl-line { display: inline-block; line-height: 1.3; color: var(--ink); }
   .ht-lead { color: var(--ink); }
@@ -238,26 +335,24 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   }
   .hero-cta { display: flex; align-items: center; gap: 24px; margin-bottom: 32px; }
 
+  /* cottagecore：实心草绿药丸，去掉扫光（纸面上不该有高光掠过） */
   .btn-primary {
     position: relative; display: inline-flex; align-items: center; gap: 8px;
-    padding: 12px 28px; border: none; border-radius: var(--radius-pill);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 92%, var(--surface) 8%), var(--ink));
-    color: var(--bg);
-    font-size: 16px; line-height: 24px; font-weight: 600;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.28) inset, 0 8px 24px rgba(0, 0, 0, 0.18);
-    transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
-    isolation: isolate; overflow: hidden;
+    padding: 13px 30px; border: none; border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: 16px; line-height: 24px; font-weight: 500;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 6px 16px rgba(90, 72, 48, 0.14);
+    transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+      background var(--dur) var(--ease);
   }
-  .btn-primary::after {
-    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-    background: linear-gradient(115deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.32) 46%, rgba(255, 255, 255, 0.05) 58%, rgba(255, 255, 255, 0) 100%);
-    transform: translateX(-120%);
-    transition: transform 0.8s var(--ease);
+  .btn-primary:hover {
+    background: var(--accent-ink);
+    transform: translateY(-2px);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 10px 22px rgba(90, 72, 48, 0.18);
   }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.28) inset, 0 12px 32px rgba(0, 0, 0, 0.22); }
-  .btn-primary:hover::after { transform: translateX(120%); }
   .btn-primary:active { transform: translateY(0) scale(0.98); }
-  .btn-ghost { font-size: 16px; line-height: 24px; font-weight: 600; color: var(--ink-2); transition: color 0.3s var(--ease); }
+  .btn-ghost { font-size: 16px; line-height: 24px; font-weight: 500; color: var(--ink-2); transition: color 0.3s var(--ease); }
   .btn-ghost:hover { color: var(--accent-ink); }
   .hero-proof { display: flex; flex-wrap: wrap; gap: 4px 24px; color: var(--ink-3); }
   .hero-proof b { color: var(--ink-2); font-weight: 500; }
@@ -267,7 +362,8 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   #tagline {
     max-width: 720px;
     font-family: var(--font-display-cn);
-    font-size: 48px; line-height: 1.2; font-weight: 600;
+    /* 宋体没有 600 字重，写 600 会被合成伪粗，笔画糊成一团 */
+    font-size: 48px; line-height: 1.28; font-weight: 400; letter-spacing: 0.01em;
   }
   #tagline .w { opacity: 0.22; }
   #tagline .w.k1 { color: var(--accent-ink); }
@@ -288,14 +384,28 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
     display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
     margin-bottom: 14px;
   }
+  /* 栏目名左侧的色标：像手账里给每一章贴的彩色小签，给页面一点颜色的起落 */
+  .sec-head h2::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 6px;
+    height: 0.54em;
+    border-radius: 3px;
+    transform: translateY(-50%);
+    background: var(--sec-c, var(--accent));
+  }
   .sec-head h2 {
+    position: relative;
+    padding-left: 22px;
     font-family: var(--font-display-cn);
     font-size: clamp(38px, 3.6vw, 52px);
     line-height: 1;
     font-weight: 400;
     letter-spacing: 0.01em;
     color: transparent;
-    -webkit-text-stroke: 1.3px color-mix(in srgb, var(--ink) 48%, transparent);
+    -webkit-text-stroke: 1.8px color-mix(in srgb, var(--accent) 88%, transparent);
     user-select: none;
   }
   @supports not (-webkit-text-stroke: 1px black) {
@@ -330,13 +440,18 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .row time {
     justify-self: end;
     font-size: 12.5px; line-height: 26px;
-    color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap;
+    color: color-mix(in srgb, var(--accent-2) 82%, var(--ink-3));
+    font-variant-numeric: tabular-nums; white-space: nowrap;
   }
   .row:hover .row-title { color: var(--accent-ink); }
   .row:active .row-title { color: var(--accent); }
 
   /* 废话条：留一处呼吸口，正文用楷体，不加卡片 */
-  .quote { display: block; padding: 22px 0 6px; }
+  .quote {
+    display: block;
+    padding: 20px 0 6px 18px;
+    border-left: 2px solid color-mix(in srgb, var(--rose) 45%, transparent);
+  }
   .quote + .quote { padding-top: 18px; }
   .quote-text {
     display: block;
@@ -381,8 +496,13 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
     .sec + .sec { margin-top: 56px; }
     .heading-1 { font-size: 40px; line-height: 1.16; }
     #tagline { font-size: 28px; }
-    .hero-ghost { font-size: 130px; }
-    .hero { padding-top: 72px; }
+    /* 130px 在 390 宽的屏上会顶出右边界，缩小并往下让开头像 */
+    .hero-ghost { font-size: 74px; top: 104px; right: 6px; opacity: 0.12; }
+    /* 手机屏放不下这簇花，不显示，省得和头像挤在一起 */
+    .hero-flowers { display: none; }
+    /* 手机屏放不下这簇花，不显示，省得和头像挤在一起 */
+    .hero-flowers { display: none; }
+    .hero { padding-top: 88px; }
     .hl-mask { display: inline; overflow: visible; }
     :global(html.js.anim) .hl-line { transform: none; }
   }

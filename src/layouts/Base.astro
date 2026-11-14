@@ -10,7 +10,7 @@ import '../styles/global.css';
 // 后台专用的 macOS 视觉层：只在 /admin 页面挂载，不进其他页面的样式包
 import adminMacCss from '../styles/admin-mac.css?url';
 // 后台玻璃点缀层（Uiverse 工艺翻译）：叠在 mac 层之上，只改控制条材质
-import adminGlassCss from '../styles/admin-glass.css?url';
+import adminCottageCss from '../styles/admin-cottage.css?url';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import PageLoader from '../components/PageLoader.astro';
@@ -85,17 +85,10 @@ const buildSha = (import.meta.env.PUBLIC_BUILD_SHA ?? 'local').slice(0, 7);
     <link rel="preload" as="style" href={u('/fonts/hanchan/result.css')} onload="this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href={u('/fonts/hanchan/result.css')} /></noscript>
     {isAdmin && <link rel="stylesheet" href={adminMacCss} />}
-    {isAdmin && <link rel="stylesheet" href={adminGlassCss} />}
+    {isAdmin && <link rel="stylesheet" href={adminCottageCss} />}
     <script is:inline>
-      // 首屏前设定主题与背景偏好，避免闪烁
-      const saved = localStorage.getItem('sr-theme');
-      const theme =
-        saved === 'light' || saved === 'dark'
-          ? saved
-          : matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'dark'
-            : 'light';
-      document.documentElement.dataset.theme = theme;
+      // cottagecore 试点：先只提供亮色，忽略系统深色与本机偏好
+      document.documentElement.dataset.theme = 'light';
       if (localStorage.getItem('sr-decor') === 'off') {
         document.documentElement.classList.add('no-decor');
       }

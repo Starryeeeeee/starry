@@ -1,0 +1,290 @@
+/* ==========================================================================
+   管理后台 · 暖色新拟态（admin-cottage.css）
+   --------------------------------------------------------------------------
+   叠在 admin-mac.css 之上的材质层，只换外观，不动结构与行为。
+
+   为什么底色比前台深一档：
+   新拟态靠「同一底色上的双向投影」制造凸起/凹陷，底色越接近纯白，
+   投影越看不见，控件就退化成一片平板。前台纸白 #fdfdf6 上做不出这种质感，
+   所以后台单独用暖米灰 --neu-bg，和前台仍是同一套暖色，只是深一级。
+
+   优先级：admin.astro 的 scoped 样式是「.x[data-astro-cid]」（0,2,0），
+   这里一律用「.macos-admin .admin .x」（0,3,0）压过去，不依赖打包顺序。
+
+   2026-11-13：替代 admin-glass.css（那层的深空水彩洗与玻璃在米色纸面下不成立）。
+   ========================================================================== */
+
+.macos-admin {
+  /* —— 新拟态的三种材料 —— */
+  --neu-bg: #ece5d7;
+  --neu-hi: #fdf9f0;
+  --neu-lo: #c8bda7;
+
+  /* —— 系统色换成站内色板 —— */
+  --mac-blue: #5a8f5a;
+  --mac-green: #5a8f5a;
+  --mac-red: #b44a6b;
+  --mac-orange: #d9b74f;
+
+  /* —— 材质：全部落回同一底色，靠光影分层 —— */
+  --mac-win: var(--neu-bg);
+  --mac-sidebar: var(--neu-bg);
+  --mac-toolbar: var(--neu-bg);
+  --mac-pop: #f1ebe0;
+  --mac-canvas: var(--neu-bg);
+  --mac-fill: #e7dfd0;
+  --mac-fill-hover: #e1d8c7;
+  --mac-sep: #dad0bd;
+
+  /* —— 文字 —— */
+  --mac-label: #37322a;
+  --mac-label-2: #5b5344;
+  --mac-label-3: #8a8071;
+
+  /* —— 控件 —— */
+  --mac-control: var(--neu-bg);
+  --mac-control-line: transparent;
+  --mac-placeholder: #a1998a;
+
+  /* —— 圆角比 mac 层再圆一档 —— */
+  --mac-r-window: 18px;
+  --mac-r-card: 14px;
+  --mac-r-control: 12px;
+  --mac-r-field: 11px;
+
+  /* —— 光影：凸起 / 凹陷两套 —— */
+  --mac-e1: 3px 3px 8px var(--neu-lo), -3px -3px 8px var(--neu-hi);
+  --mac-e2: 6px 6px 16px var(--neu-lo), -6px -6px 16px var(--neu-hi);
+  --neu-in: inset 3px 3px 7px var(--neu-lo), inset -3px -3px 7px var(--neu-hi);
+}
+
+/* —— 画布：统一暖米灰，去掉玻璃层的深空水彩 —— */
+body.macos-admin {
+  background: var(--neu-bg);
+}
+
+.macos-admin .admin {
+  background: var(--neu-bg);
+  background-image: none;
+}
+
+/* —— 面板：凸起的一块，不再用白卡 + 描边 —— */
+.macos-admin .admin .admin-panel,
+.macos-admin .admin-panel {
+  background: var(--neu-bg);
+  border: 0;
+  border-radius: var(--mac-r-card);
+  box-shadow: var(--mac-e2);
+}
+
+/* —— 卡片内的分组：用凹陷压出层次，避免凸起套凸起糊成一片 —— */
+.macos-admin .admin .admin-list,
+.macos-admin .admin .edit-banner {
+  background: var(--neu-bg);
+  border: 0;
+  border-radius: var(--mac-r-field);
+  box-shadow: var(--neu-in);
+}
+
+/* —— 输入类：凹进去，像按在软垫里的格子 —— */
+.macos-admin .admin input,
+.macos-admin .admin select,
+.macos-admin .admin textarea,
+.macos-admin .admin .field {
+  /* 同样要 !important：scoped 的 .admin-panel[data-astro-cid] textarea[data-astro-cid]
+     是 0,3,1，同特异性且后加载 */
+  background: var(--neu-bg) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--mac-r-field);
+  box-shadow: var(--neu-in) !important;
+  color: var(--mac-label);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+/* label.field 是"外壳"，负责凹陷外观；里面的真控件必须透明，否则白底会盖住光影。
+   这里必须用 !important：admin.astro 的 scoped 规则是
+   「.admin-panel[data-astro-cid] input[data-astro-cid]」（0,3,1），
+   与本文件同特异性且后加载，只能靠 !important 跨层覆盖。 */
+.macos-admin .admin .field input,
+.macos-admin .admin .field select,
+.macos-admin .admin .field textarea {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--mac-label);
+}
+
+/* 没有外壳包裹的裸输入（登录那一行）：自己承担凹陷外观 */
+.macos-admin .admin .login-row input {
+  background: var(--neu-bg) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--mac-r-field);
+  box-shadow: var(--neu-in) !important;
+}
+
+.macos-admin .admin .login-row input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent) !important;
+  box-shadow: var(--neu-in), 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+}
+
+/* label.field 是"外壳"，负责凹陷外观；里面的真控件必须透明，否则白底会盖住光影。
+   这里必须用 !important：admin.astro 的 scoped 规则是
+   「.admin-panel[data-astro-cid] input[data-astro-cid]」（0,3,1），
+   与本文件同特异性且后加载，只能靠 !important 跨层覆盖。 */
+.macos-admin .admin .field input,
+.macos-admin .admin .field select,
+.macos-admin .admin .field textarea {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--mac-label);
+}
+
+/* 没有外壳包裹的裸输入（登录那一行）：自己承担凹陷外观 */
+.macos-admin .admin .login-row input {
+  background: var(--neu-bg) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--mac-r-field);
+  box-shadow: var(--neu-in) !important;
+}
+
+.macos-admin .admin .login-row input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent) !important;
+  box-shadow: var(--neu-in), 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+}
+
+.macos-admin .admin input::placeholder,
+.macos-admin .admin textarea::placeholder {
+  color: var(--mac-placeholder);
+}
+
+.macos-admin .admin input:focus,
+.macos-admin .admin select:focus,
+.macos-admin .admin textarea:focus,
+.macos-admin .admin .field:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: var(--neu-in), 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* —— 按钮：平时凸起，按下凹进去 —— */
+.macos-admin .admin .admin-btn {
+  background: var(--neu-bg);
+  border: 0;
+  border-radius: var(--mac-r-control);
+  box-shadow: var(--mac-e1);
+  color: var(--mac-label);
+  transition: box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+.macos-admin .admin .admin-btn:hover {
+  box-shadow: 4px 4px 11px var(--neu-lo), -4px -4px 11px var(--neu-hi);
+}
+
+.macos-admin .admin .admin-btn:active {
+  box-shadow: var(--neu-in);
+  transform: translateY(1px);
+}
+
+/* 主按钮：草绿实心，投影用深绿而不是灰，才不像浮在半空 */
+.macos-admin .admin .admin-btn.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 4px 4px 12px color-mix(in srgb, var(--p-leaf-750) 34%, transparent),
+    -3px -3px 10px var(--neu-hi);
+}
+
+.macos-admin .admin .admin-btn.primary:hover {
+  background: var(--accent-ink);
+}
+
+.macos-admin .admin .admin-btn.primary:active {
+  box-shadow: inset 3px 3px 8px color-mix(in srgb, var(--p-leaf-750) 45%, transparent);
+}
+
+/* 危险态用花粉，不用正红 */
+.macos-admin .admin .admin-btn.danger {
+  color: var(--danger-ink);
+}
+
+.macos-admin .admin .admin-btn.danger:hover {
+  background: color-mix(in srgb, var(--danger) 12%, var(--neu-bg));
+}
+
+/* 幽灵按钮：不占视觉重量，只留文字 */
+.macos-admin .admin .admin-btn.ghost {
+  box-shadow: none;
+  background: transparent;
+  color: var(--mac-label-2);
+}
+
+.macos-admin .admin .admin-btn.ghost:hover {
+  box-shadow: var(--mac-e1);
+  color: var(--mac-label);
+}
+
+/* —— 标签页：选中的那个凹进去，像被按下去 —— */
+.macos-admin .admin .admin-tab {
+  background: var(--neu-bg);
+  border: 0;
+  border-radius: var(--mac-r-control);
+  box-shadow: none;
+  color: var(--mac-label-2);
+}
+
+.macos-admin .admin .admin-tabs .admin-tab.active,
+.macos-admin .admin .admin-tabs .admin-tab[aria-selected="true"] {
+  /* 选中的页签「按下去」：新拟态里凹陷即表示被激活，不用实心色块抢注意力 */
+  background: var(--neu-bg) !important;
+  color: var(--accent-ink);
+  box-shadow: var(--neu-in) !important;
+}
+
+/* —— AI 助手面板：气泡也按软垫处理 —— */
+.macos-admin .admin .ai-msg.bot {
+  background: var(--neu-bg);
+  border: 0;
+  box-shadow: var(--mac-e1);
+}
+
+.macos-admin .admin .ai-msg.user {
+  background: color-mix(in srgb, var(--accent) 16%, var(--neu-bg));
+  border: 0;
+}
+
+.macos-admin .admin .ai-profile-chip {
+  background: var(--neu-bg);
+  border: 0;
+  box-shadow: var(--mac-e1);
+}
+
+.macos-admin .admin .ai-profile-chip.active {
+  color: var(--accent-ink);
+  box-shadow: var(--neu-in);
+}
+
+.macos-admin .admin .ai-icon-btn {
+  background: var(--neu-bg);
+  border: 0;
+  box-shadow: var(--mac-e1);
+}
+
+.macos-admin .admin .ai-icon-btn:active {
+  box-shadow: var(--neu-in);
+}
+
+/* —— 登录卡：唯一允许大面积浮起的对象 —— */
+.macos-admin .admin .login-card,
+.macos-admin .admin .admin-login {
+  background: var(--neu-bg);
+  border: 0;
+  box-shadow: var(--mac-e2);
+}
+
+/* —— 提示文字：暖灰，不用纯黑 —— */
+.macos-admin .admin .hint,
+.macos-admin .admin .meta {
+  color: var(--mac-label-3);
+}

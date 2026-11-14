@@ -3,86 +3,89 @@
    规则：
    1. 原始值（--p-*）只允许出现在本文件，页面与组件里出现 hex 即违规。
    2. 页面只用语义层（--bg / --ink / --accent…），不直接用原始值。
-   3. 暗色只重绑语义层，原始值不动；新增颜色先在这里登记再使用。
+   3. 新增颜色先在这里登记再使用。
+
+   2026-11-13 · cottagecore 试点
+   从「纸白 + 霁蓝」换成「亚麻米 + 草绿 + 陶土 + 雏菊黄 + 花粉」。
+   暗色暂不提供（站主要求先只做亮色），下方 dark 段刻意留空。
    ============================================================ */
 
 :root {
   /* ---------- 第一层：原始值 ---------- */
-  --p-paper-0: #ffffff;
-  --p-paper-1: #faf9f5; /* 纸白 */
-  --p-paper-2: #f8f6f1;
-  --p-paper-3: #f1eee7; /* 暖沙灰 */
-  --p-paper-4: #e7e3da; /* 边线 */
-  --p-paper-5: #e6d8c3;
-  --p-paper-6: #edf1ec; /* 水彩浅底 */
+  --p-linen-0: #fffefa; /* 卡片：比纸再亮一档 */
+  --p-linen-1: #fdfdf6; /* 纸底（Cream Linen） */
+  --p-linen-2: #f8f5e8; /* 次级底 */
+  --p-linen-3: #f0ebda; /* 洗淡底 */
+  --p-linen-4: #e4dcc8; /* 边线 */
+  --p-linen-5: #d5cab1; /* 深边线 */
 
-  --p-ink-900: #30353a;
-  --p-ink-700: #5d646b;
-  --p-ink-500: #6b6b7a;
-  --p-ink-300: #767684; /* 已废弃：对比度不足，仅历史引用兜底 */
+  --p-ink-950: #2a241c; /* 灯箱遮罩、代码块 */
+  --p-ink-900: #37322a; /* 正文墨（暖） */
+  --p-ink-700: #5b5344;
+  --p-ink-500: #7c7361;
 
-  --p-blue-700: #32567a;
-  --p-blue-600: #466f9a; /* 霁蓝 */
-  --p-blue-400: #8fa9c2;
-  --p-blue-300: #a9c0d6;
+  --p-leaf-750: #3f6b3f; /* 深草绿：链接、hover */
+  --p-leaf-600: #5a8f5a; /* 草绿：主色 */
+  --p-leaf-400: #8fb98f;
+  --p-leaf-250: #d2e2cd;
 
-  --p-green-600: #6b8f7d;
-  --p-green-500: #5f7f6d;
-  --p-green-400: #97b8a4;
-  --p-green-300: #b3cabb;
+  --p-clay-700: #6f5a42; /* 陶土棕：第二强调 */
+  --p-clay-600: #8b7355;
+  --p-clay-400: #b09a7c;
 
-  --p-rose-600: #b4766b; /* 陶土玫瑰 */
-  --p-rose-700: #9c5f55;
-  --p-rose-400: #cf8d81;
-  --p-rose-300: #e0a89d;
+  --p-honey-600: #d9b74f; /* 雏菊黄：装饰与高亮 */
+  --p-honey-400: #f5d76e;
+  --p-honey-250: #f9e9b0;
 
-  --p-sand-600: #a98e67;
-  --p-sand-700: #8f744f;
-  --p-sand-400: #c4ab84;
-  --p-sand-300: #d6c19e;
+  --p-blossom-700: #8f3852; /* 花粉：强调与危险态 */
+  --p-blossom-600: #b44a6b;
+  --p-blossom-400: #d1829a;
 
-  --p-dark-900: #1d1c1a; /* 暖炭灰 */
-  --p-dark-800: #262522;
-  --p-dark-700: #302e2a;
-  --p-dark-600: #38352f;
-  --p-dark-950: #14141a;
+  /* 历史引用兜底：代码块与灯箱仍按暖墨取值 */
+  --p-dark-950: var(--p-ink-950);
 
-  --p-cream-200: #eae7e1;
-  --p-cream-400: #b3afa6;
-  --p-cream-500: #8f8b82;
-
-  /* ---------- 第二层：语义（亮色） ---------- */
+  /* ---------- 第二层：语义 ---------- */
   color-scheme: light;
 
-  --bg: var(--p-paper-1);
-  --surface: var(--p-paper-0);
-  --surface-2: var(--p-paper-3);
-  --wash: var(--p-paper-6);
-  --line: var(--p-paper-4);
+  --bg: var(--p-linen-1);
+  --surface: var(--p-linen-0);
+  --surface-2: var(--p-linen-2);
+  --wash: var(--p-linen-3);
+  --line: var(--p-linen-4);
 
   --ink: var(--p-ink-900);
   --ink-2: var(--p-ink-700);
   --ink-3: var(--p-ink-500);
 
-  --accent: var(--p-blue-600);
-  --accent-ink: var(--p-blue-700);
-  --accent-2: var(--p-green-600);
-  --accent-2-ink: var(--p-green-500);
+  --accent: var(--p-leaf-600);
+  --accent-ink: var(--p-leaf-750);
+  --on-accent: var(--p-linen-0); /* 主色底上的文字 */
+  --on-solid: #ffffff; /* 深底/彩色实心块上的文字（灯箱、深色按钮） */
+  /* 柔和色：只用于极淡的装饰渐变，不参与文字与控件 */
+  --sand-soft: var(--p-honey-250);
+  --rose-soft: var(--p-blossom-400);
+  --leaf-soft: var(--p-leaf-250);
+  --accent-light: var(--p-leaf-400);
+  --accent-light: var(--p-leaf-400);
+  --on-solid: #ffffff; /* 深底/彩色实心块上的文字（灯箱、深色按钮） */
+  --accent-2: var(--p-clay-600);
+  --accent-2-ink: var(--p-clay-700);
 
-  --rose: var(--p-rose-600);
-  --rose-ink: var(--p-rose-700);
-  --sand: var(--p-sand-600);
-  --sand-ink: var(--p-sand-700);
+  --rose: var(--p-blossom-600);
+  --rose-ink: var(--p-blossom-700);
+  --sand: var(--p-honey-400);
+  --sand-ink: var(--p-honey-600);
 
   /* 状态色：只表达状态，不做装饰 */
-  --danger: var(--p-rose-600);
-  --danger-ink: var(--p-rose-700);
-  --success: var(--p-green-600);
-  --success-ink: var(--p-green-500);
+  --danger: var(--p-blossom-600);
+  --danger-ink: var(--p-blossom-700);
+  --success: var(--p-leaf-600);
+  --success-ink: var(--p-leaf-750);
 
-  --shadow: 0 1px 2px rgba(48, 53, 58, 0.05), 0 10px 30px rgba(48, 53, 58, 0.06);
+  /* 阴影：暖棕调；cottagecore 的卡片几乎不用阴影 */
+  --shadow: 0 1px 2px rgba(90, 72, 48, 0.05), 0 10px 28px rgba(90, 72, 48, 0.06);
 
-  /* ---------- 第三层：尺度（明暗无关） ---------- */
+  /* ---------- 第三层：尺度（与配色无关） ---------- */
   /* 间距：4 的倍数，页面里不再写散值 */
   --space-1: 4px;
   --space-2: 8px;
@@ -93,10 +96,10 @@
   --space-7: 48px;
   --space-8: 64px;
 
-  /* 圆角：只有四档 */
-  --radius-sm: 6px; /* 极小控件、代码片段 */
-  --radius-md: 10px; /* 按钮、输入框、标签容器 */
-  --radius-lg: 14px; /* 容器、面板、卡片 */
+  /* 圆角：cottagecore 比上一版更圆一档 */
+  --radius-sm: 8px; /* 极小控件、代码片段 */
+  --radius-md: 12px; /* 按钮、输入框、标签容器 */
+  --radius-lg: 18px; /* 容器、面板、卡片 */
   --radius-pill: 999px; /* 胶囊 */
   --radius: var(--radius-lg); /* 兼容旧引用 */
 
@@ -108,8 +111,14 @@
   --z-modal: 120;
   --z-toast: 200;
 
-  /* 动效 */
+  /* 动效
+     --ease-out 等曲线此前从未定义，却是 27 处 animation / transition 的参数。
+     浏览器对未定义的 var() 会让整条声明失效（不是回退到默认值），
+     所以那些动画其实一直没播 —— 加载进度条停在水位 0 就是这么来的。 */
   --ease: ease;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --dur-fast: 0.15s;
   --dur: 0.25s;
   --dur-slow: 0.4s;
@@ -119,13 +128,24 @@
   --w-wide: 1080px;
   --gutter: 24px;
 
-  /* 字体 */
+  /* 字体
+     标题：宋体系（印刷衬线），英文走 STIX；正文：楷体（手作感）。
+     cottagecore 的斜体衬线只对拉丁字母成立，中文一律不斜。 */
   --font-sans: "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Source Han Sans SC",
     "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", system-ui,
     -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-serif: Georgia, "Times New Roman", "Songti SC", serif;
   --font-display: "STIX Two Text", "Times New Roman", Times, Georgia, serif;
-  --font-display-cn: "AliHYAiHei-Beta", "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* SimSun 必须排在 Songti SC 之前：Windows 上 "Songti SC" 会回退到一种更粗的字体，
+     实测同一句 48px 中文，SimSun 才是清秀的印刷宋体。macOS 无 SimSun 时自然落到 Songti SC。 */
+  --font-display-cn: "SimSun", "Songti SC", "Noto Serif SC", "Source Han Serif SC",
+    "STSong", serif;
+  /* 英文标题保持原样（AI 黑体）。用户明确「英文字体不用改」，
+     中文标题走宋体，两者分开各管各的。 */
+  --font-display-en: "AliHYAiHei-Beta", "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* 首屏那句 "Hi, I'm Starry" 专用：带衬角的古典衬线（站主选定的这一版） */
+  --font-hero: "Palatino Linotype", "Book Antiqua", Palatino, Georgia,
+    "STIX Two Text", "Times New Roman", serif;
   --font-kai: "LXGW WenKai Screen", "LXGW WenKai", "Kaiti SC", STKaiti, KaiTi, serif;
   --font-song: "SimSun", "NSimSun", "Songti SC", "Noto Serif SC", serif;
   --font-round: "寒蝉全圆体", "LXGW WenKai Screen", "Kaiti SC", STKaiti, KaiTi, serif;
@@ -142,36 +162,11 @@
   --text-2xl: 2rem;
 }
 
-/* ---------- 暗色：只重绑语义层 ---------- */
+/* ---------- 暗色：cottagecore 试点阶段停用 ----------
+   站主决定先只做亮色。这里不重绑任何变量，
+   即使 html 上残留 data-theme="dark"，也一律按亮色渲染。 */
 [data-theme="dark"] {
-  color-scheme: dark;
-
-  --bg: var(--p-dark-900);
-  --surface: var(--p-dark-800);
-  --surface-2: var(--p-dark-700);
-  --wash: #262b28;
-  --line: var(--p-dark-600);
-
-  --ink: var(--p-cream-200);
-  --ink-2: var(--p-cream-400);
-  --ink-3: var(--p-cream-500);
-
-  --accent: var(--p-blue-400);
-  --accent-ink: var(--p-blue-300);
-  --accent-2: var(--p-green-400);
-  --accent-2-ink: var(--p-green-300);
-
-  --rose: var(--p-rose-400);
-  --rose-ink: var(--p-rose-300);
-  --sand: var(--p-sand-400);
-  --sand-ink: var(--p-sand-300);
-
-  --danger: var(--p-rose-400);
-  --danger-ink: var(--p-rose-300);
-  --success: var(--p-green-400);
-  --success-ink: var(--p-green-300);
-
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(0, 0, 0, 0.28);
+  color-scheme: light;
 }
 
 /* 正文字体偏好（页脚切换） */

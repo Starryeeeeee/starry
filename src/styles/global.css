@@ -32,7 +32,8 @@ body {
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
+  /* cottagecore：正文用楷体（页脚仍可切换到宋体/圆体），UI 控件单独走无衬线 */
+  font-family: var(--font-body);
   line-height: 1.85;
   color: var(--ink);
   background: var(--bg);
@@ -130,10 +131,9 @@ main {
   padding: 8px 10px 8px 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  -webkit-backdrop-filter: blur(8px) saturate(120%);
-  backdrop-filter: blur(8px) saturate(120%);
-  box-shadow: 0 6px 24px rgba(48, 53, 58, 0.06);
+  /* cottagecore：不透明米白胶囊，去掉毛玻璃（纸面不该透） */
+  background: var(--surface);
+  box-shadow: 0 4px 16px rgba(90, 72, 48, 0.06);
   isolation: isolate;
 }
 
@@ -787,7 +787,8 @@ main {
 /* 页面大标题与副标题：全站唯一事实源，各页不再自己定义 */
 .page-title,
 .prose h1 {
-  font-family: var(--font-display-cn);
+  /* 英文走 Palatino 衬线，中文字符自动回退到系统宋体（serif） */
+  font-family: var(--font-hero);
   font-weight: 400;
   font-size: var(--text-2xl);
   line-height: 1.3;
@@ -848,6 +849,18 @@ main {
   color: var(--accent-ink);
 }
 
+/* 控件类文字保持无衬线：楷体只用于内容，不用于按钮与导航 */
+.nav-links > a,
+.nav-more-btn,
+.nav-more-menu a,
+.chip,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-sans);
+}
+
 /* ---------- 通用组件层：全站只此一套，页面不再自造 ---------- */
 
 /* 标签与筛选 chip：同一种胶囊，只有可点击的才有 hover 与选中态 */
@@ -869,6 +882,28 @@ main {
   background: var(--surface-2);
   border: 0;
   border-radius: var(--radius-pill);
+}
+
+/* 标签轮换色：同一排标签里有黄有粉，像手账里不同颜色的贴纸 */
+.tags span:nth-child(3n + 2) {
+  background: color-mix(in srgb, var(--sand) 34%, var(--surface-2));
+  color: color-mix(in srgb, var(--sand-ink) 70%, var(--ink-2));
+}
+
+.tags span:nth-child(3n) {
+  background: color-mix(in srgb, var(--rose) 16%, var(--surface-2));
+  color: color-mix(in srgb, var(--rose-ink) 55%, var(--ink-2));
+}
+
+/* 标签轮换色：同一排标签里有黄有粉，像手账里不同颜色的贴纸 */
+.tags span:nth-child(3n + 2) {
+  background: color-mix(in srgb, var(--sand) 34%, var(--surface-2));
+  color: color-mix(in srgb, var(--sand-ink) 70%, var(--ink-2));
+}
+
+.tags span:nth-child(3n) {
+  background: color-mix(in srgb, var(--rose) 16%, var(--surface-2));
+  color: color-mix(in srgb, var(--rose-ink) 55%, var(--ink-2));
 }
 
 button.chip {
@@ -1025,8 +1060,11 @@ button.chip[aria-pressed="true"] {
 }
 
 .moment-name {
-  font-weight: 650;
-  font-size: 0.95rem;
+  /* 署名统一成衬线斜体，和页脚、品牌行的做法一致 */
+  font-family: var(--font-hero);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1rem;
 }
 
 .moment-head time {
@@ -1050,7 +1088,9 @@ button.chip[aria-pressed="true"] {
   font-size: var(--text-xs);
   line-height: 1.9;
   color: var(--ink-3);
-  background: var(--wash);
+  /* 空态用虚线圈，比一块实心米色轻，也更像手账上的留白格 */
+  background: transparent;
+  border: 1px dashed var(--line);
   border-radius: var(--radius-lg);
 }
 
@@ -1402,6 +1442,32 @@ button.chip[aria-pressed="true"] {
   text-decoration-thickness: 1px;
 }
 
+/* 页脚手绘分隔：虚线 + 一朵五瓣小花，给结尾一点手作痕迹 */
+.foot-orn {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0 0;
+}
+
+.foot-orn svg {
+  display: block;
+  width: 140px;
+  height: 18px;
+}
+
+/* 页脚手绘分隔：虚线 + 一朵五瓣小花，给结尾一点手作痕迹 */
+.foot-orn {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0 0;
+}
+
+.foot-orn svg {
+  display: block;
+  width: 140px;
+  height: 18px;
+}
+
 .foot-bottom {
   display: flex;
   flex-wrap: wrap;
@@ -1518,6 +1584,12 @@ html.no-decor .bg-decor {
   display: block;
   width: 100%;
   height: auto; /* 覆盖 astro:assets 写入的 height 属性，否则会变细长条 */
+  border-radius: var(--radius-md);
+  /* 用 ring 而不是 border，避免影响百分比宽度计算 */
+  box-shadow: 0 0 0 1px var(--line);
+  border-radius: var(--radius-md);
+  /* 用 ring 而不是 border，避免影响百分比宽度计算 */
+  box-shadow: 0 0 0 1px var(--line);
   transition: transform 0.5s var(--ease-out), filter 0.3s ease;
 }
 
@@ -1624,7 +1696,7 @@ html.no-decor .bg-decor {
   border-radius: var(--radius-pill);
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  color: var(--on-solid);
   font-size: 17px;
   line-height: 1;
   cursor: pointer;
