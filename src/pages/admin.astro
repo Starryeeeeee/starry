@@ -2,6 +2,10 @@
 // 站长管理面板：纯客户端，通过 GitHub API 直接读写仓库（等于把 GitHub 当后端）
 // 登录方式：GitHub 个人访问令牌（PAT），只存在站长自己浏览器的 localStorage 里
 import Base from '../layouts/Base.astro';
+// AI 助手两个模式开关的图标：Lucide (ISC)，走全站统一的本地 SVG 库（1em + currentColor，
+// 勾选变绿时图标跟着一起变色）
+import lightbulbIcon from '../icons/ui/lightbulb.svg?raw';
+import globeIcon from '../icons/ui/globe.svg?raw';
 ---
 
 <Base title="管理 · 星野漫游" description="站长管理面板。">
@@ -333,8 +337,8 @@ import Base from '../layouts/Base.astro';
           <button class="admin-btn ghost" type="button" data-ai-q="帮我把下面这句话润色成一条废话条，保持原意、语言更有味道，只输出润色后的一句话：">润色废话条</button>
         </div>
         <div class="ai-modes">
-          <label class="kb-mode"><input type="checkbox" data-ai="think" /> 深度思考</label>
-          <label class="kb-mode"><input type="checkbox" data-ai="web" /> 联网搜索</label>
+          <label class="kb-mode"><input type="checkbox" data-ai="think" /><Fragment set:html={lightbulbIcon} /><span>深度思考</span></label>
+          <label class="kb-mode"><input type="checkbox" data-ai="web" /><Fragment set:html={globeIcon} /><span>联网搜索</span></label>
           <span class="ai-mode-note">都不开 = 快速模式，只基于站内资料；开思考更缜密但更慢；开联网则站内资料与网上结果结合分析</span>
         </div>
         <div class="ai-input-row">
