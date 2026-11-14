@@ -11,8 +11,17 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping likes table
+      - name: Ping likes table（失败时打印诊断）
         run: |
-          curl -fsS "https://noueumqoguhikzmjetuu.supabase.co/rest/v1/likes?select=count&limit=1" \
+          code=$(curl -sS -o /tmp/ping-body -w "%{http_code}" \
+            "https://noueumqoguhikzmjetuu.supabase.co/rest/v1/likes?select=count&limit=1" \
             -H "apikey: sb_publishable_m_aCm2fn9GEJRV9hokGAmg_NBamZWOe" \
-            -H "Authorization: Bearer sb_publishable_m_aCm2fn9GEJRV9hokGAmg_NBamZWOe"
+            -H "Authorization: Bearer sb_publishable_m_aCm2fn9GEJRV9hokGAmg_NBamZWOe") || code=000
+          echo "HTTP $code"
+          cat /tmp/ping-body 2>/dev/null || true
+          if [ "$code" != "200" ]; then
+            echo "::error::Supabase ping 失败（HTTP $code）。401/403=key 无效，去 Dashboard API Keys 页核对 publishable key；"
+            echo "::error::持续失败且 Dashboard 显示项目 paused = 免费档已被暂停，去 Dashboard 恢复项目即可。"
+            exit 1
+          fi
+          echo "keepalive OK"

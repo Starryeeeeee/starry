@@ -10,7 +10,7 @@
 - [x] P2 首页 Hero / 标语 / 内容层次（2026-11-01：首屏按站主要求保持简约不动；内容区改单列 + 镂空栏目标题，浮现改半透明起手）
 - [x] P3 AI 挂件视觉融入（2026-11-01：终端 → 纸白，功能全留）
 - [x] P4 内容生命周期 + 知识库访问级别（2026-11-01：`access` 字段 + 数据层过滤，见 PRODUCT.md）
-- [ ] P4.1 /admin 知识库表单加「访问级别」选择器（现在要手改 frontmatter）
+- [x] P4.1 /admin 知识库表单加「访问级别」选择器（2026-11-14：表单选择器 + frontmatter 写入 + 编辑回填 + 发布后回落 public；private 不构建，personal 不进列表/AI 索引）
 - [x] P5 字体加载策略 + OG / sitemap / 404 + lint / typecheck（2026-11-01）
 - [ ] P5.1 内容备份导出（现在内容只活在 GitHub API 里；2026-11-14 评估后站主决定暂缓）。已定方向：①首选 Actions 每周自动把 Issues / Discussions 快照成 JSON 存进仓库 `_backup/`（站主零操作，仓库自带版本史）；②可选 /admin 一键导出 zip。另注意：AI 会话记录与模型配置只活在站主浏览器 localStorage，清缓存即丢，是全站最脆的一份数据，届时一并处理
 - [x] P5.5 后台新增「日志」页签，可直接写 / 改 / 删建站日志（2026-11-14：复用文章的 contents API 链路，编号自动递增、编辑时锁定）
@@ -40,9 +40,7 @@
 - [x] 匿名点赞（2026-10-30 代码上线）：Supabase REST 直连，RLS 设计（anon 只读+只能调 increment_like 原子自增函数）；**等站主跑一次 `scripts/supabase-setup.sql`**（Dashboard → SQL Editor 粘贴 Run），跑完点赞按钮自动激活（**2026-10-31 站主决定搁置**：SQL 未跑前点赞按钮在全站自动隐藏，不影响任何功能；想激活随时跑 SQL）
 - [x] Supabase 保活：.github/workflows/supabase-keepalive.yml，每周一自动 ping，防免费档 7 天无活动被暂停
 - [ ] 不蒜子访客统计
-- [ ] 画廊在 /admin 的上传功能（现在加图仍需本地放文件 push）
 - [ ] 管理令牌安全提醒：PAT 存在浏览器 localStorage，仅自己电脑用；泄露可在 github.com/settings/tokens 撤销
-- [ ] `src/pages/icon-preview.astro` 是图标预览页，部署前可以删掉
 
 ## 字体（已接入 2026-10-25）
 - [x] 两套 cn-font-split 子集在 `public/fonts/`：alihei（阿里汉仪AI黑体，官方免费商用，正文/UI/标题）、hanchan（寒蝉全圆体，开源免费，标语/废话条/引用）；字魂正酷黑已按站长要求全站移除（2026-10-31，文件与引用均无残留）

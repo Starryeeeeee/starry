@@ -234,6 +234,15 @@ import globeIcon from '../icons/ui/globe.svg?raw';
             </select>
           </label>
           <label class="field">
+            <span>访问级别</span>
+            <select data-kb-note="access">
+              <option value="public">公开（列表、AI 索引、站点地图都可见）</option>
+              <option value="personal">个人（不进列表与 AI 索引，仅直链可看）</option>
+              <option value="private">私密（完全不构建）</option>
+            </select>
+          </label>
+          <p class="hint">访问级别是「状态」之外的另一层开关：personal 与 private 的条目不会进列表、AI 索引和站点地图；private 连详情页都不构建。</p>
+          <label class="field">
             <span>一句话说明</span>
             <input type="text" data-kb-note="desc" placeholder="列表页显示的摘要（可空）" />
           </label>
@@ -1540,6 +1549,10 @@ import globeIcon from '../icons/ui/globe.svg?raw';
       editingKbNote.metaStatus === 'draft' || editingKbNote.metaStatus === 'archived'
         ? editingKbNote.metaStatus
         : 'public';
+    ($('[data-kb-note="access"]') as HTMLSelectElement).value =
+      String(meta.access) === 'personal' || String(meta.access) === 'private'
+        ? String(meta.access)
+        : 'public';
     ($('[data-kb-note="body"]') as HTMLTextAreaElement).value = body;
     ($('[data-act="publish-kb-note"]') as HTMLElement).textContent = '保存修改';
     setBanner('kb', f.name);
@@ -1557,6 +1570,8 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     editingKbNote = null;
     ($('[data-act="publish-kb-note"]') as HTMLElement).textContent = '发布条目';
     setBanner('kb', null);
+    // 访问级别回落到公开：避免上一条的 private 混进下一条新笔记
+    ($('[data-kb-note="access"]') as HTMLSelectElement).value = 'public';
     if (clearForm)
       ['title', 'tags', 'desc', 'body'].forEach(
         (k) => (($(`[data-kb-note="${k}"]`) as HTMLInputElement).value = ''),
@@ -2319,6 +2334,8 @@ import globeIcon from '../icons/ui/globe.svg?raw';
           ? (editingKbNote!.metaId ?? newCid(date))
           : newCid(date);
         const status = g('status') || 'public';
+        // 访问级别：public 是默认值，不写进 frontmatter 保持文件干净；kb.ts 数据层缺省即 public
+        const access = g('access') || 'public';
         const name = isEdit ? editingKbNote!.name : `${titleToFileName(title)}.md`;
         const fm = [
           '---',
@@ -2329,6 +2346,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
           `subject: ${g('subject') || '未分类'}`,
           tags.length ? `tags: [${tags.join(', ')}]` : null,
           `status: ${status}`,
+          access !== 'public' ? `access: ${access}` : null,
           '---',
           '',
           '',

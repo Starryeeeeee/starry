@@ -15,6 +15,12 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
         <button type="button" class="qc-type" data-qc-type="quote" aria-pressed="false">箴言</button>
         <button type="button" class="qc-type" data-qc-type="view" aria-pressed="false">看法</button>
       </div>
+      <div class="qc-stems" data-qc-stems hidden>
+        <button type="button" class="qc-stem" data-qc-stem="今天发现：">今天发现：</button>
+        <button type="button" class="qc-stem" data-qc-stem="我想记住：">我想记住：</button>
+        <button type="button" class="qc-stem" data-qc-stem="反思：">反思：</button>
+        <button type="button" class="qc-stem" data-qc-stem="读到一条：">读到一条：</button>
+      </div>
       <textarea class="qc-text" data-qc-text rows="4" maxlength="500" placeholder="记一笔…（Enter 发送，Shift+Enter 换行）"></textarea>
       <div class="qc-foot">
         <span class="qc-hint" data-qc-hint></span>
@@ -94,6 +100,30 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
     display: flex;
     gap: 4px;
     margin-bottom: 10px;
+  }
+  /* 速记模板：把「开头」垫进输入框，降低起草成本（2026-11-14 采纳 Copilot 建议） */
+  .qc-stems {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .qc-stems[hidden] {
+    display: none;
+  }
+  .qc-stem {
+    padding: 4px 10px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    color: var(--ink-2);
+    background: var(--wash);
+    border: none;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .qc-stem:hover {
+    background: color-mix(in srgb, var(--accent) 14%, var(--wash));
   }
   .qc-type {
     padding: 5px 13px;
@@ -302,6 +332,14 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
     hintTimer = window.setTimeout(() => (hint.textContent = ''), 4200);
   }
 
+  // 草稿本地暂存：切页、断网、误退都不丢——输入即存，发布成功即清
+  const DRAFT_KEY = 'sr-qc-draft';
+  const saveDraft = () => {
+    if (text.value.trim()) localStorage.setItem(DRAFT_KEY, text.value);
+    else localStorage.removeItem(DRAFT_KEY);
+  };
+  text.addEventListener('input', saveDraft);
+
   function setOpen(open: boolean) {
     root.dataset.open = String(open);
     fab.setAttribute('aria-expanded', String(open));
@@ -312,6 +350,7 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
       text.hidden = !loggedIn;
       sendBtn.hidden = !loggedIn;
       (root.querySelector('.qc-types') as HTMLElement).hidden = !loggedIn;
+      (root.querySelector('[data-qc-stems]') as HTMLElement).hidden = !loggedIn;
       if (!loggedIn) {
         hint.classList.add('err');
         hint.innerHTML =
@@ -321,6 +360,7 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
       } else {
         hint.classList.remove('err');
         hint.textContent = '发布到「' + typeName() + '」';
+        if (!text.value) text.value = localStorage.getItem(DRAFT_KEY) ?? '';
         text.focus();
       }
     } else {
@@ -342,6 +382,15 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
         x.setAttribute('aria-pressed', String(x === b));
       });
       hint.textContent = '发布到「' + typeName() + '」';
+    });
+  }
+
+  // 速记模板：点一下把「开头」垫进输入框（已带开头就不重复）
+  for (const b of [...root.querySelectorAll<HTMLButtonElement>('[data-qc-stem]')]) {
+    b.addEventListener('click', () => {
+      const stem = b.dataset.qcStem ?? '';
+      if (!text.value.startsWith(stem)) text.value = stem + text.value;
+      text.focus();
     });
   }
 
@@ -429,8 +478,11 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
       }
       // 2) 写文件本身就是 commit，push 自动触发部署，无需再单独触发构建
       text.value = '';
-      say('已发布到「' + typeName() + '」，1-2 分钟上站');
-      window.setTimeout(() => setOpen(false), 1100);
+      localStorage.removeItem(DRAFT_KEY);
+      const where = label() === 'quote' ? '/quotes/' : label() === 'view' ? '/views/' : '/moments/';
+      hint.innerHTML =
+        '已发布到「' + typeName() + '」，1-2 分钟上站 · <a href="' + u(where) + '">立即查看</a>';
+      window.setTimeout(() => setOpen(false), 1600);
     } catch (e) {
       // 草稿（text.value）故意保留，重试不丢内容
       const err = e as Error;
