@@ -71,7 +71,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
             </select>
           </label>
         </div>
-        <textarea rows="3" placeholder="这一刻的想法…（Ctrl+Enter 快捷发布）" aria-label="动态内容"></textarea>
+        <textarea rows="3" placeholder="这一刻的想法…（Ctrl+Enter 发布）" aria-label="动态内容"></textarea>
         <div class="row-end">
           <button class="admin-btn primary" type="button" data-act="publish-moment">发布</button>
         </div>
@@ -1620,10 +1620,10 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     const mine = entries.filter((e) => e.kind === label);
     if (!mine.length) {
       list.innerHTML = `<li class="meta">还没有${typeName}</li>`;
-      setCount('moments', 0);
+      setCount('moments', entries.length);
       return;
     }
-    setCount('moments', mine.length);
+    setCount('moments', entries.length);
     for (const it of mine) {
       const li = document.createElement('li');
       li.innerHTML = `<span class="name"></span><span class="meta">${it.at.slice(0, 10)}</span>`;
@@ -1648,6 +1648,9 @@ import globeIcon from '../icons/ui/globe.svg?raw';
       list.appendChild(li);
     }
   }
+
+  // 「发布到」切换时列表与标题立即跟上——不能停在上一类的旧视图
+  $('[data-moment-label]')?.addEventListener('change', () => refreshMoments());
 
   // ---------- 文章（contents API） ----------
   async function refreshPosts() {

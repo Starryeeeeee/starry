@@ -131,25 +131,6 @@ body.macos-admin {
   box-shadow: var(--neu-in) !important;
 }
 
-.macos-admin .admin .login-row input:focus {
-  outline: none;
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent) !important;
-  box-shadow: var(--neu-in), 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent) !important;
-}
-
-/* label.field 是"外壳"，负责凹陷外观；里面的真控件必须透明，否则白底会盖住光影。
-   这里必须用 !important：admin.astro 的 scoped 规则是
-   「.admin-panel[data-astro-cid] input[data-astro-cid]」（0,3,1），
-   与本文件同特异性且后加载，只能靠 !important 跨层覆盖。 */
-.macos-admin .admin .field input,
-.macos-admin .admin .field select,
-.macos-admin .admin .field textarea {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  color: var(--mac-label);
-}
-
 /* 没有外壳包裹的裸输入（登录那一行）：自己承担凹陷外观 */
 .macos-admin .admin .login-row input {
   background: var(--neu-bg) !important;
@@ -160,8 +141,8 @@ body.macos-admin {
 
 .macos-admin .admin .login-row input:focus {
   outline: none;
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent) !important;
-  box-shadow: var(--neu-in), 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+  border-color: var(--accent-ink) !important;
+  box-shadow: var(--neu-in), 0 0 0 3px color-mix(in srgb, var(--accent-ink) 28%, transparent) !important;
 }
 
 .macos-admin .admin input::placeholder,
@@ -174,8 +155,14 @@ body.macos-admin {
 .macos-admin .admin textarea:focus,
 .macos-admin .admin .field:focus {
   outline: none;
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  box-shadow: var(--neu-in), 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: var(--accent-ink);
+  box-shadow: var(--neu-in), 0 0 0 3px color-mix(in srgb, var(--accent-ink) 28%, transparent);
+}
+
+/* 焦点可见性：mac 层的 72% 透明绿在米灰底上只有 ≈2.2:1，键盘焦点环提到
+   全量 accent-ink（对画布 ≈4.95:1），输入环同色（评审 P1） */
+.macos-admin :focus-visible {
+  outline-color: var(--accent-ink);
 }
 
 /* —— 按钮：平时凸起，按下凹进去 —— */
@@ -197,16 +184,17 @@ body.macos-admin {
   transform: translateY(1px);
 }
 
-/* 主按钮：草绿实心，投影用深绿而不是灰，才不像浮在半空 */
+/* 主按钮：深草绿实心（白字 6.2:1 过 AA——浅草绿只有 3.78:1），
+   投影用深绿而不是灰，才不像浮在半空 */
 .macos-admin .admin .admin-btn.primary {
-  background: var(--accent);
+  background: var(--accent-ink);
   color: var(--on-accent);
   box-shadow: 4px 4px 12px color-mix(in srgb, var(--p-leaf-750) 34%, transparent),
     -3px -3px 10px var(--neu-hi);
 }
 
 .macos-admin .admin .admin-btn.primary:hover {
-  background: var(--accent-ink);
+  background: color-mix(in srgb, var(--accent-ink) 82%, var(--p-ink-950));
 }
 
 .macos-admin .admin .admin-btn.primary:active {
@@ -274,10 +262,23 @@ body.macos-admin {
   box-shadow: var(--neu-in);
 }
 
+/* AI 会话条/登出的图标钮：admin-glass 退役时尺寸规格随之丢失（实测塌缩成
+   12×21px、SVG 0×0 不渲染），这里把整组规格补齐；触屏下 44px 起手 */
 .macos-admin .admin .ai-icon-btn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  flex-shrink: 0;
   background: var(--neu-bg);
   border: 0;
   box-shadow: var(--mac-e1);
+}
+
+.macos-admin .admin .ai-icon-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .macos-admin .admin .ai-icon-btn:active {
@@ -292,10 +293,13 @@ body.macos-admin {
   box-shadow: var(--mac-e2);
 }
 
-/* —— 提示文字：暖灰，不用纯黑 —— */
+/* —— 提示文字与日期：列表的扫描锚点——label-3 只有 3.1:1 不达 AA，提到 label-2（6.06:1）；
+   .admin-list/.admin-panel 两级特异性压过 scoped 后加载的 ink-3 —— */
 .macos-admin .admin .hint,
-.macos-admin .admin .meta {
-  color: var(--mac-label-3);
+.macos-admin .admin .admin-panel .hint,
+.macos-admin .admin .meta,
+.macos-admin .admin .admin-list .meta {
+  color: var(--mac-label-2);
 }
 
 /* ---------- 知识库的「写笔记 / 上传文档」 ----------
@@ -390,4 +394,16 @@ body.macos-admin {
 
 .macos-admin .admin .admin-panel .ai-modes .kb-mode:has(input:focus-visible) {
   box-shadow: var(--mac-e1), 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* ---------- 触屏与窄屏：触控目标 44px 起 ----------
+   评审实测 390px 下删除 30px、发布 32px——拇指最重的动作目标反而最小。
+   桌面（hover:hover）不受影响。 */
+@media (hover: none) and (max-width: 959px) {
+  .macos-admin .admin .admin-btn,
+  .macos-admin .admin .admin-tab,
+  .macos-admin .admin .kb-modes .kb-mode,
+  .macos-admin .admin .admin-panel .ai-modes .kb-mode {
+    min-height: 44px;
+  }
 }
