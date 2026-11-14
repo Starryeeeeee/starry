@@ -47,6 +47,7 @@ import Base from '../layouts/Base.astro';
       <nav class="admin-tabs" role="tablist">
         <button class="admin-tab active" type="button" data-tab="moment" role="tab">动态</button>
         <button class="admin-tab" type="button" data-tab="post" role="tab">文章</button>
+        <button class="admin-tab" type="button" data-tab="log" role="tab">日志</button>
         <button class="admin-tab" type="button" data-tab="kb" role="tab">知识库</button>
         <button class="admin-tab" type="button" data-tab="gallery" role="tab">画廊</button>
         <button class="admin-tab" type="button" data-tab="site" role="tab">站点</button>
@@ -115,6 +116,37 @@ import Base from '../layouts/Base.astro';
         </div>
         <h3>已有文章<i class="sec-count" data-sec-count="posts"></i></h3>
         <ul class="admin-list" data-list="posts"></ul>
+      </div>
+
+      <!-- 建站日志 -->
+      <div class="admin-panel" data-panel="log" hidden>
+        <div class="edit-banner" data-edit-banner="log" hidden>
+          正在编辑 <b data-edit-name></b>
+          <button class="admin-btn ghost" type="button" data-act="cancel-edit-log">取消编辑</button>
+        </div>
+        <label class="field">
+          <span>标题</span>
+          <input type="text" data-log="title" placeholder="这一版改了什么" />
+        </label>
+        <div class="field-grid">
+          <label class="field">
+            <span>日期</span>
+            <input type="date" data-log="date" />
+          </label>
+          <label class="field">
+            <span>编号</span>
+            <input type="text" data-log="seq" inputmode="numeric" placeholder="自动" />
+          </label>
+        </div>
+        <label class="field">
+          <span>正文（Markdown，一行一条）</span>
+          <textarea rows="10" data-log="body" placeholder="- 改了什么&#10;- 为什么这么改"></textarea>
+        </label>
+        <div class="row-end">
+          <button class="admin-btn primary" type="button" data-act="save-log">发布日志</button>
+        </div>
+        <h3>已有日志<i class="sec-count" data-sec-count="logs"></i></h3>
+        <ul class="admin-list" data-list="logs"></ul>
       </div>
 
       <!-- 知识库 -->
@@ -1346,6 +1378,7 @@ import Base from '../layouts/Base.astro';
     // 各列表独立兜底：某个列表拉取失败不应该被误判成"令牌无效"而登出
     await refreshMoments().catch((e) => msg('动态列表加载失败：' + (e as Error).message, true));
     await refreshPosts().catch((e) => msg('文章列表加载失败：' + (e as Error).message, true));
+    await refreshLogs().catch((e) => console.warn('[admin] 日志列表加载失败', e));
     await refreshKb().catch((e) => console.warn('[admin] 知识库列表加载失败', e));
     await refreshGallery().catch((e) => console.warn('[admin] 画廊列表加载失败', e));
     await refreshStorageUi().catch((e) => console.warn('[admin] 存储配置加载失败', e));
@@ -1399,7 +1432,7 @@ import Base from '../layouts/Base.astro';
     return { meta, body: m[2] };
   }
 
-  function setBanner(kind: 'post' | 'kb', name: string | null) {
+  function setBanner(kind: 'post' | 'kb' | 'log', name: string | null) {
     const banner = $(`[data-edit-banner="${kind}"]`) as HTMLElement;
     banner.hidden = !name;
     if (name) (banner.querySelector('[data-edit-name]') as HTMLElement).textContent = name;
@@ -1594,6 +1627,132 @@ import Base from '../layouts/Base.astro';
       };
       li.append(name, edit, del);
       list.appendChild(li);
+    }
+  }
+
+  // ---------- 建站日志（contents API，与文章同一条链路） ----------
+  const LOG_DIR = 'src/content/changelog';
+  let editingLog: { name: string; sha: string } | null = null;
+  let nextLogSeq = 1;
+
+  async function refreshLogs() {
+    const list = $('[data-list="logs"]');
+    list.innerHTML = '<li class="meta">加载中…</li>';
+    const files = (await api(`/repos/${REPO}/contents/${LOG_DIR}?ref=${BRANCH}`)) as Array<{
+      name: string;
+      sha: string;
+    }>;
+    const sorted = [...files].sort((a, b) => (a.name < b.name ? 1 : -1));
+    nextLogSeq =
+      sorted.reduce((m, f) => Math.max(m, Number(f.name.match(/^(\d+)/)?.[1] ?? 0)), 0) + 1;
+    const seqInput = $('[data-log="seq"]') as HTMLInputElement;
+    const dateInput = $('[data-log="date"]') as HTMLInputElement;
+    if (!editingLog) {
+      seqInput.value = String(nextLogSeq).padStart(3, '0');
+      if (!dateInput.value) dateInput.value = todayStr();
+    }
+    setCount('logs', sorted.length);
+    list.innerHTML = '';
+    if (!sorted.length) {
+      list.innerHTML = '<li class="meta">还没有日志</li>';
+      return;
+    }
+    for (const f of sorted) {
+      const li = document.createElement('li');
+      const name = document.createElement('span');
+      name.className = 'name';
+      name.textContent = f.name.replace(/\.md$/, '');
+      const edit = document.createElement('button');
+      edit.className = 'admin-btn ghost';
+      edit.type = 'button';
+      edit.textContent = '编辑';
+      edit.onclick = () => startEditLog(f).catch((e) => msg('打开失败：' + (e as Error).message));
+      const del = document.createElement('button');
+      del.className = 'admin-btn ghost';
+      del.type = 'button';
+      del.textContent = '删除';
+      del.onclick = () => {
+        armDelete(del, async () => {
+          await api(`/repos/${REPO}/contents/${LOG_DIR}/${encodeURIComponent(f.name)}`, {
+            method: 'DELETE',
+            body: JSON.stringify({ message: `删日志 ${f.name}`, sha: f.sha, branch: BRANCH }),
+          });
+          msg('已删除，构建中…（push 自动触发）');
+          await refreshLogs();
+        });
+      };
+      li.append(name, edit, del);
+      list.appendChild(li);
+    }
+  }
+
+  async function startEditLog(f: { name: string; sha: string }) {
+    const r = await api(
+      `/repos/${REPO}/contents/${LOG_DIR}/${encodeURIComponent(f.name)}?ref=${BRANCH}`,
+    );
+    const { meta, body } = parseFrontmatter(b64ToText(r.content.replace(/\s/g, '')));
+    editingLog = { name: f.name, sha: r.sha };
+    ($('[data-log="title"]') as HTMLInputElement).value = String(meta.title ?? '');
+    ($('[data-log="date"]') as HTMLInputElement).value = String(meta.date ?? todayStr());
+    const seqInput = $('[data-log="seq"]') as HTMLInputElement;
+    seqInput.value = f.name.match(/^(\d+)/)?.[1] ?? '';
+    seqInput.disabled = true; // 编辑模式不改编号，否则会改名
+    ($('[data-log="body"]') as HTMLTextAreaElement).value = body.trim();
+    ($('[data-act="save-log"]') as HTMLElement).textContent = '保存修改';
+    setBanner('log', f.name);
+    activateTab('log');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function exitLogEdit(clearForm: boolean) {
+    editingLog = null;
+    const seqInput = $('[data-log="seq"]') as HTMLInputElement;
+    seqInput.disabled = false;
+    seqInput.value = String(nextLogSeq).padStart(3, '0');
+    ($('[data-act="save-log"]') as HTMLElement).textContent = '发布日志';
+    setBanner('log', null);
+    if (clearForm)
+      ['title', 'body'].forEach(
+        (k) => (($(`[data-log="${k}"]`) as HTMLInputElement).value = ''),
+      );
+  }
+
+  async function saveLog() {
+    const title = ($('[data-log="title"]') as HTMLInputElement).value.trim();
+    const date = ($('[data-log="date"]') as HTMLInputElement).value || todayStr();
+    const body = ($('[data-log="body"]') as HTMLTextAreaElement).value.trim();
+    if (!title) return msg('先写个标题', true);
+    if (!body) return msg('正文还是空的', true);
+
+    let name = editingLog?.name;
+    if (!name) {
+      const seq = (($('[data-log="seq"]') as HTMLInputElement).value || String(nextLogSeq))
+        .replace(/\D/g, '')
+        .padStart(3, '0');
+      const slug = title
+        .replace(/[\\/:*?"<>|]+/g, '')
+        .replace(/\s+/g, '-')
+        .slice(0, 40);
+      name = `${seq}-${slug}.md`;
+    }
+    const fm = ['---', `title: ${title}`, `date: ${date}`, '---', '', ''].join('\n');
+    const btn = $('[data-act="save-log"]') as HTMLButtonElement;
+    btn.disabled = true;
+    try {
+      await api(`/repos/${REPO}/contents/${LOG_DIR}/${encodeURIComponent(name)}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          message: editingLog ? `改日志：${title}` : `记日志：${title}`,
+          branch: BRANCH,
+          content: b64(fm + body + '\n'),
+          ...(editingLog ? { sha: editingLog.sha } : {}),
+        }),
+      });
+      msg(editingLog ? '已保存，构建中（1-2 分钟上站）' : '已发布，构建中（1-2 分钟上站）');
+      exitLogEdit(true);
+      await refreshLogs();
+    } finally {
+      btn.disabled = false;
     }
   }
 
@@ -2936,6 +3095,14 @@ import Base from '../layouts/Base.astro';
   for (const tab of document.querySelectorAll<HTMLButtonElement>('.admin-tab')) {
     tab.addEventListener('click', () => activateTab(tab.dataset.tab ?? 'moment'));
   }
+
+  // 建站日志：保存与取消编辑
+  document.querySelector('[data-act="save-log"]')?.addEventListener('click', () => {
+    saveLog().catch((e) => msg('保存失败：' + (e as Error).message, true));
+  });
+  document.querySelector('[data-act="cancel-edit-log"]')?.addEventListener('click', () => {
+    exitLogEdit(true);
+  });
 
   initAiPanel();
 
