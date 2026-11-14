@@ -119,6 +119,40 @@ import Base from '../layouts/Base.astro';
 
       <!-- 知识库 -->
       <div class="admin-panel" data-panel="kb" hidden>
+        <!-- 文件存储（R2）：知识库文档与画廊图片都走这里，文件本体不再进 Git 仓库 -->
+        <div class="kb-form" data-kb-form="storage">
+          <h3>文件存储（R2）</h3>
+          <p class="hint">
+            上传的文件存进 Cloudflare R2，GitHub 仓库只留一份清单，新文件不会再撑大仓库。
+            首次使用先照 <code>cloudflare/upload/README.md</code> 建好桶与 Worker，再把两个地址填在这里。
+          </p>
+          <div class="field-grid">
+            <label class="field">
+              <span>上传服务地址（Worker）</span>
+              <input
+                type="text"
+                data-storage="workerUrl"
+                placeholder="https://starry-file-upload.你的子域.workers.dev"
+                spellcheck="false"
+              />
+            </label>
+            <label class="field">
+              <span>公开访问地址（R2）</span>
+              <input
+                type="text"
+                data-storage="publicBase"
+                placeholder="https://files.你的子域.r2.dev"
+                spellcheck="false"
+              />
+            </label>
+          </div>
+          <div class="row-end">
+            <button class="admin-btn" type="button" data-act="save-storage">保存地址</button>
+            <button class="admin-btn ghost" type="button" data-act="test-storage">测试连接</button>
+          </div>
+          <p class="hint" data-storage="status" role="status"></p>
+        </div>
+
         <div class="kb-modes">
           <label class="kb-mode"><input type="radio" name="kb-mode" value="note" checked /> 写笔记 / 技巧</label>
           <label class="kb-mode"><input type="radio" name="kb-mode" value="file" /> 上传文档</label>
@@ -182,6 +216,7 @@ import Base from '../layouts/Base.astro';
             <span>选择文件（PDF / Word / PPT / Markdown 等）</span>
             <input type="file" data-kb-file />
           </label>
+          <p class="hint" data-kb-fileinfo role="status">选好文件后，这里会先显示文件名、格式和大小，确认无误再上传。</p>
           <label class="field">
             <span>标题（不填就用文件名）</span>
             <input type="text" data-kb-file="title" placeholder="函数专题讲义" />
@@ -203,7 +238,7 @@ import Base from '../layouts/Base.astro';
           <div class="row-end">
             <button class="admin-btn primary" type="button" data-act="upload-kb-file">上传并发布</button>
           </div>
-          <p class="hint">上传的文件会存进仓库 public/kb/，随站点一起发布；PDF 在详情页可直接预览。</p>
+          <p class="hint">文件本体存进 Cloudflare R2（地址见上方「文件存储」），仓库里只留清单；PDF 在详情页可直接预览。</p>
         </div>
 
         <h3>已有条目<i class="sec-count" data-sec-count="kb"></i></h3>
@@ -220,9 +255,10 @@ import Base from '../layouts/Base.astro';
           aria-label="选择或拖入图片"
         >
           <b>选择图片，或把图片拖到这里</b>
-          <span>可多选 · 自动按今天日期命名 · 大图自动压缩</span>
+          <span>可多选 · 大图自动压缩 · 存进 R2，不再进 Git 仓库</span>
         </div>
         <input type="file" data-gallery-input accept="image/*" multiple hidden />
+        <p class="hint" data-gallery-storage></p>
         <label class="field">
           <span>图注（不填就用文件名；多选时对所有图片生效）</span>
           <input type="text" data-gallery-caption placeholder="如：社团活动合影" />
@@ -1225,13 +1261,6 @@ import Base from '../layouts/Base.astro';
     }
   }
 
-  const b64bin = (buf: Uint8Array) => {
-    let out = '';
-    for (let i = 0; i < buf.length; i += 0x8000)
-      out += String.fromCharCode(...buf.subarray(i, i + 0x8000));
-    return btoa(out);
-  };
-
   const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
   let msgTimer: number | undefined;
   const msg = (m: string, isErrForced = false) => {
@@ -1319,6 +1348,7 @@ import Base from '../layouts/Base.astro';
     await refreshPosts().catch((e) => msg('文章列表加载失败：' + (e as Error).message, true));
     await refreshKb().catch((e) => console.warn('[admin] 知识库列表加载失败', e));
     await refreshGallery().catch((e) => console.warn('[admin] 画廊列表加载失败', e));
+    await refreshStorageUi().catch((e) => console.warn('[admin] 存储配置加载失败', e));
   }
 
   // ---------- 编辑模式状态 ----------
@@ -1577,18 +1607,39 @@ import Base from '../layouts/Base.astro';
   async function refreshGallery() {
     const list = $('[data-list="gallery"]');
     list.innerHTML = '<li class="meta">加载中…</li>';
-    const files = await api(
-      `/repos/${REPO}/contents/src/assets/gallery?ref=${BRANCH}`,
-    ).catch(() => []);
+    const [files, galleryJson] = await Promise.all([
+      api(`/repos/${REPO}/contents/src/assets/gallery?ref=${BRANCH}`).catch(() => []),
+      getGalleryJson().catch(() => ({ list: [] as any[] })),
+    ]);
     const images = (Array.isArray(files) ? files : []).filter((f: any) =>
       /\.(jpe?g|png|webp|avif|gif)$/i.test(f.name),
     );
-    setCount('gallery', images.length);
+    const remote = galleryJson.list ?? [];
+    setCount('gallery', images.length + remote.length);
     list.innerHTML = '';
-    if (!images.length) {
+    if (!images.length && !remote.length) {
       list.innerHTML = '<li class="meta">还没有图片</li>';
       return;
     }
+    // R2 里的新图：删除 = 删对象 + 删清单
+    for (const rec of remote) {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="name"></span><span class="meta"></span>`;
+      (li.querySelector('.name') as HTMLElement).textContent =
+        `${rec.caption || rec.file}（${Math.max(1, Math.round((rec.size ?? 0) / 1024))} KB）`;
+      li.querySelector('.meta')!.textContent = `${rec.date ?? ''} · R2`;
+      li.appendChild(makeKbDeleteBtn(async () => {
+        await deleteFromR2(rec.file);
+        const { sha, list: cur } = await getGalleryJson();
+        await putGalleryJson(
+          cur.filter((x: any) => x.id !== rec.id),
+          sha,
+          '画廊清单：删除图片',
+        );
+      }, li));
+      list.appendChild(li);
+    }
+    // 仓库里的老图：照旧删仓库文件
     for (const f of images) {
       const li = document.createElement('li');
       const stem = f.name.replace(/\.[^.]+$/, '');
@@ -1607,25 +1658,42 @@ import Base from '../layouts/Base.astro';
 
   async function uploadGalleryFiles(files: File[], caption: string) {
     const date = todayStr();
-    for (let i = 0; i < files.length; i++) {
-      const f = files[i];
-      msg(`上传中 ${i + 1}/${files.length}：${f.name}`);
-      const blob = await compressImage(f);
-      const buf = new Uint8Array(await blob.arrayBuffer());
-      const ext = blob.type === 'image/jpeg' && !/\.jpe?g$/i.test(f.name) ? 'jpg' : (f.name.match(/\.([^.]+)$/)?.[1] ?? 'jpg').toLowerCase();
-      const rawStem = caption || f.name.replace(/\.[^.]+$/, '').replace(/^\d{4}-\d{2}-\d{2}[\s_-]?/, '') || '图片';
-      const stem = rawStem.replace(/[/\\?#%*"<>|:]/g, '').trim() || '图片';
-      const name = `${date} ${stem}.${ext}`;
-      await api(`/repos/${REPO}/contents/${encodeURIComponent('src/assets/gallery/' + name)}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          message: `画廊：${stem}`,
-          branch: BRANCH,
-          content: b64bin(buf),
-        }),
-      });
+    await loadStorageCfg();
+    const { sha, list } = await getGalleryJson();
+    const added: any[] = [];
+    const uploaded: string[] = [];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const ext = (f.name.match(/\.([^.]+)$/)?.[1] ?? '').toLowerCase();
+        if (!ALLOWED_GALLERY_EXT.includes(ext)) {
+          throw new Error(`${f.name}：不是图片格式（可用 JPG / PNG / WebP / AVIF / GIF）`);
+        }
+        if (f.size > MAX_GALLERY_BYTES) {
+          throw new Error(`${f.name}：${(f.size / 1024 / 1024).toFixed(1)}MB 超过 12MB 上限`);
+        }
+        msg(`上传中 ${i + 1}/${files.length}：${f.name}`);
+        const blob = await compressImage(f);
+        const name = `${date}-${caption || f.name.replace(/\.[^.]+$/, '')}.${ext}`;
+        const up = await uploadToR2(new File([blob], name, { type: blob.type }), 'gallery');
+        uploaded.push(up.key);
+        added.push({
+          id: up.key.replace(/^gallery\//, '').replace(/\.[^.]+$/, ''),
+          file: up.key,
+          storage: 'r2',
+          caption: caption || f.name.replace(/\.[^.]+$/, '').replace(/^\d{4}-\d{2}-\d{2}[\s_-]?/, '') || '照片',
+          date,
+          size: up.size,
+        });
+      }
+      msg('更新清单…');
+      await putGalleryJson([...added, ...list], sha, '画廊清单：新增图片（R2）');
+      await dispatchBuild();
+    } catch (e) {
+      // 有图已传上去但清单没写成 → 逐个清掉，别留孤儿
+      for (const key of uploaded) await deleteFromR2(key);
+      throw e;
     }
-    await dispatchBuild();
   }
 
   const todayStr = () => new Date().toISOString().slice(0, 10);
@@ -1646,6 +1714,152 @@ import Base from '../layouts/Base.astro';
 
   const putKbJson = (list: any[], sha: string | null, message: string) =>
     api(`/repos/${REPO}/contents/${KB_JSON_PATH}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        message,
+        branch: BRANCH,
+        content: b64(JSON.stringify(list, null, 2) + '\n'),
+        ...(sha ? { sha } : {}),
+      }),
+    });
+
+  // ---------- R2 存储：配置、上传、删除 ----------
+  // 文件本体存 Cloudflare R2（Worker 代理），GitHub 仓库只留元数据清单。
+  // 背景与验收见《改进计划》P5.4。
+
+  type StorageCfg = { workerUrl?: string; publicBase?: string };
+  let storageCfg: StorageCfg = {};
+
+  const MAX_KB_BYTES = 40 * 1024 * 1024;
+  const MAX_GALLERY_BYTES = 12 * 1024 * 1024;
+  const ALLOWED_KB_EXT = [
+    'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx',
+    'md', 'markdown', 'txt', 'csv',
+    'png', 'jpg', 'jpeg', 'webp', 'gif', 'avif',
+  ];
+  const ALLOWED_GALLERY_EXT = ['png', 'jpg', 'jpeg', 'webp', 'avif', 'gif'];
+  /** 文件类型浏览器没给时，按扩展名补一个（Worker 按类型白名单收） */
+  const MIME_BY_EXT: Record<string, string> = {
+    pdf: 'application/pdf',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ppt: 'application/vnd.ms-powerpoint',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    xls: 'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    md: 'text/markdown', markdown: 'text/markdown', txt: 'text/plain', csv: 'text/csv',
+    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+    webp: 'image/webp', gif: 'image/gif', avif: 'image/avif',
+  };
+
+  /** 从 site-config.json 读 storage 段 */
+  const loadStorageCfg = async (): Promise<StorageCfg> => {
+    try {
+      const { cfg } = await getSiteConfig();
+      const s = (cfg.storage ?? {}) as StorageCfg;
+      storageCfg = {
+        workerUrl: (s.workerUrl ?? '').trim(),
+        publicBase: (s.publicBase ?? '').trim(),
+      };
+    } catch {
+      storageCfg = {};
+    }
+    return storageCfg;
+  };
+
+  /** 合并写回 site-config.json（读旧值再合并，不整份覆盖） */
+  const saveStorageCfg = async (patch: StorageCfg) => {
+    const { sha, cfg } = await getSiteConfig();
+    const next = { ...((cfg.storage ?? {}) as StorageCfg), ...patch };
+    await putSiteConfig({ ...cfg, storage: next }, sha, '站点配置：R2 存储地址');
+    storageCfg = {
+      workerUrl: (next.workerUrl ?? '').trim(),
+      publicBase: (next.publicBase ?? '').trim(),
+    };
+  };
+
+  /** 把 storage 配置读出来填进表单，并更新画廊页的提示 */
+  const refreshStorageUi = async () => {
+    const cfg = await loadStorageCfg();
+    const w = $('[data-storage="workerUrl"]') as HTMLInputElement | null;
+    const b = $('[data-storage="publicBase"]') as HTMLInputElement | null;
+    if (w && document.activeElement !== w) w.value = cfg.workerUrl ?? '';
+    if (b && document.activeElement !== b) b.value = cfg.publicBase ?? '';
+    const hint = $('[data-gallery-storage]');
+    if (hint) {
+      hint.textContent = cfg.workerUrl
+        ? `文件将存到 R2：${cfg.publicBase || '（还没填公开访问地址）'}`
+        : '还没配置 R2 上传服务——先到「知识库」页的「文件存储」填地址；不配的话新文件会退回旧方式存进 Git 仓库。';
+    }
+  };
+
+  /** 上传一个文件到 R2，返回 { key, url, size } */
+  const uploadToR2 = async (
+    file: File,
+    kind: 'kb' | 'gallery',
+  ): Promise<{ key: string; url: string; size: number }> => {
+    const worker = storageCfg.workerUrl?.replace(/\/+$/, '');
+    if (!worker) {
+      throw new Error('还没配置上传服务地址（知识库页 →「文件存储」→ 上传服务地址）');
+    }
+    const token = localStorage.getItem(TOKEN_KEY) ?? '';
+    const ext = (file.name.match(/\.([^.]+)$/)?.[1] ?? '').toLowerCase();
+    const mime = file.type || MIME_BY_EXT[ext] || 'application/octet-stream';
+    const r = await fetch(`${worker}/upload`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': mime,
+        'X-File-Kind': kind,
+        'X-File-Name': file.name,
+        Authorization: `Bearer ${token}`,
+      },
+      body: file,
+    });
+    const body = await r.json().catch(() => ({} as Record<string, unknown>));
+    if (!r.ok || !body.ok) {
+      throw new Error(String(body.error || `上传失败（HTTP ${r.status}）`));
+    }
+    if (!body.key) throw new Error('上传服务没有返回对象路径');
+    // 上传服务会回公开地址；首次上传时顺手把公开地址存进站点配置（构建时拼链接要用）
+    if (!storageCfg.publicBase && typeof body.url === 'string' && body.url) {
+      const base = body.url.replace(/\/[^/]*$/, '');
+      try {
+        await saveStorageCfg({ publicBase: base });
+      } catch {
+        /* 存不进去也不影响本次上传，只是以后要手填 */
+      }
+    }
+    return { key: String(body.key), url: String(body.url ?? ''), size: Number(body.size ?? file.size) };
+  };
+
+  /** 删除 R2 对象（失败不抛：清单仍要能改） */
+  const deleteFromR2 = async (key: string): Promise<boolean> => {
+    const worker = storageCfg.workerUrl?.replace(/\/+$/, '');
+    if (!worker || !key) return false;
+    try {
+      const token = localStorage.getItem(TOKEN_KEY) ?? '';
+      const r = await fetch(`${worker}/object?key=${encodeURIComponent(key)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return r.ok;
+    } catch {
+      return false;
+    }
+  };
+
+  const galleryJsonPath = 'src/data/gallery-files.json';
+  const getGalleryJson = async (): Promise<{ sha: string | null; list: any[] }> => {
+    try {
+      const r = await api(`/repos/${REPO}/contents/${galleryJsonPath}?ref=${BRANCH}`);
+      return { sha: r.sha, list: JSON.parse(b64ToText(r.content.replace(/\s/g, ''))) };
+    } catch (e) {
+      if (String((e as Error).message).startsWith('404')) return { sha: null, list: [] };
+      throw e;
+    }
+  };
+  const putGalleryJson = (list: any[], sha: string | null, message: string) =>
+    api(`/repos/${REPO}/contents/${galleryJsonPath}`, {
       method: 'PUT',
       body: JSON.stringify({
         message,
@@ -1725,14 +1939,19 @@ import Base from '../layouts/Base.astro';
         `${rec.title}（${(rec.ext ?? '').toUpperCase()}，${Math.max(1, Math.round((rec.size ?? 0) / 1024))} KB）`;
       li.querySelector('.meta')!.textContent = rec.date ?? '';
       li.appendChild(makeKbDeleteBtn(async () => {
-        // 先删文件本体（不存在也不报错跳过），再把记录从清单里拿掉
-        try {
-          const meta = await api(`/repos/${REPO}/contents/${encodeURIComponent(KB_FILE_DIR)}/${encodeURIComponent(rec.file.split('/').pop() ?? '')}?ref=${BRANCH}`);
-          await api(`/repos/${REPO}/contents/${KB_FILE_DIR}/${encodeURIComponent(rec.file.split('/').pop() ?? '')}`, {
-            method: 'DELETE',
-            body: JSON.stringify({ message: `删知识库文件 ${rec.file}`, sha: meta.sha, branch: BRANCH }),
-          });
-        } catch { /* 文件本体可能已不在，继续清清单 */ }
+        if (rec.storage === 'r2') {
+          // 新条目：文件在 R2，删对象 + 删清单，两边都要清
+          await deleteFromR2(rec.file);
+        } else {
+          // 老条目：文件在仓库 public/kb/，照旧删仓库文件（不存在也不报错跳过）
+          try {
+            const meta = await api(`/repos/${REPO}/contents/${encodeURIComponent(KB_FILE_DIR)}/${encodeURIComponent(rec.file.split('/').pop() ?? '')}?ref=${BRANCH}`);
+            await api(`/repos/${REPO}/contents/${KB_FILE_DIR}/${encodeURIComponent(rec.file.split('/').pop() ?? '')}`, {
+              method: 'DELETE',
+              body: JSON.stringify({ message: `删知识库文件 ${rec.file}`, sha: meta.sha, branch: BRANCH }),
+            });
+          } catch { /* 文件本体可能已不在，继续清清单 */ }
+        }
         const { sha, list: cur } = await getKbJson();
         await putKbJson(cur.filter((x: any) => x.slug !== rec.slug), sha, '更新知识库清单');
       }, li));
@@ -1907,56 +2126,90 @@ import Base from '../layouts/Base.astro';
         await refreshKb();
         t.removeAttribute('disabled');
       }
+      if (act === 'save-storage') {
+        const w = ($('[data-storage="workerUrl"]') as HTMLInputElement).value.trim();
+        const b = ($('[data-storage="publicBase"]') as HTMLInputElement).value.trim();
+        if (w && !/^https?:\/\//i.test(w)) return msg('上传服务地址要以 http:// 或 https:// 开头', true);
+        if (b && !/^https?:\/\//i.test(b)) return msg('公开访问地址要以 http:// 或 https:// 开头', true);
+        await saveStorageCfg({ workerUrl: w, publicBase: b });
+        await refreshStorageUi();
+        msg('地址已保存（随下次构建生效）');
+      }
+      if (act === 'test-storage') {
+        const worker = storageCfg.workerUrl?.replace(/\/+$/, '');
+        if (!worker) return msg('先填上传服务地址并保存，再测试', true);
+        const r = await fetch(`${worker}/health`).catch(() => null);
+        if (!r || !r.ok) return msg('连不上上传服务：检查地址、Worker 是否已部署', true);
+        const body = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+        if (!body.bucket) return msg('上传服务能连上，但还没绑定 R2 桶（Worker → Settings → Bindings）', true);
+        msg(`上传服务正常：${body.publicBase || '（Worker 没填 R2_PUBLIC_BASE，公开地址要在这边手动补）'}`);
+      }
       if (act === 'upload-kb-file') {
         const input = $('[data-kb-file]') as HTMLInputElement;
         const f = input.files?.[0];
         if (!f) return msg('先选一个文件');
-        if (f.size > 40 * 1024 * 1024) return msg('文件超过 40MB，放进 git 仓库会让克隆变慢，建议拆小或换链接');
-        const date = todayStr();
-        const safe = safeName(f.name);
-        const stem = safe.replace(/\.[^.]+$/, '') || 'file';
         const ext = (f.name.match(/\.([^.]+)$/)?.[1] ?? '').toLowerCase();
+        if (!ALLOWED_KB_EXT.includes(ext)) {
+          return msg(`不支持的格式 .${ext}（可用：PDF / Word / PPT / Excel / Markdown / 图片）`);
+        }
+        if (f.size > MAX_KB_BYTES) {
+          return msg(`文件 ${(f.size / 1024 / 1024).toFixed(1)}MB 超过 40MB 上限，先拆小或换链接`);
+        }
+        const date = todayStr();
+        const stem = safeName(f.name).replace(/\.[^.]+$/, '') || 'file';
         const slug = `${date}-${stem}`.slice(0, 100);
         const g = (k: string) => ($(`[data-kb-file="${k}"]`) as HTMLInputElement).value.trim();
         t.setAttribute('disabled', '');
-        msg('上传中…（文件较大时会慢一些）');
-        const dataUrl = await new Promise<string>((res, rej) => {
-          const r = new FileReader();
-          r.onload = () => res(r.result as string);
-          r.onerror = () => rej(new Error('读取文件失败'));
-          r.readAsDataURL(f);
-        });
-        await api(`/repos/${REPO}/contents/${KB_FILE_DIR}/${encodeURIComponent(safe)}`, {
-          method: 'PUT',
-          body: JSON.stringify({
-            message: `知识库文件：${safe}`,
-            branch: BRANCH,
-            content: dataUrl.split(',')[1],
-          }),
-        });
-        const { sha, list } = await getKbJson();
-        list.unshift({
-          slug,
-          title: g('title') || stem,
-          subject: g('subject') || '未分类',
-          tags: g('tags')
-            .split(/[,，]/)
-            .map((s) => s.trim())
-            .filter(Boolean),
-          description: g('desc'),
-          file: `/kb/${safe}`,
-          ext,
-          size: f.size,
-          date,
-        });
-        await putKbJson(list, sha, '知识库清单：新增文档条目');
-        msg('已上传，构建中（1-2 分钟上站）');
-        input.value = '';
-        ['title', 'subject', 'tags', 'desc'].forEach(
-          (k) => (($(`[data-kb-file="${k}"]`) as HTMLInputElement).value = ''),
-        );
-        await refreshKb();
-        t.removeAttribute('disabled');
+        let uploadedKey: string | null = null;
+        try {
+          msg('① 校验格式与大小…');
+          await loadStorageCfg();
+          msg('② 上传到 R2…');
+          const up = await uploadToR2(f, 'kb');
+          uploadedKey = up.key;
+          msg('③ 更新清单…');
+          const { sha, list } = await getKbJson();
+          list.unshift({
+            slug,
+            title: g('title') || stem,
+            subject: g('subject') || '未分类',
+            tags: g('tags')
+              .split(/[,，]/)
+              .map((s) => s.trim())
+              .filter(Boolean),
+            description: g('desc'),
+            file: up.key,
+            storage: 'r2',
+            ext,
+            size: up.size,
+            date,
+          });
+          await putKbJson(list, sha, '知识库清单：新增文档条目（R2）');
+          uploadedKey = null; // 清单已记下，对象不再是孤儿
+          msg('④ 已提交，构建中（1-2 分钟上站）');
+          input.value = '';
+          const info = $('[data-kb-fileinfo]');
+          if (info) info.textContent = '选好文件后，这里会先显示文件名、格式和大小，确认无误再上传。';
+          ['title', 'subject', 'tags', 'desc'].forEach(
+            (k) => (($(`[data-kb-file="${k}"]`) as HTMLInputElement).value = ''),
+          );
+          await refreshKb();
+        } catch (e) {
+          // 文件已进 R2 但清单没写成功 → 清掉孤儿对象，别在桶里留垃圾
+          if (uploadedKey) {
+            const cleaned = await deleteFromR2(uploadedKey);
+            msg(
+              cleaned
+                ? `上传中断，已清理没入库的文件（对象 ${uploadedKey}），可以重试`
+                : `上传中断，没能清理 R2 上的残留文件（对象 ${uploadedKey}），稍后手动删掉`,
+              true,
+            );
+          } else {
+            msg('上传失败：' + (e as Error).message, true);
+          }
+        } finally {
+          t.removeAttribute('disabled');
+        }
       }
       if (act === 'cancel-edit-post') {
         exitPostEdit(true);
@@ -2724,6 +2977,25 @@ import Base from '../layouts/Base.astro';
       files.forEach((f) => dt.items.add(f));
       gInput.files = dt.files;
     }
+  });
+
+  // 选好文件后先显示文件名 / 格式 / 大小，上传前能确认
+  const kbFileInput = document.querySelector<HTMLInputElement>('[data-kb-file]');
+  const kbFileInfo = document.querySelector<HTMLElement>('[data-kb-fileinfo]');
+  const defaultFileInfo = '选好文件后，这里会先显示文件名、格式和大小，确认无误再上传。';
+  kbFileInput?.addEventListener('change', () => {
+    if (!kbFileInfo) return;
+    const f = kbFileInput.files?.[0];
+    if (!f) {
+      kbFileInfo.textContent = defaultFileInfo;
+      return;
+    }
+    const ext = (f.name.match(/\.([^.]+)$/)?.[1] ?? '').toLowerCase();
+    const sizeMB = (f.size / 1024 / 1024).toFixed(2);
+    const ok = ALLOWED_KB_EXT.includes(ext) && f.size <= MAX_KB_BYTES;
+    kbFileInfo.textContent = ok
+      ? `${f.name} · ${ext.toUpperCase()} · ${sizeMB}MB —— 可以上传`
+      : `${f.name} · ${ext.toUpperCase() || '未知格式'} · ${sizeMB}MB —— 格式不支持或超过 40MB，不能上传`;
   });
 
   await verify();

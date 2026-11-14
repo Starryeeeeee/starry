@@ -4,12 +4,18 @@
  * 1. 手写条目（src/content/kb/*.md）：定理、公式、解题技巧等，
  *    markdown 正文，支持 $...$ 数学公式，详情页全文渲染。
  * 2. 上传文档（src/data/kb-files.json）：pdf / word / ppt 等，
- *    文件本体在 public/kb/，清单记录元数据，详情页提供预览或下载。
+ *    清单记录元数据，详情页提供预览或下载。
+ *
+ * 文件本体存放在哪：
+ * - 新上传的文件在 Cloudflare R2，清单里存对象键（storage: 'r2'），见《改进计划》P5.4；
+ * - 老的文件仍在 public/kb/，清单里存站点内路径（没有 storage 字段）。
+ *   两种形态都由 src/lib/storage.ts 的 fileHref() 统一转成可访问地址。
  *
  * /admin 管理面板的「知识库」tab 负责两条通道的写入与删除。
  */
 import { getCollection, type CollectionEntry } from 'astro:content';
 import rawFiles from '../data/kb-files.json';
+import { fileHref } from './storage';
 
 export type KbAccess = 'public' | 'personal' | 'private';
 
@@ -22,8 +28,10 @@ export type KbFileRecord = {
   subject: string;
   tags: string[];
   description: string;
-  /** 相对站点根的文件路径，如 /kb/2026-10-30-笔记.pdf */
+  /** 站点内路径（如 /kb/2026-10-30-笔记.pdf）或 R2 对象键（storage='r2' 时） */
   file: string;
+  /** 文件存在哪：r2 = Cloudflare R2；缺省 = 仓库 public/kb/（老条目） */
+  storage?: 'r2' | 'legacy';
   ext: string;
   /** 字节数 */
   size: number;
@@ -31,6 +39,9 @@ export type KbFileRecord = {
   status?: 'draft' | 'public' | 'archived';
   access?: KbAccess;
 };
+
+/** 清单记录 → 可访问地址（R2 外链 / 站内路径统一处理） */
+export const kbFileHref = (rec: { file: string; storage?: string }) => fileHref(rec);
 
 export type KbEntry = {
   kind: 'note' | 'file';

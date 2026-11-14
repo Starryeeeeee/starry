@@ -10,7 +10,7 @@ import { getCollection } from 'astro:content';
 import kbFileRecordsJson from '../data/kb-files.json';
 import type { KbFileRecord } from '../lib/kb';
 import { getMoments } from '../lib/moments';
-import { fileKindLabel } from '../lib/kb';
+import { fileKindLabel, kbFileHref } from '../lib/kb';
 
 /** 每条正文最多保留多少字符（AI 上下文有限，太多反而稀释检索命中） */
 const MAX_BODY = 1600;
@@ -69,7 +69,7 @@ export async function GET() {
       date: f.date,
       subject: f.subject,
       tags: f.tags,
-      description: [f.description, `${fileKindLabel(f.ext)}，文件 ${f.file}`].filter(Boolean).join('；'),
+      description: [f.description, `${fileKindLabel(f.ext)}，文件 ${kbFileHref(f)}`].filter(Boolean).join('；'),
       status: f.status ?? 'public',
     });
   }

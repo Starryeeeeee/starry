@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 import Comments from '../../components/Comments.astro';
 import { fmtDate } from '../../lib/format';
 import { u } from '../../lib/base';
-import { kbFileRecords, fileKindLabel, isPreviewable, type KbFileRecord } from '../../lib/kb';
+import { kbFileRecords, kbFileHref, fileKindLabel, isPreviewable, type KbFileRecord } from '../../lib/kb';
 
 export async function getStaticPaths() {
   // private 完全不构建；personal 构建但不进列表与索引，只能靠直链访问
@@ -47,7 +47,7 @@ const entry = kind === 'note' && note
     };
 
 const { Content } = kind === 'note' && note ? await render(note) : { Content: null };
-const fileUrl = file ? u(file.file) : '';
+const fileUrl = file ? kbFileHref(file) : '';
 const previewable = file ? isPreviewable(file.ext) : false;
 const sizeLabel = file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : '';
 ---
