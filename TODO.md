@@ -12,7 +12,7 @@
 - [x] P4 内容生命周期 + 知识库访问级别（2026-11-01：`access` 字段 + 数据层过滤，见 PRODUCT.md）
 - [ ] P4.1 /admin 知识库表单加「访问级别」选择器（现在要手改 frontmatter）
 - [x] P5 字体加载策略 + OG / sitemap / 404 + lint / typecheck（2026-11-01）
-- [ ] P5.1 内容备份导出（现在内容只活在 GitHub API 里）
+- [ ] P5.1 内容备份导出（现在内容只活在 GitHub API 里；2026-11-14 评估后站主决定暂缓）。已定方向：①首选 Actions 每周自动把 Issues / Discussions 快照成 JSON 存进仓库 `_backup/`（站主零操作，仓库自带版本史）；②可选 /admin 一键导出 zip。另注意：AI 会话记录与模型配置只活在站主浏览器 localStorage，清缓存即丢，是全站最脆的一份数据，届时一并处理
 - [x] P5.5 后台新增「日志」页签，可直接写 / 改 / 删建站日志（2026-11-14：复用文章的 contents API 链路，编号自动递增、编辑时锁定）
 - [x] P5.2 部署自检（2026-11-13：发布前查 Pages 来源、发布后对账 `sr-build` 版本号）
 - [ ] P5.3 `Supabase keepalive` 定时任务连续失败（11-03、11-10），疑似 secret 过期
