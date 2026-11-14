@@ -13,6 +13,7 @@
 - [ ] P4.1 /admin 知识库表单加「访问级别」选择器（现在要手改 frontmatter）
 - [x] P5 字体加载策略 + OG / sitemap / 404 + lint / typecheck（2026-11-01）
 - [ ] P5.1 内容备份导出（现在内容只活在 GitHub API 里）
+- [x] P5.5 后台新增「日志」页签，可直接写 / 改 / 删建站日志（2026-11-14：复用文章的 contents API 链路，编号自动递增、编辑时锁定）
 - [x] P5.2 部署自检（2026-11-13：发布前查 Pages 来源、发布后对账 `sr-build` 版本号）
 - [ ] P5.3 `Supabase keepalive` 定时任务连续失败（11-03、11-10），疑似 secret 过期
 
