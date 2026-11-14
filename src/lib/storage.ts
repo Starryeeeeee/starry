@@ -8,7 +8,7 @@
  *   {
  *     "storage": {
  *       "workerUrl": "https://starry-file-upload.<子域>.workers.dev",  // 上传服务
- *       "publicBase": "https://files.<子域>.r2.dev"                    // R2 公开访问地址
+ *       "publicBase": "https://pub-xxxxxxxx.r2.dev"                   // R2 公开访问地址
  *     }
  *   }
  *

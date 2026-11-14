@@ -8,8 +8,9 @@ compatibility_date = "2026-10-01"
 ALLOWED_GITHUB_LOGIN = "Starryeeeeee"
 # 允许发起上传请求的来源（逗号分隔）
 ALLOWED_ORIGINS = "https://starryeeeeee.github.io,http://localhost:4321,http://127.0.0.1:4321"
-# R2 桶的公开访问地址：建好桶并开启公开访问后填这里（控制台 → R2 → 该桶 → Public domain）
-R2_PUBLIC_BASE = "https://files.你的子域.r2.dev"
+# R2 桶的公开访问地址：建好桶并开启公开访问后填这里（控制台 → R2 → 该桶 → Public development url）
+# 实际形如 https://pub-xxxxxxxx.r2.dev（pub- 后是一长串随机字符）
+R2_PUBLIC_BASE = "https://pub-xxxxxxxx.r2.dev"
 # 体积上限（字节）：知识库 40MB，画廊 12MB
 MAX_KB_BYTES = "41943040"
 MAX_GALLERY_BYTES = "12582912"

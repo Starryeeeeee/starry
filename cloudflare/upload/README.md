@@ -15,7 +15,7 @@ GitHub 仓库只留元数据清单（`src/data/kb-files.json`、`src/data/galler
 ### 1. 建 R2 桶
 1. dash.cloudflare.com → **R2**（左侧）→ **Create bucket**，名字填 `starry-files`。
 2. 打开这个桶 → **Settings** → **Public access** → 打开 **r2.dev** 子域名（免费）。
-   复制它给你的公开地址，形如 `https://files.你的子域.r2.dev`。
+   复制它给你的公开地址，形如 `https://pub-xxxxxxxx.r2.dev`（pub- 后是一长串随机字符，以桶设置里实际显示的为准）。
    > 这个地址就是 R2_PUBLIC_BASE，也是站外访问文件用的域名。
    > 想用自己的域名也行：Workers & Pages → 域名 → 添加自定义域，指向这个桶。
 
@@ -34,7 +34,7 @@ GitHub 仓库只留元数据清单（`src/data/kb-files.json`、`src/data/galler
 |---|---|---|
 | `ALLOWED_GITHUB_LOGIN` | Text | `Starryeeeeee` |
 | `ALLOWED_ORIGINS` | Text | `https://starryeeeeee.github.io,http://localhost:4321` |
-| `R2_PUBLIC_BASE` | Text | 第 1 步拿到的公开地址，如 `https://files.xxx.r2.dev` |
+| `R2_PUBLIC_BASE` | Text | 第 1 步拿到的公开地址，如 `https://pub-xxxxxxxx.r2.dev` |
 | `MAX_KB_BYTES` | Text | `41943040`（40MB） |
 | `MAX_GALLERY_BYTES` | Text | `12582912`（12MB） |
 | `RATE_PER_HOUR` | Text | `60` |

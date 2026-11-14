@@ -287,7 +287,7 @@ export default {
 interface Env {
   /** 绑定的 R2 桶（binding，不是 secret——凭证不落在任何配置文件里） */
   FILES?: R2Bucket;
-  /** R2 公开访问地址，如 https://files.<子域>.r2.dev 或自定义域名 */
+  /** R2 公开访问地址，如 https://pub-xxxxxxxx.r2.dev 或自定义域名 */
   R2_PUBLIC_BASE?: string;
   /** 允许上传的 GitHub 用户名 */
   ALLOWED_GITHUB_LOGIN?: string;
