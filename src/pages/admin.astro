@@ -543,6 +543,19 @@ import Base from '../layouts/Base.astro';
   .admin-tab:hover:not(.active) {
     color: var(--ink);
   }
+  /* 手机上页签换行成两行，不再横向裁掉一半（原来 overflow-x:auto 还藏了滚动条，
+     「站点 / AI 助手 / 模型配置」在 390px 下根本看不出可以滑动） */
+  @media (max-width: 700px) {
+    .admin-tabs {
+      flex-wrap: wrap;
+      overflow-x: visible;
+      border-radius: 16px;
+    }
+    .admin-tab {
+      flex: 1 1 auto;
+      text-align: center;
+    }
+  }
   /* 每个 tab 面板是一张卡：内容不再直接浮在页面底色上 */
   .admin-panel {
     background: var(--surface);
@@ -763,9 +776,9 @@ import Base from '../layouts/Base.astro';
   .admin-list :global(.name) {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    /* 名字换行显示，不再单行截断：废话条正文、文章标题、日志标题、R2 文件名都读得全；
+       长文件名/URL 靠 anywhere 在任意字符处断行，不撑破面板 */
+    overflow-wrap: anywhere;
   }
   .admin-list :global(.meta) {
     flex-shrink: 0;
