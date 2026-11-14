@@ -1249,6 +1249,15 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     type WebResult,
   } from '../lib/ai';
   import { typeInto } from '../lib/typewriter';
+  import {
+    MOMENTS_FILE_PATH,
+    momentsFileBody,
+    newMomentId,
+    parseMomentsFile,
+    toFileStamp,
+    type FileMoment,
+    type MomentKind,
+  } from '../lib/moments-file';
 
   const REPO = 'Starryeeeeee/starry';
   const BRANCH = 'main';
@@ -1560,10 +1569,38 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     if (el) el.textContent = String(n);
   }
 
-  // ---------- 动态（废话条 / 箴言 / 看法，同一入口不同标签） ----------
+  // ---------- 动态（废话条 / 箴言 / 看法，仓库内同一个文件的三种类型） ----------
+  // 数据源：src/data/moments.md，每条以 @@ 行开头（时间 | 类型 | ID），正文可多行。
+  // 发布 = 读文件 → 追加一块 → 写回；push 本身触发部署，不再单独触发构建。
   const MOMENT_TYPES: Record<string, string> = { moment: '废话条', quote: '箴言', view: '看法' };
   const currentMomentLabel = () =>
     ($('[data-moment-label]') as HTMLSelectElement | null)?.value ?? 'moment';
+
+  const readMomentsFile = async (): Promise<{ sha: string; entries: FileMoment[] }> => {
+    const r = await api(`/repos/${REPO}/contents/${MOMENTS_FILE_PATH}?ref=${BRANCH}`);
+    const text = b64ToText(String(r.content).replace(/\s/g, ''));
+    return { sha: r.sha, entries: parseMomentsFile(text) };
+  };
+
+  const writeMomentsFile = async (
+    entries: FileMoment[],
+    sha: string,
+    message: string,
+  ): Promise<void> => {
+    const bodyText = momentsFileBody(entries);
+    const attempt = (currentSha: string) =>
+      api(`/repos/${REPO}/contents/${MOMENTS_FILE_PATH}`, {
+        method: 'PUT',
+        body: JSON.stringify({ message, branch: BRANCH, content: b64(bodyText), sha: currentSha }),
+      });
+    try {
+      await attempt(sha);
+    } catch {
+      // sha 过期（恰有另一处同时写入）：重读最新内容，按新 sha 再写一次
+      const fresh = await readMomentsFile();
+      await attempt(fresh.sha);
+    }
+  };
 
   async function refreshMoments() {
     const label = currentMomentLabel();
@@ -1572,30 +1609,38 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     if (titleEl) titleEl.textContent = `已发布的${typeName}`;
     const list = $('[data-list="moments"]');
     list.innerHTML = '<li class="meta">加载中…</li>';
-    const issues = await api(`/repos/${REPO}/issues?labels=${encodeURIComponent(label)}&state=open&per_page=30`);
-    list.innerHTML = '';
-    if (!issues.length) {
+    let entries: FileMoment[] = [];
+    try {
+      entries = (await readMomentsFile()).entries;
+    } catch {
+      list.innerHTML = '<li class="meta">动态文件读不出来——检查网络或令牌，稍后再试</li>';
+      setCount('moments', 0);
+      return;
+    }
+    const mine = entries.filter((e) => e.kind === label);
+    if (!mine.length) {
       list.innerHTML = `<li class="meta">还没有${typeName}</li>`;
       setCount('moments', 0);
       return;
     }
-    setCount('moments', issues.length);
-    for (const it of issues) {
+    setCount('moments', mine.length);
+    for (const it of mine) {
       const li = document.createElement('li');
-      li.innerHTML = `<span class="name"></span><span class="meta">${it.created_at.slice(0, 10)}</span>`;
-      (li.querySelector('.name') as HTMLElement).textContent = it.title;
+      li.innerHTML = `<span class="name"></span><span class="meta">${it.at.slice(0, 10)}</span>`;
+      (li.querySelector('.name') as HTMLElement).textContent = it.text;
       const del = document.createElement('button');
       del.className = 'admin-btn ghost';
       del.type = 'button';
       del.textContent = '删除';
       del.onclick = () => {
         armDelete(del, async () => {
-          await api(`/repos/${REPO}/issues/${it.number}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ state: 'closed' }),
-          });
-          await dispatchBuild();
-          msg('已删除，站点构建中（1-2 分钟生效）');
+          const { sha, entries: all } = await readMomentsFile();
+          await writeMomentsFile(
+            all.filter((e) => e.id !== it.id),
+            sha,
+            `删动态：${it.text.slice(0, 20)}`,
+          );
+          msg('已删除，站点构建中（1-2 分钟上站）');
           await refreshMoments();
         });
       };
@@ -2178,11 +2223,15 @@ import globeIcon from '../icons/ui/globe.svg?raw';
         const label = ($('[data-moment-label]') as HTMLSelectElement).value;
         const typeName = label === 'quote' ? '箴言' : label === 'view' ? '看法' : '废话条';
         t.setAttribute('disabled', '');
-        await api(`/repos/${REPO}/issues`, {
-          method: 'POST',
-          body: JSON.stringify({ title: text, labels: [label] }),
-        });
-        await dispatchBuild();
+        const at = new Date();
+        const entry: FileMoment = {
+          id: newMomentId(at),
+          at: toFileStamp(at),
+          kind: label as MomentKind,
+          text,
+        };
+        const { sha, entries } = await readMomentsFile();
+        await writeMomentsFile([entry, ...entries], sha, `发动态：${text.slice(0, 20)}`);
         ta.value = '';
         msg(`已发布到「${typeName}」，站点构建中（1-2 分钟上站）`);
         await refreshMoments();

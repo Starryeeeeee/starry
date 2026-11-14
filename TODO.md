@@ -23,6 +23,7 @@
 - [x] 废话条数据源：确认跑通（2026-10-30 线上已显示手机发的 2 条真实动态）
 
 ## 功能待接入
+- [x] 动态数据源切文件（2026-11-14）：废话条/箴言/看法从 GitHub Issues 全部迁到仓库内 `src/data/moments.md`（每条 @@ 行开头），构建时直接读文件、后台/快速记录往里追加，push 自动部署不再单独触发构建；存量 3 条 Issues 已迁入，Issues 保留作存档不再上站。手机发布改走 /admin 或首页快速记录（首次需在手机浏览器粘贴 PAT）
 - [x] 废话条接 GitHub Issues（拉取逻辑已由另一会话实现，等 `starry` 仓库就绪）
 - [x] 部署 GitHub Pages：**已上线 2026-10-25，https://starryeeeeee.github.io/starry/**（方法见 DEPLOY.md：WorkBuddy 便携版 git + ~/.workbuddy/gh_deploy 密钥 + Actions 自动构建）
 - [x] 音乐播放器（2026-10-25 晚上线）：左下角浮动唱片，第一首 Komorebi；加歌 = mp3 丢进 `public/music/` + `src/components/MusicPlayer.astro` 列表加一行

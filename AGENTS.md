@@ -4,7 +4,7 @@
 
 ## 项目是什么
 
-Astro 5 个人站，GitHub Pages 托管，GitHub Issues 当动态后台，零服务器零成本。
+Astro 5 个人站，GitHub Pages 托管，动态（废话条/箴言/看法）用仓库内 `src/data/moments.md` 文件当后台（2026-11-14 起，原 GitHub Issues 方案退役），零服务器零成本。
 线上 `https://starryeeeeee.github.io/starry/`，本地 `C:/Users/Win10/Desktop/starry-roam`。
 
 ## 先读什么

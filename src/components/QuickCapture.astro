@@ -1,7 +1,7 @@
 ---
 // 全站快速记录：右下角浮动笔，点开弹出居中 Modal（手机端底部面板），写完即走
 // 仅在站长已登录（localStorage 有 PAT）时显示；访客不可见
-// 发布通道与 /admin 相同：GitHub Issues API + 自动触发构建
+// 发布通道与 /admin 相同：往仓库 src/data/moments.md 追加一条，push 自动部署
 // 位置走 global.css 的悬浮操作区约定（--fab-*），与 AI 星球挂件共用一条 dock 列
 import penIcon from '../icons/ui/pen-line.svg?raw';
 ---
@@ -249,11 +249,21 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
 </style>
 
 <script>
-  // ============ 快速记录：GitHub Issues API 即后端（与 /admin 同通道） ============
+  // ============ 快速记录：往仓库 moments.md 追加一条（与 /admin 同通道） ============
   // Token 只从 localStorage 读取：不进 URL、不进控制台、不出现在错误信息里。
   import { u } from '../lib/base';
+  import {
+    MOMENTS_FILE_PATH,
+    momentsFileBody,
+    newMomentId,
+    parseMomentsFile,
+    toFileStamp,
+    type FileMoment,
+    type MomentKind,
+  } from '../lib/moments-file';
 
   const REPO = 'Starryeeeeee/starry';
+  const BRANCH = 'main';
   const TOKEN_KEY = 'sr-admin-token';
   const TYPE_NAMES: Record<string, string> = { moment: '废话条', quote: '箴言', view: '看法' };
 
@@ -351,8 +361,51 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
         ? 'GitHub 限流了，休息几分钟再试（草稿还留着）'
         : '令牌权限不够：需要 repo 权限，去 /admin 检查';
     if (status === 422) return 'GitHub 拒绝了这条内容，换个说法再试（草稿还留着）';
+    if (status === 409) return '动态文件刚被别处改过且重试仍冲突，稍等几秒再点一次发布';
     return `发布失败（${status}）：草稿已保留，稍后重试`;
   }
+
+  const b64 = (s: string) => btoa(String.fromCharCode(...new TextEncoder().encode(s)));
+
+  /** 读动态文件：解析后的条目 + 写回需要的 sha */
+  const readMoments = async (): Promise<{ sha: string; entries: FileMoment[] }> => {
+    const r = await fetch(
+      `https://api.github.com/repos/${REPO}/contents/${MOMENTS_FILE_PATH}?ref=${BRANCH}`,
+      {
+        headers: { Authorization: `Bearer ${token()}`, Accept: 'application/vnd.github+json' },
+      },
+    );
+    if (!r.ok) {
+      const body = (await r.json().catch(() => ({}))) as { message?: string };
+      throw Object.assign(new Error(friendlyError(r.status, body.message ?? '')), { status: r.status });
+    }
+    const data = (await r.json()) as { content: string; sha: string };
+    const text = new TextDecoder().decode(
+      Uint8Array.from(atob(data.content.replace(/\s/g, '')), (c) => c.charCodeAt(0)),
+    );
+    return { sha: data.sha, entries: parseMomentsFile(text) };
+  };
+
+  /** 写回动态文件；sha 冲突（恰有另一处同时写入）自动重读重试一次 */
+  const writeMoments = async (entries: FileMoment[], sha: string, message: string) => {
+    const bodyText = momentsFileBody(entries);
+    const attempt = (currentSha: string) =>
+      fetch(`https://api.github.com/repos/${REPO}/contents/${MOMENTS_FILE_PATH}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token()}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message, branch: BRANCH, content: b64(bodyText), sha: currentSha }),
+      });
+    let r = await attempt(sha);
+    if (r.status === 409 || r.status === 422) {
+      const fresh = await readMoments();
+      r = await attempt(fresh.sha);
+    }
+    return r;
+  };
 
   sendBtn.addEventListener('click', async () => {
     const value = text.value.trim();
@@ -360,42 +413,23 @@ import penIcon from '../icons/ui/pen-line.svg?raw';
     sendBtn.disabled = true;
     say('发布中…');
     try {
-      // 1) 创建 Issue —— 这一步成功才算记录成功
-      const r = await fetch(`https://api.github.com/repos/${REPO}/issues`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token()}`,
-          Accept: 'application/vnd.github+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ title: value, labels: [label()] }),
-      });
+      // 1) 往动态文件追加一条 —— 这一步成功才算记录成功
+      const at = new Date();
+      const entry: FileMoment = {
+        id: newMomentId(at),
+        at: toFileStamp(at),
+        kind: label() as MomentKind,
+        text: value,
+      };
+      const { sha, entries } = await readMoments();
+      const r = await writeMoments([entry, ...entries], sha, `发动态：${value.slice(0, 20)}`);
       if (!r.ok) {
         const body = (await r.json().catch(() => ({}))) as { message?: string };
         throw Object.assign(new Error(friendlyError(r.status, body.message ?? '')), { status: r.status });
       }
-      // 2) 触发构建只是加速上站，失败不算记录失败：
-      //    Issue 事件本身也会触发部署（.github/workflows 的 issue 触发器保底）
-      const dispatchOk = await fetch(
-        `https://api.github.com/repos/${REPO}/actions/workflows/deploy.yml/dispatches`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token()}`,
-            Accept: 'application/vnd.github+json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ ref: 'main' }),
-        },
-      )
-        .then(() => true)
-        .catch(() => false);
+      // 2) 写文件本身就是 commit，push 自动触发部署，无需再单独触发构建
       text.value = '';
-      say(
-        dispatchOk
-          ? '已发布到「' + typeName() + '」，1-2 分钟上站'
-          : '已发布到「' + typeName() + '」（手动构建没触发成功，稍后由 Issue 事件自动上站）',
-      );
+      say('已发布到「' + typeName() + '」，1-2 分钟上站');
       window.setTimeout(() => setOpen(false), 1100);
     } catch (e) {
       // 草稿（text.value）故意保留，重试不丢内容

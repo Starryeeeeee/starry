@@ -24,7 +24,8 @@ git 不用装——WorkBuddy 自带了便携版 git：`C:\Users\Win10\AppData\Lo
 ## 二、日常更新
 
 - **改代码/写文章**：改完 → `git add .` → `git commit -m "说明"` → `git push`，Actions 自动重新构建发布，1–2 分钟生效。
-- **发废话条**：手机 GitHub App 打开 starry 仓库 → Issues → ➕ → 标题写动态内容 → Labels 选 `moment` → 发布；再触发一次构建（推任意 commit，或 Actions 页面手动 Run workflow）即可上站。
+- **发废话条**：打开网站 → 登录 /admin（或用首页右下角的快速记录笔）→ 写一句 → 发布。写入的是仓库里 `src/data/moments.md` 文件，push 自动触发构建，1–2 分钟上站。
+  （2026-11-14 起动态不再走 GitHub Issues；手机上第一次用需在浏览器里粘贴一次 PAT 登录。）
 
 ## 三、关于 SSH
 

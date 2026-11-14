@@ -5,7 +5,7 @@
 ## 产品是什么
 
 **私人轻量记录与分享空间**，不是对外展示的博客模板。站主把 GitHub 当 CMS 和数据库用：
-GitHub Pages 托管静态站，Issues 当动态后台，Contents API 当写入通道，零服务器、零成本。
+GitHub Pages 托管静态站，动态（废话条/箴言/看法）用仓库内 moments.md 文件当后台，Contents API 当写入通道，零服务器、零成本。
 
 - 线上地址：https://starryeeeeee.github.io/starry/
 - 本地路径：`C:/Users/Win10/Desktop/starry-roam`
@@ -29,7 +29,7 @@ GitHub Pages 托管静态站，Issues 当动态后台，Contents API 当写入�
 
 | 层 | 位置 | 特点 | 生命周期 |
 |---|---|---|---|
-| 废话条 Moments | `/moments/`（Issues） | 一句话，10 秒发出去 | 高频、可过期，不追求完整 |
+| 废话条 Moments | `/moments/`（仓库内 moments.md） | 一句话，10 秒发出去 | 高频、可过期，不追求完整 |
 | 文章 Articles | `/posts/` | 有头有尾，值得被搜到 | 低频、长期有效，可被引用 |
 | 知识库 Knowledge | `/kb/` | 会反复回查的资料 | 持续累积，按科目组织 |
 
