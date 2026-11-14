@@ -88,6 +88,13 @@ body.macos-admin {
   box-shadow: var(--neu-in);
 }
 
+/* 列表凹陷框必须自带横向内边距：li 用 margin-inline:-12px 做「悬停背景通栏」，
+   框自己不 padding 的话，行的背景、分隔线会向左右戳出凹槽 12px，
+   文字也顶到框边——看起来就是内容溢出了框（2026-11-14 站主实测指认） */
+.macos-admin .admin .admin-list {
+  padding: 2px 12px 2px;
+}
+
 /* —— 输入类：凹进去，像按在软垫里的格子 —— */
 .macos-admin .admin input,
 .macos-admin .admin select,
