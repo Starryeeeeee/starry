@@ -341,8 +341,10 @@ body.macos-admin {
 
 /* ---------- AI 助手的「深度思考 / 联网搜索」 ----------
    同样是把原生 checkbox 换成药丸开关：常亮=可用（凸起），勾上=生效（凹陷）。
-   不改 HTML，只换外观，与知识库那组分段控件同一套语言。 */
-.macos-admin .admin .ai-modes .kb-mode {
+   不改 HTML，只换外观，与知识库那组分段控件同一套语言。
+   注意：admin-mac.css 对同一批元素用了带 .admin-panel 的五层选择器（0,5,1），
+   这里的规则必须同样带上 .admin-panel 才能压过它（本文件后加载，同特异性即胜）。 */
+.macos-admin .admin .admin-panel .ai-modes .kb-mode {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -357,25 +359,28 @@ body.macos-admin {
   transition: color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.macos-admin .admin .ai-modes .kb-mode input {
+/* 藏掉原生 checkbox：absolute 脱离 flex 流，不再占一个 gap 位（在 flex 里
+   即使宽高为 0 也会让图标前的空隙比右侧宽）；外观交给 label */
+.macos-admin .admin .admin-panel .ai-modes .kb-mode input {
+  position: absolute;
   appearance: none;
   -webkit-appearance: none;
   width: 0;
   height: 0;
-  margin: 0 -6px;
+  margin: 0;
   opacity: 0;
 }
 
 /* 图标跟随文字颜色：未勾选是暖灰，勾上凹陷变绿时图标同步变绿 */
-.macos-admin .admin .ai-modes .kb-mode svg {
+.macos-admin .admin .admin-panel .ai-modes .kb-mode svg {
   flex-shrink: 0;
 }
 
-.macos-admin .admin .ai-modes .kb-mode:has(input:checked) {
+.macos-admin .admin .admin-panel .ai-modes .kb-mode:has(input:checked) {
   color: var(--accent-ink);
   box-shadow: var(--neu-in);
 }
 
-.macos-admin .admin .ai-modes .kb-mode:has(input:focus-visible) {
+.macos-admin .admin .admin-panel .ai-modes .kb-mode:has(input:focus-visible) {
   box-shadow: var(--mac-e1), 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
 }
