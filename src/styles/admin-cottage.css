@@ -69,9 +69,11 @@ body.macos-admin {
 }
 
 /* —— 面板：凸起的一块，不再用白卡 + 描边 —— */
+/* !important 的原因同上：.admin-panel[data-astro-cid] 与这里同特异性且后加载，
+   不加的话面板会保持白底，在暖米灰画布上叠出「一层白」 */
 .macos-admin .admin .admin-panel,
 .macos-admin .admin-panel {
-  background: var(--neu-bg);
+  background: var(--neu-bg) !important;
   border: 0;
   border-radius: var(--mac-r-card);
   box-shadow: var(--mac-e2);
@@ -287,4 +289,51 @@ body.macos-admin {
 .macos-admin .admin .hint,
 .macos-admin .admin .meta {
   color: var(--mac-label-3);
+}
+
+/* ---------- 知识库的「写笔记 / 上传文档」 ----------
+   原来是两个原生 radio：圆点小、文字会换行，选中态几乎看不出来。
+   改成新拟态的分段控件——整组是一个凹槽，选中的那颗凸起来。 */
+.macos-admin .admin .kb-modes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 14px;
+  border-radius: var(--mac-r-control);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-in);
+}
+
+.macos-admin .admin .kb-modes .kb-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 15px;
+  border-radius: 9px;
+  white-space: nowrap; /* 关键：原来就是这里换行，把「/ 技巧」挤到第二行 */
+  font-size: 0.9rem;
+  color: var(--mac-label-2);
+  cursor: pointer;
+  transition: color 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* 藏掉原生圆点，外观交给 label */
+.macos-admin .admin .kb-modes .kb-mode input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 0;
+  height: 0;
+  margin: 0;
+  opacity: 0;
+}
+
+.macos-admin .admin .kb-modes .kb-mode:has(input:checked) {
+  color: var(--accent-ink);
+  background: var(--neu-bg);
+  box-shadow: var(--mac-e1);
+}
+
+.macos-admin .admin .kb-modes .kb-mode:has(input:focus-visible) {
+  box-shadow: var(--mac-e1), 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
 }
