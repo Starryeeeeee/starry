@@ -148,14 +148,14 @@
 }
 .macos-admin .admin .admin-greet {
   margin-top: 2px;
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--mac-label-2);
 }
 .macos-admin .admin .admin-user {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.85rem;
+  font-size: var(--text-xs);
   padding: 4px 6px 4px 4px;
   background: var(--mac-fill);
   border: 1px solid transparent;
@@ -173,7 +173,7 @@
   gap: 8px;
   margin: 14px 0 4px;
   padding: 0;
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--mac-label-2);
 }
 .macos-admin .admin .admin-overview span {
@@ -203,7 +203,7 @@
 }
 .macos-admin .admin .login-sub {
   margin-top: 8px;
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   color: var(--mac-label-2);
   line-height: 1.85;
 }
@@ -211,7 +211,7 @@
   margin: 16px 0 22px;
   padding-left: 1.3em;
   color: var(--mac-label-2);
-  font-size: 0.83rem;
+  font-size: var(--text-xs);
   line-height: 2;
 }
 .macos-admin .admin .admin-login a {
@@ -350,7 +350,7 @@
   margin-top: 0;
 }
 .macos-admin .admin .admin-panel .hint {
-  font-size: 0.83rem;
+  font-size: var(--text-xs);
   line-height: 1.8;
   color: var(--mac-label-2);
 }
@@ -476,7 +476,7 @@
 .macos-admin .admin .admin-panel .field {
   display: block;
   margin-top: 14px;
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--mac-label-2);
 }
 .macos-admin .admin .admin-panel .field > span {
@@ -527,7 +527,7 @@
   padding: 9px 13px;
   border-radius: 17px;
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   line-height: 1.75;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -556,7 +556,7 @@
 /* 角色标签：小号次级文字 */
 .macos-admin .ai-role {
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: var(--text-2xs);
   color: var(--mac-label-3);
   padding: 0 4px;
   letter-spacing: 0.02em;
@@ -569,7 +569,7 @@
   margin-top: 8px;
   padding-top: 6px;
   border-top: 1px solid var(--mac-sep);
-  font-size: 0.76rem;
+  font-size: var(--text-2xs);
   color: var(--mac-label-3);
 }
 .macos-admin .ai-src a {
@@ -592,7 +592,7 @@
   border-color: transparent;
   border-radius: 999px;
   padding: 5px 12px;
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--mac-label);
 }
 
@@ -608,7 +608,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.85rem;
+  font-size: var(--text-xs);
   color: var(--mac-label);
   cursor: pointer;
 }
@@ -632,7 +632,7 @@
   background-image: radial-gradient(circle at 27px 50%, #fff 0 8px, transparent 8.5px);
 }
 .macos-admin .admin .admin-panel .ai-mode-note {
-  font-size: 0.78rem;
+  font-size: var(--text-2xs);
   color: var(--mac-label-3);
 }
 
@@ -681,7 +681,7 @@
   background: var(--mac-fill);
   border-radius: 999px;
   font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--mac-label);
   cursor: pointer;
   white-space: nowrap;
@@ -711,7 +711,7 @@
   background: none;
   text-align: left;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   color: var(--mac-label);
   padding: 7px 10px;
   border-radius: var(--mac-r-control);
@@ -728,7 +728,7 @@
 }
 .macos-admin .ai-model-empty,
 .macos-admin .ai-profile-empty {
-  font-size: 0.84rem;
+  font-size: var(--text-xs);
   color: var(--mac-label-3);
   padding: 8px 10px;
 }
@@ -765,7 +765,7 @@
   border: none;
   background: none;
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--mac-label);
   text-align: left;
@@ -781,7 +781,7 @@
   background: none;
   color: var(--mac-label-3);
   cursor: pointer;
-  font-size: 0.78rem;
+  font-size: var(--text-2xs);
   border-radius: 6px;
 }
 /* 常态：把 Unicode ✕ 换成画的 SVG 图标（craft-floor：字形不能当图标）。
@@ -800,7 +800,7 @@
 .macos-admin .ai-profile-del[data-armed] {
   width: auto;
   padding: 0 8px;
-  font-size: 0.78rem;
+  font-size: var(--text-2xs);
   color: var(--mac-red);
 }
 .macos-admin .ai-profile-del:hover {

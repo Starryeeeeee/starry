@@ -9,6 +9,10 @@ const entries = (await getKbEntries()).filter(
   (e) => e.status !== 'draft' && e.status !== 'archived' && e.access === 'public',
 );
 const subjects = kbSubjects(entries);
+// 标签聚合：按使用次数排序（2026-11-14 采纳 Copilot 建议的标签筛选）
+const tagCounts = new Map<string, number>();
+for (const e of entries) for (const t of e.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14);
 ---
 
 <Base title="知识库 · 星野漫游" description="Starry 的学习笔记、资料文档与定理公式、解题技巧。">
@@ -25,6 +29,14 @@ const subjects = kbSubjects(entries);
       </div>
       <input class="field" type="search" placeholder="搜标题、说明、标签…" aria-label="搜索知识库" />
     </div>
+    {tags.length > 0 && (
+      <div class="kb-chips kb-tag-row reveal" role="group" aria-label="按标签筛选">
+        <button class="chip" type="button" data-tag="" aria-pressed="true">全部标签</button>
+        {tags.map(([t, n]) => (
+          <button class="chip" type="button" data-tag={t} aria-pressed="false">{t}<i>{n}</i></button>
+        ))}
+      </div>
+    )}
 
     {entries.length === 0 ? (
       <div class="empty">知识库还空着——第一批内容整理好后会出现在这里。</div>
@@ -35,6 +47,7 @@ const subjects = kbSubjects(entries);
             class="kb-item reveal"
             href={u(`/kb/${e.slug}/`)}
             data-subject={e.subject}
+            data-tags={e.tags.join(' ')}
             data-search={`${e.title} ${e.subject} ${e.tags.join(' ')} ${e.description}`.toLowerCase()}
           >
             <div class="kb-item-head">
@@ -61,21 +74,25 @@ const subjects = kbSubjects(entries);
 </Base>
 
 <script>
-  // 前端筛选：科目 chip + 关键词，两条件取交集；无 JS 时全量展示，不影响阅读
+  // 前端筛选：科目 chip + 标签 chip + 关键词，三条件取交集；无 JS 时全量展示，不影响阅读
   // 匹配数据在 .kb-item 的 data-search 属性里（标题/科目/标签/说明，构建时写死）
-  const chips = document.querySelectorAll<HTMLElement>('.chip[aria-pressed]');
+  const chips = document.querySelectorAll<HTMLElement>('.kb-toolbar .chip[aria-pressed]');
+  const tagChips = document.querySelectorAll<HTMLElement>('.kb-tag-row .chip[aria-pressed]');
   const search = document.querySelector<HTMLInputElement>('.field');
   const items = document.querySelectorAll<HTMLElement>('.kb-item');
   const emptyTip = document.getElementById('kb-list-empty');
   let subject = '';
+  let tag = '';
 
   function apply() {
     const q = (search?.value ?? '').trim().toLowerCase();
     let visible = 0;
     for (const el of items) {
       const okSubject = !subject || el.dataset.subject === subject;
+      const itemTags = (el.dataset.tags ?? '').split(' ').filter(Boolean);
+      const okTag = !tag || itemTags.includes(tag);
       const okQuery = !q || (el.dataset.search ?? '').includes(q);
-      const show = okSubject && okQuery;
+      const show = okSubject && okTag && okQuery;
       el.hidden = !show;
       if (show) visible++;
     }
@@ -87,6 +104,14 @@ const subjects = kbSubjects(entries);
       chips.forEach((c) => c.setAttribute('aria-pressed', 'false'));
       chip.setAttribute('aria-pressed', 'true');
       subject = chip.dataset.subject ?? '';
+      apply();
+    });
+  }
+  for (const chip of tagChips) {
+    chip.addEventListener('click', () => {
+      tagChips.forEach((c) => c.setAttribute('aria-pressed', 'false'));
+      chip.setAttribute('aria-pressed', 'true');
+      tag = chip.dataset.tag ?? '';
       apply();
     });
   }
@@ -134,13 +159,13 @@ const subjects = kbSubjects(entries);
   .kb-item-head h3 {
     flex: 1;
     min-width: 0;
-    font-size: 1.05rem;
+    font-size: var(--text-md);
     font-weight: 650;
     color: var(--ink);
   }
   .kb-item-head time {
     flex-shrink: 0;
-    font-size: 0.8rem;
+    font-size: var(--text-xs);
     color: var(--ink-3);
   }
   .kb-kind {
@@ -157,7 +182,7 @@ const subjects = kbSubjects(entries);
   }
   .kb-desc {
     margin: 8px 0 0;
-    font-size: 0.92rem;
+    font-size: var(--text-sm);
     color: var(--ink-2);
     line-height: 1.8;
   }
@@ -177,7 +202,7 @@ const subjects = kbSubjects(entries);
   }
   .kb-size {
     margin-left: auto;
-    font-size: 0.76rem;
+    font-size: var(--text-2xs);
     color: var(--ink-3);
   }
   @media (max-width: 560px) {

@@ -1,4 +1,4 @@
-﻿---
+---
 // 站长管理面板：纯客户端，通过 GitHub API 直接读写仓库（等于把 GitHub 当后端）
 // 登录方式：GitHub 个人访问令牌（PAT），只存在站长自己浏览器的 localStorage 里
 import Base from '../layouts/Base.astro';
@@ -35,7 +35,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
       <h2 class="login-title">站长通道</h2>
       <p class="login-sub">粘贴 GitHub 个人访问令牌登录。令牌只存在这台电脑的浏览器里，不上站、不进仓库。</p>
       <ol>
-        <li>打开 <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=starry-roam-admin" target="_blank" rel="noopener">github.com/settings/tokens/new</a>（已预选 repo + workflow 权限）</li>
+        <li>打开 <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=starry-roam-admin" target="_blank" rel="noopener">github.com/settings/tokens/new</a>——已预选 repo 与 workflow 权限</li>
         <li>Generate token，复制生成的一串字符</li>
         <li>粘贴到下面，登录</li>
       </ol>
@@ -115,6 +115,10 @@ import globeIcon from '../icons/ui/globe.svg?raw';
           <span>正文（Markdown）</span>
           <textarea rows="10" data-post="body" placeholder="# 用 Markdown 写…"></textarea>
         </label>
+        <div class="body-tools">
+          <button class="admin-btn ghost" type="button" data-act="preview-post" aria-pressed="false">预览</button>
+        </div>
+        <div class="body-preview" data-post="preview" hidden></div>
         <div class="row-end">
           <button class="admin-btn primary" type="button" data-act="publish-post">发布文章</button>
         </div>
@@ -250,6 +254,10 @@ import globeIcon from '../icons/ui/globe.svg?raw';
             <span>正文（Markdown，支持 $行内$ 与 $$公式块$$）</span>
             <textarea rows="8" data-kb-note="body" placeholder="## 结论&#10;椭圆焦点弦最短为 $2b^2/a$…"></textarea>
           </label>
+          <div class="body-tools">
+            <button class="admin-btn ghost" type="button" data-act="preview-kb-note" aria-pressed="false">预览</button>
+          </div>
+          <div class="body-preview" data-kb-note="preview" hidden></div>
           <div class="row-end">
             <button class="admin-btn primary" type="button" data-act="publish-kb-note">发布条目</button>
           </div>
@@ -348,6 +356,14 @@ import globeIcon from '../icons/ui/globe.svg?raw';
         <div class="ai-modes">
           <label class="kb-mode"><input type="checkbox" data-ai="think" /><Fragment set:html={lightbulbIcon} /><span>深度思考</span></label>
           <label class="kb-mode"><input type="checkbox" data-ai="web" /><Fragment set:html={globeIcon} /><span>联网搜索</span></label>
+          <label class="ai-scope"><span>资料范围</span>
+            <select data-ai="scope">
+              <option value="all">全部</option>
+              <option value="post">文章</option>
+              <option value="kb">知识库</option>
+              <option value="moment">动态</option>
+            </select>
+          </label>
           <span class="ai-mode-note">都不开 = 快速模式，只基于站内资料；开思考更缜密但更慢；开联网则站内资料与网上结果结合分析</span>
         </div>
         <div class="ai-input-row">
@@ -433,14 +449,14 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   }
   .admin-greet {
     margin-top: 4px;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     color: var(--ink-2);
   }
   .admin-user {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     padding: 5px 8px 5px 6px;
     background: var(--surface);
     border: 1px solid var(--line);
@@ -460,7 +476,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     margin-top: 18px;
     padding-bottom: 18px;
     border-bottom: 1px solid var(--line);
-    font-size: 0.86rem;
+    font-size: var(--text-xs);
     color: var(--ink-3);
     display: flex;
     flex-wrap: wrap;
@@ -495,7 +511,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   }
   .login-sub {
     margin-top: 10px;
-    font-size: 0.94rem;
+    font-size: var(--text-sm);
     color: var(--ink-2);
     line-height: 1.9;
   }
@@ -504,7 +520,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     margin: 18px 0 24px;
     padding-left: 1.4em;
     color: var(--ink-3);
-    font-size: 0.88rem;
+    font-size: var(--text-sm);
     line-height: 2.1;
   }
   .admin-login a {
@@ -541,7 +557,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     border: none;
     background: none;
     font-family: inherit;
-    font-size: 0.92rem;
+    font-size: var(--text-sm);
     color: var(--ink-2);
     cursor: pointer;
     border-radius: 999px;
@@ -633,7 +649,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   .field {
     display: block;
     margin-top: 14px;
-    font-size: 0.85rem;
+    font-size: var(--text-xs);
     color: var(--ink-2);
   }
   .field-grid {
@@ -656,7 +672,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   :global(.admin-btn) {
     padding: 8px 20px;
     font-family: inherit;
-    font-size: 0.92rem;
+    font-size: var(--text-sm);
     font-weight: 550;
     color: var(--ink);
     background: var(--surface);
@@ -679,7 +695,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   }
   :global(.admin-btn.ghost) {
     padding: 4px 12px;
-    font-size: 0.82rem;
+    font-size: var(--text-xs);
   }
   :global(.admin-btn:disabled) {
     opacity: 0.55;
@@ -691,11 +707,11 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   @media (pointer: coarse) {
     :global(.admin-btn.ghost) {
       padding: 9px 16px;
-      font-size: 0.88rem;
+      font-size: var(--text-sm);
     }
     :global(.ai-profile-del) {
       padding: 8px 10px;
-      font-size: 0.85rem;
+      font-size: var(--text-xs);
     }
   }
   :global(.admin-btn.danger) {
@@ -715,7 +731,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   .sec-count {
     font-family: var(--font-sans);
     font-style: normal;
-    font-size: 0.76rem;
+    font-size: var(--text-2xs);
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
   }
@@ -724,7 +740,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   }
   .hint {
     margin-top: 8px;
-    font-size: 0.88rem;
+    font-size: var(--text-sm);
     color: var(--ink-3);
     line-height: 1.9;
   }
@@ -749,13 +765,13 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   }
   .gallery-drop b {
     display: block;
-    font-size: 0.94rem;
+    font-size: var(--text-sm);
     font-weight: 650;
   }
   .gallery-drop span {
     display: block;
     margin-top: 4px;
-    font-size: 0.8rem;
+    font-size: var(--text-xs);
     color: var(--ink-3);
   }
   .gallery-drop:hover,
@@ -777,7 +793,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     margin-inline: -12px;
     border-bottom: 1px solid var(--line);
     border-radius: 10px;
-    font-size: 0.92rem;
+    font-size: var(--text-sm);
     transition: background 0.15s ease;
   }
   .admin-list :global(li:hover) {
@@ -795,7 +811,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   }
   .admin-list :global(.meta) {
     flex-shrink: 0;
-    font-size: 0.78rem;
+    font-size: var(--text-2xs);
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
   }
@@ -808,7 +824,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     transform: translate(-50%, 10px);
     max-width: min(560px, 92vw);
     padding: 10px 22px;
-    font-size: 0.88rem;
+    font-size: var(--text-sm);
     line-height: 1.6;
     text-align: center;
     color: var(--bg);
@@ -830,7 +846,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     display: flex;
     gap: 18px;
     margin-bottom: 6px;
-    font-size: 0.92rem;
+    font-size: var(--text-sm);
   }
   .kb-mode {
     display: flex;
@@ -848,7 +864,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     gap: 8px 10px;
     margin-bottom: 14px;
     padding: 10px 14px;
-    font-size: 0.88rem;
+    font-size: var(--text-sm);
     color: var(--ink-2);
     background: var(--wash);
     border-radius: 8px;
@@ -857,7 +873,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     color: var(--accent-ink);
   }
   .edit-banner .edit-note {
-    font-size: 0.78rem;
+    font-size: var(--text-2xs);
     color: var(--ink-3);
   }
   .edit-banner :global(.admin-btn) {
@@ -888,15 +904,74 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     flex-wrap: wrap;
     gap: 6px 16px;
     margin-top: 12px;
-    font-size: 0.92rem;
+    font-size: var(--text-sm);
   }
   .ai-modes input {
     width: auto;
     margin-top: 0;
   }
   .ai-mode-note {
-    font-size: 0.78rem;
+    font-size: var(--text-2xs);
     color: var(--ink-3);
+  }
+  .ai-scope {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--text-sm);
+    color: var(--mac-label-2);
+  }
+  .ai-scope select {
+    width: auto;
+    margin-top: 0;
+    padding: 6px 10px;
+    font-size: var(--text-sm);
+  }
+  /* 正文预览（文章 / 知识库笔记共用） */
+  .body-tools {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+  .body-preview {
+    margin-top: 10px;
+    padding: 14px 16px;
+    background: var(--wash);
+    border-radius: var(--mac-r-field);
+    font-size: var(--text-sm);
+    line-height: 1.9;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .body-preview[hidden] {
+    display: none;
+  }
+  .body-preview h2,
+  .body-preview h3 {
+    margin: 0.6em 0 0.3em;
+    font-weight: 650;
+  }
+  .body-preview p {
+    margin: 0.4em 0;
+  }
+  .body-preview ul,
+  .body-preview ol {
+    margin: 0.4em 0;
+    padding-left: 1.4em;
+  }
+  .body-preview code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    padding: 1px 5px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+  .body-preview pre {
+    padding: 10px 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    background: var(--p-ink-950);
+    color: var(--p-linen-2);
   }
   .ai-profiles {
     display: flex;
@@ -945,7 +1020,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     background: var(--surface);
     border-radius: 8px;
     font-family: inherit;
-    font-size: 0.85rem;
+    font-size: var(--text-xs);
     color: var(--ink);
     cursor: pointer;
     white-space: nowrap;
@@ -985,7 +1060,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     align-items: flex-start;
   }
   .ai-role {
-    font-size: 0.72rem;
+    font-size: var(--text-2xs);
     color: var(--ink-3);
     padding: 0 6px;
     letter-spacing: 0.05em;
@@ -997,7 +1072,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     max-width: 88%;
     padding: 10px 14px;
     border-radius: 12px;
-    font-size: 0.92rem;
+    font-size: var(--text-sm);
     line-height: 1.8;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
@@ -1154,7 +1229,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     margin-top: 8px;
     padding-top: 6px;
     border-top: 1px dashed var(--line);
-    font-size: 0.78rem;
+    font-size: var(--text-2xs);
     color: var(--ink-3);
     overflow-wrap: anywhere;
   }
@@ -1169,7 +1244,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 999px;
-    font-size: 0.88rem;
+    font-size: var(--text-sm);
   }
   .ai-profile-chip.active {
     border-color: var(--accent);
@@ -1179,7 +1254,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     border: none;
     background: none;
     font: inherit;
-    font-size: 0.88rem;
+    font-size: var(--text-sm);
     color: var(--ink);
     cursor: pointer;
     padding: 2px;
@@ -1189,14 +1264,14 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     background: none;
     color: var(--ink-3);
     cursor: pointer;
-    font-size: 0.78rem;
+    font-size: var(--text-2xs);
     padding: 2px 6px;
   }
   .ai-profile-del:hover {
     color: #b4766b;
   }
   .ai-profile-empty {
-    font-size: 0.85rem;
+    font-size: var(--text-xs);
     color: var(--ink-3);
   }
   .ai-model-item {
@@ -1204,7 +1279,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     background: none;
     text-align: left;
     font: inherit;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     color: var(--ink);
     padding: 8px 10px;
     border-radius: 6px;
@@ -1218,15 +1293,15 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     font-weight: 600;
   }
   .ai-model-empty {
-    font-size: 0.85rem;
+    font-size: var(--text-xs);
     color: var(--ink-3);
     padding: 8px 10px;
   }
   .ai-memory { margin: 12px 0 4px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px 14px; background: var(--surface-2); }
-  .ai-memory summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; color: var(--ink-2); }
+  .ai-memory summary { cursor: pointer; font-weight: 600; font-size: var(--text-sm); color: var(--ink-2); }
   .ai-memory .hint { margin: 10px 0 4px; }
   .ai-memory-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
-  .ai-memory-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 0.9rem; color: var(--ink-2); }
+  .ai-memory-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: var(--text-sm); color: var(--ink-2); }
   .ai-memory-row span { flex: 1; overflow-wrap: anywhere; }
   .ai-memory-add { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
   .ai-memory-add input { flex: 1; min-width: 220px; }
@@ -1376,6 +1451,8 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     btn.dataset.original = btn.textContent ?? '';
     btn.textContent = '确认删除？';
     btn.classList.add('danger');
+    // 状态翻转对读屏可感知：确认文案的变化要被播报出来
+    btn.setAttribute('aria-live', 'polite');
     window.setTimeout(() => disarmDelete(btn), 4000);
   }
 
@@ -1473,6 +1550,12 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     if (name) (banner.querySelector('[data-edit-name]') as HTMLElement).textContent = name;
   }
 
+  // 回到顶部：尊重系统「减少动态」偏好
+  const scrollToTop = () => {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+  };
+
   function activateTab(name: string) {
     document.querySelectorAll('.admin-tab').forEach((el) => {
       el.classList.remove('active');
@@ -1513,7 +1596,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     ($('[data-act="publish-post"]') as HTMLElement).textContent = '保存修改';
     setBanner('post', f.name);
     activateTab('post');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   }
 
   function exitPostEdit(clearForm: boolean) {
@@ -1563,7 +1646,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
       radio.dispatchEvent(new Event('change'));
     }
     activateTab('kb');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   }
 
   function exitKbEdit(clearForm: boolean) {
@@ -1781,7 +1864,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     ($('[data-act="save-log"]') as HTMLElement).textContent = '保存修改';
     setBanner('log', f.name);
     activateTab('log');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   }
 
   function exitLogEdit(clearForm: boolean) {
@@ -2372,6 +2455,18 @@ import globeIcon from '../icons/ui/globe.svg?raw';
         await refreshKb();
         t.removeAttribute('disabled');
       }
+      if (act === 'preview-post' || act === 'preview-kb-note') {
+        const scopeKey = act === 'preview-post' ? 'post' : 'kb-note';
+        const ta = $(`[data-${scopeKey}="body"]`) as HTMLTextAreaElement;
+        const pv = $(`[data-${scopeKey}="preview"]`) as HTMLElement;
+        const show = pv.hidden;
+        pv.innerHTML = ta.value.trim()
+          ? await renderMarkdown(ta.value)
+          : '<p>正文还是空的——先写点内容再预览。</p>';
+        pv.hidden = !show;
+        t.textContent = show ? '回到编辑' : '预览';
+        t.setAttribute('aria-pressed', String(show));
+      }
       if (act === 'save-storage') {
         const w = ($('[data-storage="workerUrl"]') as HTMLInputElement).value.trim();
         const b = ($('[data-storage="publicBase"]') as HTMLInputElement).value.trim();
@@ -2817,7 +2912,17 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     setThinkingLabel(bubble, thinkOn ? '深度思考中' : '思考中');
     try {
       const index = await ensureAiIndex();
-      const hits = searchIndex(index, q, 5);
+      // 资料范围限定：按板块过滤检索结果（all = 不过滤）
+      const scope = (aiFields('scope') as HTMLSelectElement).value;
+      const rawHits = searchIndex(index, q, 5);
+      const hits =
+        scope === 'all'
+          ? rawHits
+          : rawHits.filter(({ entry }) =>
+              scope === 'kb'
+                ? entry.type === 'kb-note' || entry.type === 'kb-file'
+                : entry.type === scope,
+            );
       // 联网搜索两种走法：智谱等原生工具 = 服务端搜，最稳；
       // 其余服务商 = 浏览器经公共中转搜必应 RSS，尽力而为。两者都不拖累站内资料回答。
       const nativeSearch = !!profile.webSearchTool;
@@ -2954,13 +3059,19 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     refreshProfileList();
     refreshModelPop();
     updateModelPill();
-    // 恢复上次的深度思考 / 联网搜索开关状态
+    // 恢复上次的深度思考 / 联网搜索开关状态 + 资料范围
     const toggles = loadAiToggles();
     (aiFields('think') as HTMLInputElement).checked = toggles.think;
     (aiFields('web') as HTMLInputElement).checked = toggles.web;
     for (const box of [aiFields('think'), aiFields('web')]) {
       box.addEventListener('change', saveAiToggles);
     }
+    const scopeSel = aiFields('scope') as HTMLSelectElement;
+    scopeSel.value = localStorage.getItem(AI_SCOPE_KEY) ?? 'all';
+    scopeSel.addEventListener('change', () => {
+      localStorage.setItem(AI_SCOPE_KEY, scopeSel.value);
+      msg(`资料范围限定为「${scopeSel.selectedOptions[0]?.textContent ?? '全部'}」`);
+    });
     // 会话下拉 + 恢复上次对话
     refreshSessionSelect();
     if (aiSessionId && curSession()) void openSession(aiSessionId);
@@ -2975,6 +3086,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
 
   // 深度思考 / 联网搜索两个开关：记住上次的选择
   const AI_TOGGLES_KEY = 'sr-ai-toggles';
+  const AI_SCOPE_KEY = 'sr-ai-scope';
   function loadAiToggles(): { think: boolean; web: boolean } {
     try {
       const t = JSON.parse(localStorage.getItem(AI_TOGGLES_KEY) ?? '{}');

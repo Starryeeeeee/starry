@@ -6,13 +6,31 @@ import { fmtDate } from '../../lib/format';
 import { u } from '../../lib/base';
 
 export async function getStaticPaths() {
-  const posts = (await getCollection('posts')).filter(
-    (post) => post.data.status !== 'draft', // 草稿不构建；归档仍可直链访问
-  );
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+  const posts = (await getCollection('posts'))
+    .filter(
+      (post) => post.data.status !== 'draft', // 草稿不构建；归档仍可直链访问
+    )
+    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  // 相邻文章：按时间排序后取前后各一篇（新 / 旧）
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      newer:
+        i > 0 ? { slug: posts[i - 1].id, title: posts[i - 1].data.title } : null,
+      older:
+        i < posts.length - 1
+          ? { slug: posts[i + 1].id, title: posts[i + 1].data.title }
+          : null,
+    },
+  }));
 }
 
-const { post } = Astro.props;
+const { post, newer, older } = Astro.props as {
+  post: import('astro:content').CollectionEntry<'posts'>;
+  newer: { slug: string; title: string } | null;
+  older: { slug: string; title: string } | null;
+};
 const { Content } = await render(post);
 ---
 
@@ -33,7 +51,61 @@ const { Content } = await render(post);
     {post.data.tags.length > 0 && (
       <div class="tags">{post.data.tags.map((t) => <span>{t}</span>)}</div>
     )}
+    {(newer || older) && (
+      <nav class="post-pager" aria-label="相邻文章">
+        {newer ? (
+          <a class="pager-link" href={u(`/posts/${newer.slug}/`)}>
+            <span>← 更新一篇</span>
+            <b>{newer.title}</b>
+          </a>
+        ) : <span class="pager-link ghost-side" aria-hidden="true"></span>}
+        {older ? (
+          <a class="pager-link next" href={u(`/posts/${older.slug}/`)}>
+            <span>更早一篇 →</span>
+            <b>{older.title}</b>
+          </a>
+        ) : <span class="pager-link ghost-side" aria-hidden="true"></span>}
+      </nav>
+    )}
     <a class="back-link" href={u('/posts/')}>回到文章列表</a>
     <Comments />
   </article>
 </Base>
+
+<style>
+  .post-pager {
+    display: flex;
+    gap: 10px;
+    margin-top: 34px;
+  }
+  .pager-link {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    background: var(--wash);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background var(--dur) var(--ease-out);
+  }
+  .pager-link:hover {
+    background: color-mix(in srgb, var(--accent) 10%, var(--wash));
+  }
+  .pager-link span {
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+  }
+  .pager-link.next {
+    text-align: right;
+  }
+  .pager-link b {
+    font-weight: 600;
+    color: var(--accent-ink);
+    overflow-wrap: anywhere;
+  }
+  .ghost-side {
+    background: none;
+  }
+</style>

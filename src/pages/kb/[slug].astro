@@ -11,23 +11,48 @@ export async function getStaticPaths() {
   const notes = (await getCollection('kb')).filter(
     (n) => n.data.status !== 'draft' && n.data.access !== 'private',
   );
-  const notePages = notes.map((note) => ({
-    params: { slug: note.id },
-    props: { kind: 'note' as const, note },
-  }));
   const filePages = kbFileRecords
     .filter((f) => f.status !== 'draft' && (f.access ?? 'public') !== 'private')
     .map((file) => ({
       params: { slug: file.slug },
       props: { kind: 'file' as const, file },
     }));
-  return [...notePages, ...filePages];
+  // 笔记与文档合成一条时间流（新→旧），详情页据此取前后相邻条目
+  const stream = [
+    ...notes
+      .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+      .map((note) => ({
+        slug: note.id,
+        title: note.data.title,
+        date: note.data.date.valueOf(),
+        props: { kind: 'note' as const, note },
+      })),
+    ...filePages.map((p) => ({
+      slug: p.params.slug,
+      title: p.props.file!.title,
+      date: p.props.file!.date.valueOf(),
+      props: p.props,
+    })),
+  ].sort((a, b) => b.date - a.date);
+  return stream.map((item, i) => ({
+    params: { slug: item.slug },
+    props: {
+      ...item.props,
+      newer: i > 0 ? { slug: stream[i - 1].slug, title: stream[i - 1].title } : null,
+      older:
+        i < stream.length - 1
+          ? { slug: stream[i + 1].slug, title: stream[i + 1].title }
+          : null,
+    },
+  }));
 }
 
-const { kind, note, file } = Astro.props as {
+const { kind, note, file, newer, older } = Astro.props as {
   kind: 'note' | 'file';
   note?: import('astro:content').CollectionEntry<'kb'>;
   file?: KbFileRecord;
+  newer: { slug: string; title: string } | null;
+  older: { slug: string; title: string } | null;
 };
 
 const entry = kind === 'note' && note
@@ -97,14 +122,65 @@ const sizeLabel = file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : '';
     {entry.tags.length > 0 && (
       <div class="tags">{entry.tags.map((t) => <span>{t}</span>)}</div>
     )}
+    {(newer || older) && (
+      <nav class="kb-pager" aria-label="相邻条目">
+        {newer ? (
+          <a class="pager-link" href={u(`/kb/${newer.slug}/`)}>
+            <span>← 更新一篇</span>
+            <b>{newer.title}</b>
+          </a>
+        ) : <span class="pager-link ghost-side" aria-hidden="true"></span>}
+        {older ? (
+          <a class="pager-link next" href={u(`/kb/${older.slug}/`)}>
+            <span>更早一篇 →</span>
+            <b>{older.title}</b>
+          </a>
+        ) : <span class="pager-link ghost-side" aria-hidden="true"></span>}
+      </nav>
+    )}
     <Comments />
   </article>
 </Base>
 
 <style>
+  .kb-pager {
+    display: flex;
+    gap: 10px;
+    margin-top: 34px;
+  }
+  .pager-link {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    background: var(--wash);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background var(--dur) var(--ease-out);
+  }
+  .pager-link:hover {
+    background: color-mix(in srgb, var(--accent) 10%, var(--wash));
+  }
+  .pager-link span {
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+  }
+  .pager-link.next {
+    text-align: right;
+  }
+  .pager-link b {
+    font-weight: 600;
+    color: var(--accent-ink);
+    overflow-wrap: anywhere;
+  }
+  .ghost-side {
+    background: none;
+  }
   .kb-crumb {
     margin-top: 40px;
-    font-size: 0.88rem;
+    font-size: var(--text-sm);
   }
   .kb-crumb a {
     color: var(--ink-2);
@@ -115,7 +191,7 @@ const sizeLabel = file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : '';
   }
   .kb-kind {
     padding: 2px 10px;
-    font-size: 0.78rem;
+    font-size: var(--text-2xs);
     border-radius: var(--radius-pill);
     background: var(--wash);
     color: var(--accent-ink);
@@ -126,7 +202,7 @@ const sizeLabel = file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : '';
     color: var(--ink-2);
     background: var(--wash);
     border-radius: var(--radius);
-    font-size: 0.94rem;
+    font-size: var(--text-sm);
     line-height: 1.9;
   }
   .kb-file-box {
@@ -145,7 +221,7 @@ const sizeLabel = file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : '';
     color: var(--ink-3);
     background: var(--wash);
     border-radius: var(--radius);
-    font-size: 0.94rem;
+    font-size: var(--text-sm);
   }
   .kb-file-actions {
     display: flex;
@@ -155,7 +231,7 @@ const sizeLabel = file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : '';
   .kb-btn {
     display: inline-block;
     padding: 9px 22px;
-    font-size: 0.92rem;
+    font-size: var(--text-sm);
     font-weight: 550;
     border-radius: var(--radius-md);
     text-decoration: none;

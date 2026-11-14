@@ -172,14 +172,14 @@ main {
 .brand-cn {
   font-family: var(--font-display-cn);
   font-weight: 400; /* AI 黑体自带厚重，伪粗会糊成一团 */
-  font-size: 1.08rem;
+  font-size: var(--text-lg);
   letter-spacing: 0.02em;
 }
 
 .brand-en {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 0.86rem;
+  font-size: var(--text-xs);
   color: var(--ink-3);
 }
 
@@ -629,7 +629,7 @@ main {
 
 .hero-sub-caps {
   margin-top: 28px;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   letter-spacing: 0.14em;
   color: var(--ink-3);
 }
@@ -638,7 +638,7 @@ main {
   margin-top: 30px;
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 1.04rem;
+  font-size: var(--text-md);
   letter-spacing: 0.01em;
   color: var(--ink-3);
 }
@@ -649,7 +649,7 @@ main {
   justify-content: center;
   flex-wrap: wrap;
   gap: 8px 26px;
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -716,7 +716,7 @@ main {
   border-radius: var(--radius-md);
   background: var(--ink);
   color: var(--bg);
-  font-size: 0.75rem;
+  font-size: var(--text-2xs);
   line-height: 1.5;
   white-space: nowrap;
   opacity: 0;
@@ -802,7 +802,7 @@ main {
 }
 
 .section-head .more {
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   color: var(--ink-3);
   transition: color 0.2s ease;
 }
@@ -823,21 +823,21 @@ main {
 }
 
 .post-item time {
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 
 .post-item h3 {
   margin-top: 4px;
-  font-size: 1.13rem;
+  font-size: var(--text-lg);
   font-weight: 650;
   transition: color 0.2s ease;
 }
 
 .post-item p {
   margin-top: 6px;
-  font-size: 0.95rem;
+  font-size: var(--text-sm);
   color: var(--ink-2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -984,13 +984,13 @@ button.chip[aria-pressed="true"] {
 }
 
 .project-card h3 {
-  font-size: 1.05rem;
+  font-size: var(--text-md);
   font-weight: 650;
 }
 
 .project-card p {
   margin-top: 8px;
-  font-size: 0.92rem;
+  font-size: var(--text-sm);
   color: var(--ink-2);
 }
 
@@ -1005,7 +1005,7 @@ button.chip[aria-pressed="true"] {
 }
 
 .skill-item h3 {
-  font-size: 1.05rem;
+  font-size: var(--text-md);
   font-weight: 650;
   transition: color 0.2s ease;
 }
@@ -1016,13 +1016,13 @@ button.chip[aria-pressed="true"] {
 
 .skill-item .desc {
   margin-top: 5px;
-  font-size: 0.92rem;
+  font-size: var(--text-sm);
   color: var(--ink-2);
 }
 
 .skill-item time {
   flex-shrink: 0;
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -1055,7 +1055,7 @@ button.chip[aria-pressed="true"] {
   background: var(--accent);
   color: var(--bg);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: var(--text-sm);
   flex-shrink: 0;
 }
 
@@ -1069,7 +1069,7 @@ button.chip[aria-pressed="true"] {
 
 .moment-head time {
   margin-left: auto;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -1077,7 +1077,7 @@ button.chip[aria-pressed="true"] {
 .moment-body {
   margin-top: 10px;
   font-family: var(--font-body);
-  font-size: 1.02rem;
+  font-size: var(--text-md);
 }
 
 /* 空态：所有列表共用 */
@@ -1113,7 +1113,7 @@ button.chip[aria-pressed="true"] {
   align-items: center;
   gap: 6px;
   padding: 3px 14px;
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--ink-3);
   background: var(--surface-2);
   border: none;
@@ -1168,7 +1168,7 @@ button.chip[aria-pressed="true"] {
 
 .prose .prose-meta {
   margin-top: 14px;
-  font-size: 0.86rem;
+  font-size: var(--text-xs);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -1235,7 +1235,7 @@ button.chip[aria-pressed="true"] {
   border: 1px solid var(--line);
   overflow-x: auto;
   line-height: 1.7;
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
 }
 
 .prose pre code {
@@ -1289,7 +1289,7 @@ button.chip[aria-pressed="true"] {
 .back-link {
   display: inline-block;
   margin-top: 44px;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   color: var(--ink-3);
   transition: color 0.2s ease;
 }
@@ -1326,19 +1326,19 @@ button.chip[aria-pressed="true"] {
 
 .foot-name {
   font-family: var(--font-display-cn);
-  font-size: 1.08rem;
+  font-size: var(--text-lg);
   letter-spacing: 0.02em;
 }
 
 .foot-slogan {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: var(--text-xs);
   color: var(--ink-3);
 }
 
 .foot-status {
-  font-size: 0.78rem;
+  font-size: var(--text-2xs);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -1358,7 +1358,7 @@ button.chip[aria-pressed="true"] {
 
 .foot-col h3 {
   margin-bottom: 14px;
-  font-size: 0.76rem;
+  font-size: var(--text-2xs);
   font-weight: 500;
   letter-spacing: 0.08em;
   color: var(--ink-3);
@@ -1376,7 +1376,7 @@ button.chip[aria-pressed="true"] {
 .foot-col a,
 .foot-col button {
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   color: var(--ink-2);
   background: none;
   border: none;
@@ -1430,7 +1430,7 @@ button.chip[aria-pressed="true"] {
 
 .foot-opt-label {
   min-width: 2.4em;
-  font-size: 0.76rem;
+  font-size: var(--text-2xs);
   color: var(--ink-3);
 }
 
@@ -1475,7 +1475,7 @@ button.chip[aria-pressed="true"] {
   margin-top: 48px;
   padding-top: 20px;
   border-top: 1px solid var(--line);
-  font-size: 0.76rem;
+  font-size: var(--text-2xs);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -1609,13 +1609,13 @@ html.no-decor .bg-decor {
   justify-content: space-between;
   gap: 12px;
   padding-top: 10px;
-  font-size: 0.86rem;
+  font-size: var(--text-xs);
   color: var(--ink-2);
 }
 
 .gallery-item figcaption .date {
   flex-shrink: 0;
-  font-size: 0.76rem;
+  font-size: var(--text-2xs);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -1680,7 +1680,7 @@ html.no-decor .bg-decor {
 
 .lightbox figcaption {
   margin-top: 16px;
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.78);
   font-variant-numeric: tabular-nums;
 }
@@ -1714,7 +1714,7 @@ html.no-decor .bg-decor {
   text-align: center;
   color: var(--ink-3);
   background: var(--wash);
-  font-size: 0.92rem;
+  font-size: var(--text-sm);
   line-height: 2;
 }
 
