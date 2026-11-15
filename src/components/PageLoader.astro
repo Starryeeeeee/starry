@@ -82,16 +82,16 @@
     overflow: hidden;
   }
 
-  /* 水位：站内三个点缀色的水彩流动（雾蓝→湖水绿→陶土玫瑰），充填时逐段展开，
-     再叠一层轻微的色相呼吸让它像活水；刻意压低幅度，不走霓虹路线 */
+  /* 水位：与首页镂空字同源的浅水色家族（草绿→浅绿→柔黄），oklab 插值避免中段发闷。
+     不再做 hue-rotate 色相旋转——旧版四色相撞 + 旋转，在米灰纸面上脏得明显（站主 11-15 指认）。
+     活水感交给 shimmer 微光扫过。 */
   .pl-fill {
     position: relative;
     height: 100%;
     width: 0;
     border-radius: var(--radius-pill);
-    /* 站主指定的四色水流，颜色不动 */
-    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--rose), var(--accent));
-    animation: pl-fill 1.1s var(--ease-out) 0.1s forwards, pl-breathe 2.4s ease-in-out infinite;
+    background: linear-gradient(90deg in oklab, var(--accent), var(--accent-light) 62%, var(--sand) 100%);
+    animation: pl-fill 1.1s var(--ease-out) 0.1s forwards;
   }
 
   .pl-fill::after {
@@ -111,11 +111,6 @@
 
   @keyframes pl-fill {
     to { width: 100%; }
-  }
-
-  @keyframes pl-breathe {
-    0%, 100% { filter: hue-rotate(0deg) saturate(1); }
-    50% { filter: hue-rotate(-16deg) saturate(1.18); }
   }
 
   @keyframes pl-shimmer {
