@@ -77,43 +77,6 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
         </g>
       </svg>
     </span>
-    <span class="hero-flowers" aria-hidden="true">
-      <svg viewBox="0 0 120 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- 茎 -->
-        <path d="M58 104c-2-18 2-34 8-46M74 104c3-14 1-26-4-36M42 104c-1-10 1-18 4-24"
-              stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
-        <!-- 叶 -->
-        <path d="M52 78c-8-2-13-8-14-15 8 0 14 5 14 15Z" fill="var(--accent)" opacity="0.3"/>
-        <path d="M78 84c7-3 11-9 11-16-7 1-12 7-11 16Z" fill="var(--accent)" opacity="0.3"/>
-        <!-- 花朵一：花粉 -->
-        <g transform="translate(66 56)">
-          <circle cx="0" cy="-6" r="4.6" fill="var(--rose)" opacity="0.62"/>
-          <circle cx="5.7" cy="-1.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
-          <circle cx="3.5" cy="4.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
-          <circle cx="-3.5" cy="4.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
-          <circle cx="-5.7" cy="-1.9" r="4.6" fill="var(--rose)" opacity="0.62"/>
-          <circle cx="0" cy="0" r="3.2" fill="var(--sand)"/>
-        </g>
-        <!-- 花朵二：雏菊黄 -->
-        <g transform="translate(70 16) scale(0.86)">
-          <circle cx="0" cy="-6" r="4.6" fill="var(--sand)" opacity="0.75"/>
-          <circle cx="5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
-          <circle cx="3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
-          <circle cx="-3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
-          <circle cx="-5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.75"/>
-          <circle cx="0" cy="0" r="3.2" fill="var(--accent-2)"/>
-        </g>
-        <!-- 花朵三：小叶芽 -->
-        <g transform="translate(45 74) scale(0.62)">
-          <circle cx="0" cy="-6" r="4.6" fill="var(--sand)" opacity="0.6"/>
-          <circle cx="5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
-          <circle cx="3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
-          <circle cx="-3.5" cy="4.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
-          <circle cx="-5.7" cy="-1.9" r="4.6" fill="var(--sand)" opacity="0.6"/>
-          <circle cx="0" cy="0" r="3.2" fill="var(--rose)"/>
-        </g>
-      </svg>
-    </span>
 
     <div class="hero-id" data-entrance>
       <img class="hero-avatar-lg" src={avatar.src} alt="Starry 的头像" width="64" height="64" />
@@ -283,17 +246,6 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
     user-select: none;
   }
   .hero-flowers svg { display: block; width: 100%; height: auto; }
-
-  /* 右下角一簇手绘野花：廉价的不是花，是花太多。这里只放一簇 */
-  .hero-flowers {
-    position: absolute;
-    right: 9%;
-    bottom: 132px;
-    width: 152px;
-    pointer-events: none;
-    user-select: none;
-  }
-  .hero-flowers svg { display: block; width: 100%; height: auto; }
   .hero-ghost {
     position: absolute; right: -24px; top: 32px;
     font-family: var(--font-display-en); font-size: 220px; line-height: 1;
@@ -330,16 +282,17 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
     font-family: var(--font-display);
     font-style: italic;
     font-size: 20px; line-height: 28px;
-    color: var(--ink-3);
+    /* 站主的格言是真实内容不是装饰，用 ink-2（7.4:1）而不是弱化灰（4.59 贴线） */
+    color: var(--ink-2);
     margin-bottom: 40px;
   }
   .hero-cta { display: flex; align-items: center; gap: 24px; margin-bottom: 32px; }
 
-  /* cottagecore：实心草绿药丸，去掉扫光（纸面上不该有高光掠过） */
+  /* cottagecore：实心深草绿药丸（白字 6.15:1 过 AA），去掉扫光（纸面上不该有高光掠过） */
   .btn-primary {
     position: relative; display: inline-flex; align-items: center; gap: 8px;
     padding: 13px 30px; border: none; border-radius: var(--radius-pill);
-    background: var(--accent);
+    background: var(--accent-ink);
     color: var(--on-accent);
     font-size: 16px; line-height: 24px; font-weight: 500;
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 6px 16px rgba(90, 72, 48, 0.14);
@@ -347,7 +300,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
       background var(--dur) var(--ease);
   }
   .btn-primary:hover {
-    background: var(--accent-ink);
+    background: color-mix(in srgb, var(--accent-ink) 82%, var(--p-ink-950));
     transform: translateY(-2px);
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 10px 22px rgba(90, 72, 48, 0.18);
   }
@@ -415,10 +368,12 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .sec-head .more {
     flex-shrink: 0;
     padding-bottom: 6px;
-    font-size: 13px; color: var(--ink-3);
+    font-size: 13px;
+    /* 链接=可交互，用深草绿而不是最弱灰（一处颜色一个含义） */
+    color: var(--accent-ink);
     transition: color 0.3s var(--ease);
   }
-  .sec-head .more:hover { color: var(--accent-ink); }
+  .sec-head .more:hover { color: var(--p-leaf-400); }
 
   /* 列表压在字的下缘，形成叠底关系 */
   .rows, .quote { position: relative; z-index: 1; }
@@ -440,7 +395,8 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .row time {
     justify-self: end;
     font-size: 12.5px; line-height: 26px;
-    color: color-mix(in srgb, var(--accent-2) 82%, var(--ink-3));
+    /* 陶土深一档：82% 混色只有 4.43:1，全量 ink 才过 4.5 */
+    color: var(--accent-2-ink);
     font-variant-numeric: tabular-nums; white-space: nowrap;
   }
   .row:hover .row-title { color: var(--accent-ink); }
@@ -498,8 +454,6 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
     #tagline { font-size: 28px; }
     /* 130px 在 390 宽的屏上会顶出右边界，缩小并往下让开头像 */
     .hero-ghost { font-size: 74px; top: 104px; right: 6px; opacity: 0.12; }
-    /* 手机屏放不下这簇花，不显示，省得和头像挤在一起 */
-    .hero-flowers { display: none; }
     /* 手机屏放不下这簇花，不显示，省得和头像挤在一起 */
     .hero-flowers { display: none; }
     .hero { padding-top: 88px; }

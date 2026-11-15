@@ -66,8 +66,6 @@
   --rose-soft: var(--p-blossom-400);
   --leaf-soft: var(--p-leaf-250);
   --accent-light: var(--p-leaf-400);
-  --accent-light: var(--p-leaf-400);
-  --on-solid: #ffffff; /* 深底/彩色实心块上的文字（灯箱、深色按钮） */
   --accent-2: var(--p-clay-600);
   --accent-2-ink: var(--p-clay-700);
 
