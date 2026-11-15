@@ -111,7 +111,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
 
   <main class="container wide">
     <div class="feed">
-      <section class="sec" style="--sec-c: var(--accent)" aria-labelledby="latest-posts">
+      <section class="sec" aria-labelledby="latest-posts">
         <div class="sec-head">
           <h2 id="latest-posts">最近的文章</h2>
           <a class="more" href={u('/posts/')}>全部文章</a>
@@ -128,7 +128,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
         </ul>
       </section>
 
-      <section class="sec" style="--sec-c: var(--rose)" aria-labelledby="latest-moments">
+      <section class="sec" aria-labelledby="latest-moments">
         <div class="sec-head">
           <h2 id="latest-moments">废话条</h2>
           <a class="more" href={u('/moments/')}>更多</a>
@@ -145,7 +145,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
         )}
       </section>
 
-      <section class="sec" style="--sec-c: var(--sand-ink)" aria-labelledby="latest-skills">
+      <section class="sec" aria-labelledby="latest-skills">
         <div class="sec-head">
           <h2 id="latest-skills">AI Skills</h2>
           <a class="more" href={u('/skills/')}>全部</a>
@@ -162,7 +162,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
         </ul>
       </section>
 
-      <section class="sec" style="--sec-c: var(--accent-2)" aria-labelledby="latest-projects">
+      <section class="sec" aria-labelledby="latest-projects">
         <div class="sec-head">
           <h2 id="latest-projects">作品</h2>
           <a class="more" href={u('/projects/')}>全部作品</a>
@@ -184,7 +184,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
         </ul>
       </section>
 
-      <section class="sec" style="--sec-c: var(--accent)" aria-labelledby="latest-kb">
+      <section class="sec" aria-labelledby="latest-kb">
         <div class="sec-head">
           <h2 id="latest-kb">知识库</h2>
           <a class="more" href={u('/kb/')}>全部条目</a>
@@ -337,7 +337,8 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
     display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
     margin-bottom: 14px;
   }
-  /* 栏目名左侧的色标：像手账里给每一章贴的彩色小签，给页面一点颜色的起落 */
+  /* 栏目名左侧的色标：单一草绿深签——五个板块五个颜色会跟绿镂空标题打架（站主 11-15
+     指认「很杂」），全部归入同一家族后，颜色只留一个声音 */
   .sec-head h2::before {
     content: "";
     position: absolute;
@@ -347,7 +348,7 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
     height: 0.54em;
     border-radius: 3px;
     transform: translateY(-50%);
-    background: var(--sec-c, var(--accent));
+    background: var(--accent-ink);
   }
   .sec-head h2 {
     position: relative;
@@ -358,7 +359,8 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
     font-weight: 400;
     letter-spacing: 0.01em;
     color: transparent;
-    -webkit-text-stroke: 1.8px color-mix(in srgb, var(--accent) 88%, transparent);
+    /* 描边加深一档（accent-ink 88%）：镂空底字更立得住，与建站日志年份同色系 */
+    -webkit-text-stroke: 1.8px color-mix(in srgb, var(--accent-ink) 88%, transparent);
     user-select: none;
   }
   @supports not (-webkit-text-stroke: 1px black) {
@@ -402,11 +404,11 @@ const lastUpdate = allPosts[0] ? fmtDate(allPosts[0].data.date) : fmtDate(new Da
   .row:hover .row-title { color: var(--accent-ink); }
   .row:active .row-title { color: var(--accent); }
 
-  /* 废话条：留一处呼吸口，正文用楷体，不加卡片 */
+  /* 废话条：留一处呼吸口，正文用楷体，不加卡片；竖线与标题同族草绿 */
   .quote {
     display: block;
     padding: 20px 0 6px 18px;
-    border-left: 2px solid color-mix(in srgb, var(--rose) 45%, transparent);
+    border-left: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
   }
   .quote + .quote { padding-top: 18px; }
   .quote-text {
