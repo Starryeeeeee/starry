@@ -42,6 +42,7 @@ const isActive = (href: string) => {
 
     <nav class="site-nav" aria-label="主导航">
       <div class="nav-links" id="nav-links">
+        <span class="nav-pill" aria-hidden="true"></span>
         {primary.map((item) => (
           <a href={u(item.href)} aria-current={isActive(item.href) ? 'true' : undefined}>
             {item.label}
@@ -54,6 +55,7 @@ const isActive = (href: string) => {
             type="button"
             aria-expanded="false"
             aria-controls="nav-more-menu"
+            aria-current={secondary.some((item) => isActive(item.href)) ? 'true' : undefined}
             data-nav-more
           >
             更多
@@ -108,6 +110,45 @@ const isActive = (href: string) => {
 
   toggle?.addEventListener('click', () => {
     setDrawer(!header?.classList.contains('nav-open'));
+  });
+
+  // ---- 滑动指示条：鼠标划过时滑到哪一项，离开时回落到当前页 ----
+  const navLinks = document.getElementById('nav-links');
+  const navPill = navLinks?.querySelector<HTMLElement>('.nav-pill');
+  const navItems = navLinks
+    ? Array.from(
+        navLinks.querySelectorAll<HTMLElement>(':scope > a, :scope > .nav-more > .nav-more-btn'),
+      )
+    : [];
+  // 当前页可能在二级里，这时「更多」按钮带 aria-current，指示条就停在它上面
+  const activeNavItem = navLinks?.querySelector<HTMLElement>('[aria-current="true"]') ?? null;
+
+  const placePill = (el: HTMLElement | null) => {
+    if (!navPill || !navLinks || !el) return;
+    const host = navLinks.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    if (!r.width) {
+      navPill.dataset.show = 'false';
+      return;
+    }
+    navPill.style.setProperty('--pill-x', `${Math.round(r.left - host.left)}px`);
+    navPill.style.setProperty('--pill-w', `${Math.round(r.width)}px`);
+    navPill.dataset.show = 'true';
+  };
+
+  for (const el of navItems) {
+    el.addEventListener('mouseenter', () => placePill(el));
+    el.addEventListener('focus', () => placePill(el));
+  }
+  navLinks?.addEventListener('mouseleave', () => placePill(activeNavItem));
+
+  // 首帧与窗口变化时重算（字体加载完宽度会变，也要重算一次）
+  placePill(activeNavItem);
+  document.fonts?.ready.then(() => placePill(activeNavItem));
+  let navResize: number | undefined;
+  addEventListener('resize', () => {
+    clearTimeout(navResize);
+    navResize = window.setTimeout(() => placePill(activeNavItem), 120);
   });
 
   // ---- 桌面「更多」下拉 ----

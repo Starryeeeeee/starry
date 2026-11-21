@@ -190,9 +190,38 @@ main {
 }
 
 .nav-links {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 2px;
+}
+
+/* 滑动指示条：一个跟着鼠标走的浅绿药丸。
+   原来是每个链接各自在 hover 时冒出一块底色，鼠标一移就像一格一格跳，很生硬。 */
+.nav-pill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: var(--pill-w, 0px);
+  height: 30px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 11%, transparent);
+  transform: translate3d(var(--pill-x, 0px), -50%, 0);
+  transition: transform 0.32s var(--ease-out), width 0.32s var(--ease-out),
+    opacity 0.18s var(--ease-out);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nav-pill[data-show='true'] {
+  opacity: 1;
+}
+
+/* 链接压在指示条之上 */
+.nav-links > a,
+.nav-more-btn {
+  position: relative;
+  z-index: 1;
 }
 
 .nav-links > a,
@@ -212,25 +241,20 @@ main {
 .nav-links > a:hover,
 .nav-more-btn:hover {
   color: var(--accent-ink);
-  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  background: none; /* 底色由滑动指示条承担 */
 }
 
+/* 当前页：绿色文字 + 常驻的指示条（当前页在二级时，条停在「更多」上） */
 .nav-links > a[aria-current="true"],
+.nav-more-btn[aria-current="true"],
 .nav-more-btn[aria-expanded="true"] {
-  color: var(--ink);
+  color: var(--accent-ink);
+  font-weight: 500;
 }
 
-/* 当前页：只有一条 16px 短横线，不用色块抢注意力 */
+/* 短横线退场：指示条已经承担「我在这一页」的表达 */
 .nav-links > a[aria-current="true"]::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 1px;
-  width: 16px;
-  height: 2px;
-  border-radius: var(--radius-pill);
-  background: var(--accent);
-  transform: translateX(-50%);
+  content: none;
 }
 
 /* 「更多」下拉 */
@@ -370,6 +394,11 @@ main {
   }
 
   .nav-links {
+    display: none;
+  }
+
+  /* 抽屉是纵向布局，指示条的横坐标没有意义 */
+  .nav-pill {
     display: none;
   }
 
