@@ -327,6 +327,24 @@ import globeIcon from '../icons/ui/globe.svg?raw';
 
       <!-- 站点 -->
       <div class="admin-panel" data-panel="site" hidden>
+        <h3>版本状态</h3>
+        <p class="hint">
+          对账「仓库最新提交」和「线上实际部署的提交」——两者不一致就说明构建没成功，网站还停在旧版本。
+          线上版本读的是首页头部那个 <code>sr-build</code> 标记。
+        </p>
+        <div class="ver-box" data-ver-box data-state="loading">
+          <div class="ver-row">
+            <span class="ver-label">仓库最新</span>
+            <code data-ver-repo>读取中…</code>
+          </div>
+          <div class="ver-row">
+            <span class="ver-label">线上已部署</span>
+            <code data-ver-live>读取中…</code>
+          </div>
+          <p class="ver-note" data-ver-note></p>
+          <button class="admin-btn" type="button" data-act="check-version">重新检查</button>
+        </div>
+
         <h3>构建</h3>
         <p class="hint">发布内容后一般会自动构建；发完废话条或想立刻刷新站点时手动点一次。</p>
         <button class="admin-btn" type="button" data-act="rebuild">触发重新构建</button>
@@ -1491,6 +1509,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     await refreshMoments().catch((e) => msg('动态列表加载失败：' + (e as Error).message, true));
     await refreshPosts().catch((e) => msg('文章列表加载失败：' + (e as Error).message, true));
     await refreshLogs().catch((e) => console.warn('[admin] 日志列表加载失败', e));
+    await refreshVersionStatus().catch((e) => console.warn('[admin] 版本对照失败', e));
     await refreshKb().catch((e) => console.warn('[admin] 知识库列表加载失败', e));
     await refreshGallery().catch((e) => console.warn('[admin] 画廊列表加载失败', e));
     await refreshStorageUi().catch((e) => console.warn('[admin] 存储配置加载失败', e));
@@ -1790,6 +1809,62 @@ import globeIcon from '../icons/ui/globe.svg?raw';
       };
       li.append(name, edit, del);
       list.appendChild(li);
+    }
+  }
+
+  // ---------- 版本对照：仓库最新提交 vs 线上实际部署 ----------
+  // 部署失败是静默的（提交成功、后台提示成功，但构建卡在 type check），
+  // 这里把两个 sha 摆在一起，一眼能看出网站还停在旧版本。
+  async function refreshVersionStatus() {
+    const box = $('[data-ver-box]');
+    const repoEl = $('[data-ver-repo]');
+    const liveEl = $('[data-ver-live]');
+    const noteEl = $('[data-ver-note]');
+    box.dataset.state = 'loading';
+    noteEl.textContent = '';
+
+    let repoShort = '';
+    try {
+      const c = await api(`/repos/${REPO}/commits/${BRANCH}`);
+      repoShort = String(c.sha).slice(0, 7);
+      const when = new Date(c.commit.author.date).toLocaleString('zh-CN', { hour12: false });
+      const firstLine = String(c.commit.message).split('\n')[0];
+      repoEl.textContent = `${repoShort} · ${when}`;
+      repoEl.title = firstLine;
+    } catch (e) {
+      repoEl.textContent = '读取失败';
+      box.dataset.state = 'unknown';
+      noteEl.textContent = '没能读到仓库最新提交：' + (e as Error).message;
+      return;
+    }
+
+    let liveShort = '';
+    try {
+      // 加时间戳绕开 Pages 的 CDN 缓存（max-age 约 10 分钟）
+      const home = new URL(import.meta.env.BASE_URL, location.origin).href;
+      const res = await fetch(`${home}?fresh=${Date.now()}`, { cache: 'no-store' });
+      const html = await res.text();
+      liveShort = html.match(/name="sr-build" content="([^"]*)"/)?.[1] ?? '';
+    } catch {
+      liveShort = '';
+    }
+
+    if (!liveShort) {
+      liveEl.textContent = '读取不到';
+      box.dataset.state = 'unknown';
+      noteEl.textContent = '读不到线上版本（本地预览或网络问题），这一项跳过。';
+      return;
+    }
+
+    liveEl.textContent = liveShort === 'local' ? 'local（本地构建）' : liveShort;
+    if (liveShort === repoShort) {
+      box.dataset.state = 'ok';
+      noteEl.textContent = '✓ 已同步，网站就是这一版。';
+    } else {
+      box.dataset.state = 'stale';
+      noteEl.textContent =
+        `⚠ 网站还没更新：线上仍是 ${liveShort}，仓库已经是 ${repoShort}。` +
+        '去 GitHub Actions 看最近一次构建是不是卡在了 Type check。';
     }
   }
 
@@ -3328,6 +3403,11 @@ import globeIcon from '../icons/ui/globe.svg?raw';
   });
   document.querySelector('[data-act="cancel-edit-log"]')?.addEventListener('click', () => {
     exitLogEdit(true);
+  });
+
+  // 版本对照：手动重查
+  document.querySelector('[data-act="check-version"]')?.addEventListener('click', () => {
+    refreshVersionStatus().catch((e) => msg('检查失败：' + (e as Error).message, true));
   });
 
   initAiPanel();

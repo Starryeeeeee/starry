@@ -407,3 +407,58 @@ body.macos-admin {
     min-height: 44px;
   }
 }
+
+/* ---------- 站点页签：版本对照 ----------
+   部署失败是静默的，把「仓库最新」和「线上已部署」摆在一起，
+   不一致时整块镀一圈雏菊黄，扫一眼就知道网站没更新。 */
+.macos-admin .admin .ver-box {
+  margin: 6px 0 8px;
+  padding: 16px 18px 14px;
+  border-radius: var(--mac-r-field);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-in);
+  transition: box-shadow 0.2s ease;
+}
+
+.macos-admin .admin .ver-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 0.9rem;
+}
+
+.macos-admin .admin .ver-label {
+  flex: 0 0 84px;
+  font-size: 0.8rem;
+  color: var(--mac-label-3);
+}
+
+.macos-admin .admin .ver-box code {
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  color: var(--mac-label);
+}
+
+.macos-admin .admin .ver-note {
+  margin: 10px 0 12px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--mac-label-2);
+}
+
+.macos-admin .admin .ver-box[data-state="ok"] .ver-note {
+  color: var(--success-ink);
+}
+
+.macos-admin .admin .ver-box[data-state="stale"] {
+  box-shadow: var(--neu-in), 0 0 0 2px color-mix(in srgb, var(--sand) 60%, transparent);
+}
+
+.macos-admin .admin .ver-box[data-state="stale"] .ver-note {
+  color: color-mix(in srgb, var(--sand-ink) 85%, var(--ink));
+}
+
+.macos-admin .admin .ver-box[data-state="unknown"] .ver-note {
+  color: var(--mac-label-3);
+}
