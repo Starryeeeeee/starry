@@ -2939,7 +2939,8 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     try {
       const index = await ensureAiIndex();
       // 资料范围限定：按板块过滤检索结果（all = 不过滤）
-      const scope = (aiFields('scope') as HTMLSelectElement).value;
+      // scope 其实是 <select>，但 aiFields 硬返回 HTMLInputElement —— 与文件里其它 select 一致地用 unknown 中转
+      const scope = (aiFields('scope') as unknown as HTMLSelectElement).value;
       const rawHits = searchIndex(index, q, 5);
       const hits =
         scope === 'all'
@@ -3092,7 +3093,7 @@ import globeIcon from '../icons/ui/globe.svg?raw';
     for (const box of [aiFields('think'), aiFields('web')]) {
       box.addEventListener('change', saveAiToggles);
     }
-    const scopeSel = aiFields('scope') as HTMLSelectElement;
+    const scopeSel = aiFields('scope') as unknown as HTMLSelectElement;
     scopeSel.value = localStorage.getItem(AI_SCOPE_KEY) ?? 'all';
     scopeSel.addEventListener('change', () => {
       localStorage.setItem(AI_SCOPE_KEY, scopeSel.value);
