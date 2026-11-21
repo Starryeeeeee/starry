@@ -124,7 +124,8 @@ const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14);
     flex-wrap: wrap;
     align-items: center;
     gap: 12px;
-    margin-bottom: 22px;
+    /* 原来 22px，悬浮块一出现就顶到筛选行上，加大到 30px */
+    margin-bottom: 30px;
   }
   .kb-chips {
     display: flex;
@@ -139,14 +140,43 @@ const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14);
     gap: 2px;
   }
   .kb-item {
+    position: relative;
     display: block;
-    padding: 16px 18px;
-    border-radius: var(--radius-lg);
+    padding: 14px 16px 14px 22px;
+    /* 12 比 18 轻：不给文字套一个明显的圆角色块 */
+    border-radius: var(--radius-md);
     text-decoration: none;
     transition: background var(--dur) var(--ease-out);
   }
-  .kb-item:hover {
-    background: var(--wash);
+  /* 悬浮：左侧一根草绿竖线长出来，配合极淡的绿意与标题变色。
+     不用整块米色填充——那是一块"色框"，在无边框列表里显得笨重。 */
+  .kb-item::before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 16px;
+    bottom: 16px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0;
+    transform: scaleY(0.45);
+    transition: opacity var(--dur) var(--ease-out), transform var(--dur) var(--ease-out);
+  }
+  .kb-item:hover::before,
+  .kb-item:focus-visible::before {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  /* 不加任何背景填充：一旦有块，就又变成"给文字套了个框"。
+     悬浮只做两件事——左侧竖线长出来、标题变绿，足够表达"我在这一行"。 */
+  .kb-item:hover,
+  .kb-item:focus-visible {
+    background: transparent;
+  }
+  .kb-item:hover h3,
+  .kb-item:focus-visible h3 {
+    color: var(--accent-ink);
   }
   .kb-item[hidden] {
     display: none;
@@ -207,7 +237,8 @@ const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14);
   }
   @media (max-width: 560px) {
     .kb-item {
-      padding: 14px 12px;
+      /* 手机上也给左侧竖线留出位置 */
+      padding: 14px 12px 14px 18px;
     }
     .kb-item-head {
       flex-wrap: wrap;
