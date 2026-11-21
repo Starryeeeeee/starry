@@ -84,6 +84,23 @@ const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14);
   let subject = '';
   let tag = '';
 
+  // 切换分类时用 View Transitions 做交叉淡入；不支持或用户要求减少动效时直接切
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canVT = !reduceMotion && typeof document.startViewTransition === 'function';
+
+  function applyWithTransition() {
+    if (!canVT) return apply();
+    try {
+      const vt = document.startViewTransition(() => apply());
+      // 连点会跳过上一次过渡，ready 与 finished 都可能以 AbortError 拒绝——属预期行为。
+      // 两个都要接住，否则控制台每次连点都飘红字（ready 才是报 "was skipped" 的那个）
+      vt.ready.catch(() => {});
+      vt.finished.catch(() => {});
+    } catch {
+      apply();
+    }
+  }
+
   function apply() {
     const q = (search?.value ?? '').trim().toLowerCase();
     let visible = 0;
@@ -104,7 +121,7 @@ const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14);
       chips.forEach((c) => c.setAttribute('aria-pressed', 'false'));
       chip.setAttribute('aria-pressed', 'true');
       subject = chip.dataset.subject ?? '';
-      apply();
+      applyWithTransition();
     });
   }
   for (const chip of tagChips) {
@@ -112,7 +129,7 @@ const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14);
       tagChips.forEach((c) => c.setAttribute('aria-pressed', 'false'));
       chip.setAttribute('aria-pressed', 'true');
       tag = chip.dataset.tag ?? '';
-      apply();
+      applyWithTransition();
     });
   }
   search?.addEventListener('input', apply);
@@ -138,6 +155,28 @@ const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14);
     display: flex;
     flex-direction: column;
     gap: 2px;
+    /* 切换分类时对这块做交叉淡入，而不是整页闪 */
+    view-transition-name: kb-list;
+  }
+
+  /* 只让列表动。不加这几条，root 也会被快照并交叉淡入，整页看起来像闪了一下。 */
+  :global(::view-transition-old(root)),
+  :global(::view-transition-new(root)) {
+    animation: none;
+  }
+
+  /* View Transition 的伪元素挂在根上，不受 scoped 影响，需要 :global */
+  :global(::view-transition-old(kb-list)) {
+    animation: kb-out 170ms var(--ease-out) both;
+  }
+  :global(::view-transition-new(kb-list)) {
+    animation: kb-in 260ms var(--ease-out) both;
+  }
+  @keyframes kb-out {
+    to { opacity: 0; transform: translateY(-4px); }
+  }
+  @keyframes kb-in {
+    from { opacity: 0; transform: translateY(7px); }
   }
   .kb-item {
     position: relative;
